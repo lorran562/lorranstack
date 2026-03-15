@@ -18,19 +18,69 @@
     .badge-featured { background:rgba(129,140,248,0.15); color:#818cf8; }
     .action-btn { font-size:12px; padding:4px 12px; border-radius:8px; cursor:pointer; border:1px solid; transition:all 0.2s; font-family:inherit; font-weight:500; }
   </style>
+
 <script>
-// LorranStack v2.1 — Cliente Supabase direto no frontend
+// LorranStack v2.2 — Supabase Client completo (auth + data)
 const _SB_URL = 'https://jkgrmlfqgprcwfooovkx.supabase.co';
 const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA';
 
-async function _sb(path) {
-  const res = await fetch(_SB_URL + '/rest/v1/' + path, {
-    headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY }
-  });
-  if (!res.ok) throw new Error('SB ' + res.status);
-  return res.json();
+// ── REST helper ──────────────────────────────────────────
+async function _sb(path, opts) {
+  const res = await fetch(_SB_URL + '/rest/v1/' + path, Object.assign({
+    headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json' }
+  }, opts || {}));
+  if (!res.ok) { const t = await res.text(); throw new Error('SB ' + res.status + ': ' + t); }
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : [];
 }
 
+// ── Auth helpers ─────────────────────────────────────────
+// Hash simples para senha (SHA-256 via SubtleCrypto — sem bcrypt no browser)
+async function _hashPwd(pwd) {
+  const enc = new TextEncoder().encode(pwd + '_lorranstack_salt');
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+window.AUTH = {
+  // Cadastro
+  async register(name, email, password, role) {
+    // Verifica se email já existe
+    const exists = await _sb('ls_users?select=id&email=eq.' + encodeURIComponent(email));
+    if (exists.length) throw new Error('Email já cadastrado');
+    const hash = await _hashPwd(password);
+    const user = await _sb('ls_users?select=id,name,email,role', {
+      method: 'POST',
+      headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ name, email, password: hash, role: role || 'user' })
+    });
+    const u = Array.isArray(user) ? user[0] : user;
+    const token = btoa(JSON.stringify({ id: u.id, email: u.email, role: u.role, exp: Date.now() + 604800000 }));
+    return { token, user: u };
+  },
+
+  // Login
+  async login(email, password) {
+    const rows = await _sb('ls_users?select=id,name,email,role,avatar_url,password&email=eq.' + encodeURIComponent(email));
+    if (!rows.length) throw new Error('Email ou senha incorretos');
+    const u = rows[0];
+    const hash = await _hashPwd(password);
+    if (u.password !== hash) throw new Error('Email ou senha incorretos');
+    const { password: _, ...safeUser } = u;
+    const token = btoa(JSON.stringify({ id: safeUser.id, email: safeUser.email, role: safeUser.role, exp: Date.now() + 604800000 }));
+    return { token, user: safeUser };
+  },
+
+  // Recupera usuário do localStorage
+  getUser() {
+    try { return JSON.parse(localStorage.getItem('ls_user') || 'null'); } catch { return null; }
+  },
+  getToken() { return localStorage.getItem('ls_token'); },
+  isLoggedIn() { return !!this.getUser(); },
+  logout() { localStorage.removeItem('ls_token'); localStorage.removeItem('ls_user'); }
+};
+
+// ── Data helpers ─────────────────────────────────────────
 window.DB = {
   async getCategories() {
     return _sb('ls_categories?select=id,name,slug,icon&order=sort_order.asc');
@@ -39,7 +89,8 @@ window.DB = {
     const rows = await _sb('ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,avg_rating,review_count,is_featured,category_id,creator_id&is_featured=eq.true&status=in.(approved,featured)&order=upvotes.desc&limit=6');
     return window.DB._joinMeta(rows);
   },
-  async getSaas({ sort='upvotes', order='desc', page=1, limit=12, category, search } = {}) {
+  async getSaas({ sort, order, page, limit, category, search } = {}) {
+    sort = sort || 'upvotes'; order = order || 'desc'; page = page || 1; limit = limit || 12;
     let q = 'ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,views,avg_rating,review_count,is_featured,category_id,creator_id&status=in.(approved,featured)';
     if (search) q += '&or=(name.ilike.*' + encodeURIComponent(search) + '*,tagline.ilike.*' + encodeURIComponent(search) + '*)';
     q += '&order=' + sort + '.' + order + '&limit=' + limit + '&offset=' + ((page-1)*limit);
@@ -56,16 +107,18 @@ window.DB = {
     const rows = await _sb('ls_saas?select=*&slug=eq.' + slug + '&status=in.(approved,featured)&limit=1');
     if (!rows.length) return null;
     const s = rows[0];
-    const cats  = await _sb('ls_categories?select=name,slug,icon&id=eq.' + s.category_id);
-    const users = await _sb('ls_users?select=name,bio,website&id=eq.' + s.creator_id);
-    const revs  = await _sb('ls_reviews?select=id,rating,comment,created_at,user_id&saas_id=eq.' + s.id + '&order=created_at.desc&limit=20');
+    const [cats, users, revs] = await Promise.all([
+      _sb('ls_categories?select=name,slug,icon&id=eq.' + s.category_id),
+      _sb('ls_users?select=name,bio,website&id=eq.' + s.creator_id),
+      _sb('ls_reviews?select=id,rating,comment,created_at,user_id&saas_id=eq.' + s.id + '&order=created_at.desc&limit=20')
+    ]);
     s.category_name = cats[0] ? cats[0].name : '';
     s.category_icon = cats[0] ? cats[0].icon : '';
     s.creator_name  = users[0] ? users[0].name : 'Anônimo';
     s.creator_bio   = users[0] ? users[0].bio  : '';
     s.creator_website = users[0] ? users[0].website : '';
     if (revs.length) {
-      const uids = revs.map(function(r){ return r.user_id; }).filter(Boolean);
+      const uids = [...new Set(revs.map(function(r){ return r.user_id; }).filter(Boolean))];
       const ulist = uids.length ? await _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : [];
       const umap = {};
       ulist.forEach(function(u){ umap[u.id] = u.name; });
@@ -75,22 +128,46 @@ window.DB = {
     return s;
   },
   async getStats() {
-    const [r1,r2] = await Promise.all([
-      fetch(_SB_URL+'/rest/v1/ls_saas?select=id&status=in.(approved,featured)',{headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'}}),
-      fetch(_SB_URL+'/rest/v1/ls_users?select=id',{headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'}})
+    const [r1, r2] = await Promise.all([
+      fetch(_SB_URL+'/rest/v1/ls_saas?select=id&status=in.(approved,featured)', { headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'} }),
+      fetch(_SB_URL+'/rest/v1/ls_users?select=id', { headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'} })
     ]);
     return {
       saas:  parseInt((r1.headers.get('content-range')||'0/15').split('/')[1]),
       users: parseInt((r2.headers.get('content-range')||'0/8').split('/')[1])
     };
   },
+  async addReview(saasId, rating, comment, userId) {
+    return _sb('ls_reviews', {
+      method: 'POST',
+      headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify({ saas_id: saasId, rating: rating, comment: comment, user_id: userId })
+    });
+  },
+  async getCollections() {
+    return _sb('ls_collections?select=id,title,slug,description,cover_emoji,is_official,saas_ids&is_official=eq.true&order=view_count.desc');
+  },
+  async getCreatorSaas(userId) {
+    const rows = await _sb('ls_saas?select=id,name,slug,status,views,clicks,upvotes,avg_rating,review_count,created_at,category_id&creator_id=eq.' + userId + '&order=created_at.desc');
+    return window.DB._joinMeta(rows);
+  },
+  async submitSaas(data) {
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') + '-' + Date.now();
+    return _sb('ls_saas', {
+      method: 'POST',
+      headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify(Object.assign({}, data, { slug: slug, status: 'pending' }))
+    });
+  },
   async _joinMeta(rows) {
     if (!rows.length) return rows;
     const cids = [...new Set(rows.map(function(r){return r.category_id;}).filter(Boolean))];
     const uids = [...new Set(rows.map(function(r){return r.creator_id;}).filter(Boolean))];
-    const cats  = cids.length ? await _sb('ls_categories?select=id,name,slug,icon&id=in.(' + cids.join(',') + ')') : [];
-    const users = uids.length ? await _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : [];
-    const cmap={}, umap={};
+    const [cats, users] = await Promise.all([
+      cids.length ? _sb('ls_categories?select=id,name,slug,icon&id=in.(' + cids.join(',') + ')') : Promise.resolve([]),
+      uids.length ? _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : Promise.resolve([])
+    ]);
+    const cmap = {}, umap = {};
     cats.forEach(function(c){cmap[c.id]=c;}); users.forEach(function(u){umap[u.id]=u;});
     return rows.map(function(r){
       return Object.assign({},r,{
@@ -209,146 +286,82 @@ window.API = null;
     if (name === 'users') loadUsers();
   }
 
-  function authHeaders() {
-    return { 'Content-Type':'application/json', Authorization:`Bearer ${getToken()}` };
+  function authHeaders() { return {'Content-Type':'application/json'}; }` };
   }
 
   async function loadStats() {
     try {
-      const res = await fetch(`${API}/admin/stats`, { headers: authHeaders() });
-      if (res.status === 403) { alert('Acesso admin necessário'); logout(); return; }
-      const d = await res.json();
-      document.getElementById('a-users').textContent   = d.users;
-      document.getElementById('a-saas').textContent    = d.saas;
-      document.getElementById('a-reviews').textContent = d.reviews;
-      document.getElementById('a-pending').textContent = d.pending;
-
-      if (d.pending > 0) {
-        const badge = document.getElementById('pending-count');
-        badge.textContent = d.pending;
-        badge.classList.remove('hidden');
-      }
-
-      document.getElementById('top-saas-list').innerHTML = d.topSaas.map(s => `
-        <div class="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-          <span class="text-sm text-white">${s.name}</span>
-          <div class="flex items-center gap-4 text-xs text-gray-500">
-            <span>👁 ${s.views}</span>
-            <span>🖱 ${s.clicks}</span>
-            <span>▲ ${s.upvotes}</span>
-            <span>⭐ ${Number(s.avg_rating||0).toFixed(1)}</span>
-          </div>
-        </div>
-      `).join('');
-    } catch { document.getElementById('a-users').textContent = 'Erro'; }
+      const [saasRows, userRows, revRows, pendRows] = await Promise.all([
+        _sb('ls_saas?select=id&status=in.(approved,featured)'),
+        _sb('ls_users?select=id'),
+        _sb('ls_reviews?select=id'),
+        _sb('ls_saas?select=id&status=eq.pending')
+      ]);
+      const pCount = pendRows.length;
+      document.getElementById('a-users').textContent   = userRows.length;
+      document.getElementById('a-saas').textContent    = saasRows.length;
+      document.getElementById('a-reviews').textContent = revRows.length;
+      document.getElementById('a-pending').textContent = pCount;
+      if (pCount > 0) { const b=document.getElementById('pending-count'); b.textContent=pCount; b.classList.remove('hidden'); }
+      const topRaw = await _sb('ls_saas?select=name,views,clicks,upvotes,avg_rating&status=in.(approved,featured)&order=views.desc&limit=5');
+      document.getElementById('top-saas-list').innerHTML = topRaw.map(function(s){
+        return '<div class="flex items-center justify-between py-3 border-b border-white/5 last:border-0"><span class="text-sm text-white">'+s.name+'</span><div class="flex items-center gap-4 text-xs text-gray-500"><span>👁 '+s.views+'</span><span>▲ '+s.upvotes+'</span><span>⭐ '+Number(s.avg_rating||0).toFixed(1)+'</span></div></div>';
+      }).join('');
+    } catch(e) { document.getElementById('a-users').textContent='Erro'; console.error(e); }
   }
+  
 
   async function loadPending() {
-    const res = await fetch(`${API}/admin/saas/pending`, { headers: authHeaders() });
-    const data = await res.json();
-    const el = document.getElementById('pending-list');
-    if (!data.length) { el.innerHTML = '<div class="p-6 text-center text-gray-600 text-sm">Nenhum SaaS pendente 🎉</div>'; return; }
-    el.innerHTML = data.map(s => `
-      <div class="p-5 border-b border-white/5">
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="font-600 text-white">${s.name}</span>
-              <span class="badge badge-pending">Pendente</span>
-            </div>
-            <p class="text-xs text-gray-500 mb-1">${s.tagline || ''}</p>
-            <p class="text-xs text-gray-600">por ${s.creator_name} (${s.creator_email}) · ${s.category_name || 'Sem categoria'}</p>
-            <a href="${s.website_url}" target="_blank" class="text-xs text-brand-400 hover:text-brand-300 mt-1 block">${s.website_url}</a>
-          </div>
-          <div class="flex flex-col gap-2">
-            <button onclick="updateStatus('${s.id}','approved')"
-              class="action-btn" style="background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.3);color:#4ade80;">
-              ✅ Aprovar
-            </button>
-            <button onclick="updateStatus('${s.id}','featured')"
-              class="action-btn" style="background:rgba(129,140,248,0.1);border-color:rgba(129,140,248,0.3);color:#818cf8;">
-              ⭐ Destaque
-            </button>
-            <button onclick="updateStatus('${s.id}','rejected')"
-              class="action-btn" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#ef4444;">
-              ❌ Rejeitar
-            </button>
-          </div>
-        </div>
-      </div>
-    `).join('');
+    try {
+      const rows = await _sb('ls_saas?select=id,name,tagline,website_url,status,category_id,creator_id&status=eq.pending&order=created_at.asc');
+      const joined = await DB._joinMeta(rows);
+      const el = document.getElementById('pending-list');
+      if (!joined.length) { el.innerHTML='<div class="p-6 text-center text-gray-600 text-sm">Nenhum SaaS pendente 🎉</div>'; return; }
+      el.innerHTML = joined.map(function(s){ return '<div class="p-5 border-b border-white/5"><div class="flex items-start justify-between gap-4"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><span class="font-600 text-white">'+s.name+'</span><span class="badge badge-pending">Pendente</span></div><p class="text-xs text-gray-500 mb-1">'+(s.tagline||'')+'</p><p class="text-xs text-gray-600">Criador: '+(s.creator_name||'—')+'</p><a href="'+(s.website_url||'#')+'" target="_blank" class="text-xs text-brand-400">'+(s.website_url||'')+'</a></div><div class="flex flex-col gap-2"><button onclick="updateStatus(''+s.id+'','approved')" class="action-btn" style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#4ade80;">✅ Aprovar</button><button onclick="updateStatus(''+s.id+'','featured')" class="action-btn" style="background:rgba(129,140,248,.1);border-color:rgba(129,140,248,.3);color:#818cf8;">⭐ Destaque</button><button onclick="updateStatus(''+s.id+'','rejected')" class="action-btn" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#ef4444;">❌ Rejeitar</button></div></div></div>'; }).join('');
+    } catch(e) { console.error(e); }
   }
+  
 
   async function updateStatus(id, status) {
-    const res = await fetch(`${API}/admin/saas/${id}/status`, {
-      method: 'PATCH',
-      headers: authHeaders(),
-      body: JSON.stringify({ status }),
+    await fetch(_SB_URL+'/rest/v1/ls_saas?id=eq.'+id, {
+      method:'PATCH',
+      headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({ status: status, is_featured: status==='featured' })
     });
-    if (res.ok) { loadPending(); loadStats(); }
+    loadPending(); loadStats();
   }
 
   async function deleteSaas(id) {
-    if (!confirm('Remover este SaaS permanentemente?')) return;
-    await fetch(`${API}/admin/saas/${id}`, { method: 'DELETE', headers: authHeaders() });
+    if (!confirm('Remover este SaaS?')) return;
+    await fetch(_SB_URL+'/rest/v1/ls_saas?id=eq.'+id, {
+      method:'DELETE',
+      headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY}
+    });
     loadAllSaas();
   }
 
   async function loadAllSaas() {
     const status = document.getElementById('status-filter').value;
-    const params = status === 'all' ? 'status=all&limit=50' : `status=${status}&limit=50`;
-    const res = await fetch(`${API}/saas?${params}`, { headers: authHeaders() });
-    const data = await res.json();
+    let q = 'ls_saas?select=id,name,slug,status,upvotes,views,category_id,creator_id&order=created_at.desc&limit=50';
+    if (status !== 'all') q += '&status=eq.' + status;
+    const rows = await _sb(q);
+    const joined = await DB._joinMeta(rows);
     const el = document.getElementById('all-saas-list');
-    if (!data.data?.length) { el.innerHTML = '<div class="p-5 text-center text-gray-600 text-sm">Nenhum resultado</div>'; return; }
-    el.innerHTML = data.data.map(s => `
-      <div class="p-4 border-b border-white/5 flex items-center justify-between gap-4">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 mb-0.5">
-            <span class="font-500 text-white text-sm">${s.name}</span>
-            <span class="badge badge-${s.status}">${s.status}</span>
-          </div>
-          <p class="text-xs text-gray-600">${s.creator_name} · ${s.category_name || '—'} · ▲${s.upvotes} · 👁${s.views}</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="updateStatus('${s.id}','featured')"
-            class="action-btn" style="background:transparent;border-color:rgba(129,140,248,0.3);color:#818cf8;">⭐</button>
-          <button onclick="deleteSaas('${s.id}')"
-            class="action-btn" style="background:transparent;border-color:rgba(239,68,68,0.3);color:#ef4444;">🗑</button>
-        </div>
-      </div>
-    `).join('');
+    if (!joined.length) { el.innerHTML='<div class="p-5 text-center text-gray-600 text-sm">Nenhum resultado</div>'; return; }
+    el.innerHTML = joined.map(function(s){ return '<div class="p-4 border-b border-white/5 flex items-center justify-between gap-4"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="font-500 text-white text-sm">'+s.name+'</span><span class="badge badge-'+(s.status||'pending')+'">'+s.status+'</span></div><p class="text-xs text-gray-600">'+(s.creator_name||'—')+' · '+(s.category_name||'—')+'</p></div><div class="flex items-center gap-2"><button onclick="updateStatus(''+s.id+'','featured')" class="action-btn" style="background:transparent;border-color:rgba(129,140,248,.3);color:#818cf8;">⭐</button><button onclick="deleteSaas(''+s.id+'')" class="action-btn" style="background:transparent;border-color:rgba(239,68,68,.3);color:#ef4444;">🗑</button></div></div>'; }).join('');
   }
 
   async function loadUsers() {
-    const res = await fetch(`${API}/admin/users`, { headers: authHeaders() });
-    const data = await res.json();
+    const users = await _sb('ls_users?select=id,name,email,role,is_verified,created_at&order=created_at.desc&limit=100');
     const el = document.getElementById('users-list');
-    el.innerHTML = data.map(u => `
-      <div class="p-4 border-b border-white/5 flex items-center justify-between gap-4">
-        <div>
-          <div class="flex items-center gap-2 mb-0.5">
-            <span class="font-500 text-white text-sm">${u.name}</span>
-            <span class="badge ${u.role === 'admin' ? 'badge-rejected' : u.role === 'creator' ? 'badge-featured' : 'badge-approved'}">${u.role}</span>
-          </div>
-          <p class="text-xs text-gray-600">${u.email} · ${u.saas_count} produtos · ${new Date(u.created_at).toLocaleDateString('pt-BR')}</p>
-        </div>
-        <select onchange="updateUserRole('${u.id}', this.value)"
-          class="text-xs px-2 py-1 rounded-lg border border-white/10 text-gray-400 outline-none"
-          style="background:rgba(255,255,255,0.04);">
-          <option ${u.role==='user'?'selected':''} value="user">user</option>
-          <option ${u.role==='creator'?'selected':''} value="creator">creator</option>
-          <option ${u.role==='admin'?'selected':''} value="admin">admin</option>
-        </select>
-      </div>
-    `).join('');
+    el.innerHTML = users.map(function(u){ return '<div class="p-4 border-b border-white/5 flex items-center justify-between gap-4"><div><div class="flex items-center gap-2 mb-0.5"><span class="font-500 text-white text-sm">'+u.name+'</span><span class="badge '+(u.role==='admin'?'badge-rejected':u.role==='creator'?'badge-featured':'badge-approved')+'">'+u.role+'</span></div><p class="text-xs text-gray-600">'+u.email+' · '+ new Date(u.created_at).toLocaleDateString('pt-BR')+'</p></div><select onchange="updateUserRole(''+u.id+'',this.value)" class="text-xs px-2 py-1 rounded-lg border border-white/10 text-gray-400 outline-none" style="background:rgba(255,255,255,.04);"><option '+(u.role==='user'?'selected':'')+' value="user">user</option><option '+(u.role==='creator'?'selected':'')+' value="creator">creator</option><option '+(u.role==='admin'?'selected':'')+' value="admin">admin</option></select></div>'; }).join('');
   }
 
   async function updateUserRole(id, role) {
-    await fetch(`${API}/admin/users/${id}/role`, {
-      method: 'PATCH',
-      headers: authHeaders(),
-      body: JSON.stringify({ role }),
+    await fetch(_SB_URL+'/rest/v1/ls_users?id=eq.'+id, {
+      method:'PATCH',
+      headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({ role: role })
     });
   }
 
