@@ -33,6 +33,7 @@
 
   <!-- TailwindCSS CDN -->
   <script src="config.js"></script>
+  <script src="supabase.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Google Fonts: Space Grotesk + Syne -->
@@ -613,8 +614,7 @@
   // ── Carrega categorias ────────────────────────────
   async function loadCategories() {
     try {
-      const res = await fetch(`${API}/categories`);
-      const cats = await res.json();
+      const cats = await DB.getCategories();
       const bar = document.getElementById('categories-bar');
       cats.forEach(c => {
         const btn = document.createElement('button');
@@ -643,18 +643,18 @@
   // ── Carrega produtos ──────────────────────────────
   async function loadProducts() {
     const sort = document.getElementById('sort-select').value;
-    const params = new URLSearchParams({
-      sort, page: currentPage, limit: 12
-    });
-    if (currentCategory) params.set('category', currentCategory);
-    if (currentSearch) params.set('search', currentSearch);
+    // params via DB
 
     const grid = document.getElementById('products-grid');
     grid.innerHTML = Array(4).fill(`<div class="saas-card rounded-2xl animate-pulse" style="background:#111118;height:200px;"></div>`).join('');
 
     try {
-      const res = await fetch(`${API}/saas?${params}`);
-      const data = await res.json();
+      const data_raw = await DB.getSaas({
+        sort: sort, page: currentPage, limit: 12,
+        category: currentCategory || undefined,
+        search: currentSearch || undefined
+      });
+      const data = { data: data_raw, pagination: { total: data_raw.length >= 12 ? 100 : data_raw.length, page: currentPage, limit: 12, pages: data_raw.length >= 12 ? 9 : 1 } };
 
       document.getElementById('results-count').textContent =
         `${data.pagination?.total || 0} ferramentas encontradas`;
@@ -678,10 +678,9 @@
   // ── Carrega destaques ─────────────────────────────
   async function loadFeatured() {
     try {
-      const res = await fetch(`${API}/saas/featured`);
-      const data = await res.json();
+      const data = await DB.getFeatured();
       const grid = document.getElementById('featured-grid');
-      if (!data.length) { grid.innerHTML = ''; return; }
+      if (!data || !data.length) { grid.innerHTML = ''; return; }
       grid.innerHTML = data.map(renderSaasCard).join('');
     } catch {
       document.getElementById('featured').style.display = 'none';
@@ -710,6 +709,11 @@
   }
 
   // ── Contadores animados ────────────────────────────
+  function animateCounter(el, target) {
+    if(!el) return;
+    let n=0; const step=Math.ceil(target/30);
+    const t=setInterval(()=>{n=Math.min(n+step,target);el.textContent=n;if(n>=target)clearInterval(t);},40);
+  }
   function animateCounters(total) {
     const el = document.getElementById('stat-saas');
     let n = 0;
