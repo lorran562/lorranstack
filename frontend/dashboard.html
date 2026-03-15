@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — LorranStack</title>
+  <script src="config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { display: ['Syne','sans-serif'], body: ['Space Grotesk','sans-serif'] },
+          colors: { brand: { 400:'#4ade80', 500:'#22c55e' } }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family:'Space Grotesk',sans-serif; background:#0a0a0f; color:#e8e8f0; }
+    .card { background:#111118; border:1px solid rgba(255,255,255,0.06); border-radius:16px; }
+    .input-field {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+      border-radius:12px; padding:12px 16px; color:#e8e8f0; width:100%; outline:none;
+      transition:border-color 0.2s; font-family:inherit; font-size:14px;
+    }
+    .input-field:focus { border-color:#4ade80; }
+    .btn-primary {
+      background:linear-gradient(135deg,#4ade80,#22c55e); color:#0a0a0f;
+      font-weight:600; padding:12px 24px; border-radius:12px; border:none;
+      cursor:pointer; font-size:14px; font-family:inherit; transition:opacity 0.2s;
+    }
+    .btn-primary:hover { opacity:0.9; }
+    .status-pending  { background:rgba(251,191,36,0.15); color:#fbbf24; }
+    .status-approved { background:rgba(74,222,128,0.15); color:#4ade80; }
+    .status-rejected { background:rgba(239,68,68,0.15); color:#ef4444; }
+    .status-featured { background:rgba(129,140,248,0.15); color:#818cf8; }
+    .tab { cursor:pointer; padding:8px 20px; border-radius:10px; font-size:14px; font-weight:500; transition:all 0.2s; color:#6b7280; }
+    .tab.active { background:rgba(74,222,128,0.1); color:#4ade80; }
+    select.input-field { appearance:none; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav style="background:rgba(10,10,15,0.9); border-bottom:1px solid rgba(255,255,255,0.05);" class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#4ade80,#22c55e);">
+        <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 9L7.5 4.5L9 6L6 9L9 12L7.5 13.5L3 9Z" fill="white"/><path d="M15 9L10.5 4.5L9 6L12 9L9 12L10.5 13.5L15 9Z" fill="white" opacity="0.6"/></svg>
+      </div>
+      <span style="font-family:Syne; font-weight:700; color:white;">Lorran<span style="color:#4ade80">Stack</span></span>
+    </a>
+    <div class="flex items-center gap-4">
+      <span class="text-sm text-gray-400" id="user-name-nav">Dashboard</span>
+      <button onclick="logout()" class="text-sm text-gray-600 hover:text-white transition-colors">Sair</button>
+    </div>
+  </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-6 pt-24 pb-16">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 style="font-family:Syne; font-weight:800;" class="text-3xl text-white mb-1">Meu Dashboard</h1>
+    <p class="text-gray-500 text-sm">Gerencie seus produtos SaaS publicados</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex items-center gap-2 mb-8 border-b border-white/5 pb-4">
+    <div class="tab active" onclick="showTab('overview')">Visão geral</div>
+    <div class="tab" onclick="showTab('products')">Meus produtos</div>
+    <div class="tab" onclick="showTab('new-product')">+ Publicar SaaS</div>
+  </div>
+
+  <!-- TAB: OVERVIEW -->
+  <div id="tab-overview">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="card p-5">
+        <p class="text-xs text-gray-500 mb-1">Total de produtos</p>
+        <p class="text-3xl font-display font-700 text-white" id="stat-products">—</p>
+      </div>
+      <div class="card p-5">
+        <p class="text-xs text-gray-500 mb-1">Visualizações</p>
+        <p class="text-3xl font-display font-700 text-white" id="stat-views">—</p>
+      </div>
+      <div class="card p-5">
+        <p class="text-xs text-gray-500 mb-1">Cliques</p>
+        <p class="text-3xl font-display font-700 text-white" id="stat-clicks">—</p>
+      </div>
+      <div class="card p-5">
+        <p class="text-xs text-gray-500 mb-1">Upvotes</p>
+        <p class="text-3xl font-display font-700 text-white" id="stat-upvotes">—</p>
+      </div>
+    </div>
+
+    <!-- Lista rápida de produtos -->
+    <div class="card overflow-hidden">
+      <div class="p-5 border-b border-white/5">
+        <h2 class="font-600 text-white">Seus produtos</h2>
+      </div>
+      <div id="dashboard-products-list" class="divide-y divide-white/5">
+        <div class="p-5 text-sm text-gray-600">Carregando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: PRODUCTS -->
+  <div id="tab-products" class="hidden">
+    <div id="products-full-list"></div>
+  </div>
+
+  <!-- TAB: NOVO PRODUTO -->
+  <div id="tab-new-product" class="hidden">
+    <div class="max-w-2xl">
+      <div class="card p-8">
+        <h2 style="font-family:Syne; font-weight:700;" class="text-xl text-white mb-6">Cadastrar novo SaaS</h2>
+
+        <div id="form-error" class="hidden mb-4 p-4 rounded-xl text-sm text-red-400 border border-red-500/20" style="background:rgba(239,68,68,0.08);"></div>
+        <div id="form-success" class="hidden mb-4 p-4 rounded-xl text-sm text-green-400 border border-green-500/20" style="background:rgba(74,222,128,0.08);"></div>
+
+        <div class="space-y-5">
+          <div>
+            <label class="block text-sm font-500 text-gray-300 mb-1.5">Nome do SaaS *</label>
+            <input id="f-name" type="text" placeholder="Ex: FlowAI" class="input-field"/>
+          </div>
+          <div>
+            <label class="block text-sm font-500 text-gray-300 mb-1.5">Tagline *</label>
+            <input id="f-tagline" type="text" placeholder="Frase curta que descreve o produto" class="input-field"/>
+          </div>
+          <div>
+            <label class="block text-sm font-500 text-gray-300 mb-1.5">Descrição completa *</label>
+            <textarea id="f-description" rows="4" placeholder="Descreva o que seu SaaS faz, para quem é e quais problemas resolve..." class="input-field" style="resize:vertical;"></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-500 text-gray-300 mb-1.5">Categoria *</label>
+              <select id="f-category" class="input-field">
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-500 text-gray-300 mb-1.5">Tipo de preço</label>
+              <select id="f-pricing" class="input-field">
+                <option value="free">Grátis</option>
+                <option value="freemium">Freemium</option>
+                <option value="paid">Pago</option>
+                <option value="subscription">Assinatura</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-500 text-gray-300 mb-1.5">Preço (ex: 29.90)</label>
+              <input id="f-price" type="number" step="0.01" placeholder="Opcional" class="input-field"/>
+            </div>
+            <div>
+              <label class="block text-sm font-500 text-gray-300 mb-1.5">Label do preço</label>
+              <input id="f-price-label" type="text" placeholder="Ex: /mês" class="input-field"/>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-500 text-gray-300 mb-1.5">URL do produto *</label>
+            <input id="f-url" type="url" placeholder="https://seusite.com" class="input-field"/>
+          </div>
+          <div>
+            <label class="block text-sm font-500 text-gray-300 mb-1.5">URL do Logo</label>
+            <input id="f-logo" type="url" placeholder="https://seusite.com/logo.png" class="input-field"/>
+          </div>
+          <div>
+            <label class="block text-sm font-500 text-gray-300 mb-1.5">URL do vídeo (YouTube/Vimeo)</label>
+            <input id="f-video" type="url" placeholder="Opcional" class="input-field"/>
+          </div>
+          <button onclick="submitSaas()" class="btn-primary w-full">
+            Enviar para aprovação →
+          </button>
+          <p class="text-xs text-gray-600 text-center">Seu SaaS será revisado pela equipe LorranStack antes de ser publicado.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = window.API || 'http://localhost:3000/api';
+
+  function getToken() { return localStorage.getItem('ls_token'); }
+  function getUser()  { return JSON.parse(localStorage.getItem('ls_user') || 'null'); }
+
+  function logout() {
+    localStorage.clear();
+    location.href = 'index.html';
+  }
+
+  function showTab(name) {
+    ['overview','products','new-product'].forEach(t => {
+      document.getElementById(`tab-${t}`).classList.add('hidden');
+      document.querySelectorAll('.tab')[['overview','products','new-product'].indexOf(t)].classList.remove('active');
+    });
+    document.getElementById(`tab-${name}`).classList.remove('hidden');
+    document.querySelectorAll('.tab')[['overview','products','new-product'].indexOf(name)].classList.add('active');
+  }
+
+  function statusBadge(s) {
+    const map = { pending:'⏳ Pendente', approved:'✅ Aprovado', rejected:'❌ Rejeitado', featured:'⭐ Destaque' };
+    return `<span class="text-xs px-2 py-0.5 rounded-full status-${s}">${map[s] || s}</span>`;
+  }
+
+  async function loadDashboard() {
+    const token = getToken();
+    if (!token) { location.href = 'index.html'; return; }
+
+    const user = getUser();
+    if (user) document.getElementById('user-name-nav').textContent = user.name.split(' ')[0];
+
+    try {
+      const res = await fetch(`${API}/dashboard`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) { logout(); return; }
+      const data = await res.json();
+
+      document.getElementById('stat-products').textContent = data.productCount;
+      document.getElementById('stat-views').textContent   = data.totals.views.toLocaleString();
+      document.getElementById('stat-clicks').textContent  = data.totals.clicks.toLocaleString();
+      document.getElementById('stat-upvotes').textContent = data.totals.upvotes.toLocaleString();
+
+      const list = document.getElementById('dashboard-products-list');
+      if (!data.products.length) {
+        list.innerHTML = `<div class="p-6 text-center text-gray-600 text-sm">
+          Você ainda não publicou nenhum SaaS.
+          <button onclick="showTab('new-product')" class="text-brand-400 ml-1 hover:text-brand-300">Publicar agora →</button>
+        </div>`;
+        return;
+      }
+
+      list.innerHTML = data.products.map(p => `
+        <div class="p-5 flex items-center justify-between gap-4">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-0.5">
+              <span class="font-600 text-white text-sm">${p.name}</span>
+              ${statusBadge(p.status)}
+            </div>
+            <div class="flex items-center gap-4 text-xs text-gray-600">
+              <span>👁 ${p.views || 0}</span>
+              <span>🖱 ${p.clicks || 0}</span>
+              <span>▲ ${p.upvotes || 0}</span>
+              <span>⭐ ${Number(p.avg_rating || 0).toFixed(1)} (${p.review_count || 0})</span>
+            </div>
+          </div>
+          <a href="saas.html?slug=${p.slug}" class="text-xs text-gray-500 hover:text-white transition-colors">Ver →</a>
+        </div>
+      `).join('');
+    } catch (e) {
+      document.getElementById('dashboard-products-list').innerHTML =
+        `<div class="p-5 text-sm text-gray-600">Erro ao conectar com a API. Verifique se o backend está rodando.</div>`;
+    }
+  }
+
+  async function loadCategories() {
+    try {
+      const res = await fetch(`${API}/categories`);
+      const cats = await res.json();
+      const sel = document.getElementById('f-category');
+      cats.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = `${c.icon} ${c.name}`;
+        sel.appendChild(opt);
+      });
+    } catch {}
+  }
+
+  async function submitSaas() {
+    const errEl = document.getElementById('form-error');
+    const sucEl = document.getElementById('form-success');
+    errEl.classList.add('hidden');
+    sucEl.classList.add('hidden');
+
+    const body = {
+      name:         document.getElementById('f-name').value.trim(),
+      tagline:      document.getElementById('f-tagline').value.trim(),
+      description:  document.getElementById('f-description').value.trim(),
+      category_id:  document.getElementById('f-category').value,
+      pricing_type: document.getElementById('f-pricing').value,
+      price:        document.getElementById('f-price').value || null,
+      price_label:  document.getElementById('f-price-label').value.trim(),
+      website_url:  document.getElementById('f-url').value.trim(),
+      logo_url:     document.getElementById('f-logo').value.trim() || null,
+      video_url:    document.getElementById('f-video').value.trim() || null,
+    };
+
+    if (!body.name || !body.description || !body.website_url || !body.category_id) {
+      errEl.textContent = 'Preencha os campos obrigatórios (*)';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/saas`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.errors?.[0]?.msg || 'Erro ao enviar');
+      sucEl.textContent = data.message;
+      sucEl.classList.remove('hidden');
+      setTimeout(() => { showTab('overview'); loadDashboard(); }, 2000);
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.remove('hidden');
+    }
+  }
+
+  // Init
+  loadDashboard();
+  loadCategories();
+</script>
+</body>
+</html>

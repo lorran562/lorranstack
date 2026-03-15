@@ -1,0 +1,43 @@
+# Dependências
+node_modules/
+.npm
+
+# Variáveis de ambiente — NUNCA commitar
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Build e cache
+dist/
+build/
+.cache/
+.vercel/
+.next/
+
+# Sistema operacional
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Uploads locais (usar Supabase Storage em produção)
+backend/uploads/
+
+# Arquivos temporários
+*.tmp
+*.temp
