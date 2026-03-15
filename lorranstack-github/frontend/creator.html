@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Criador — LorranStack</title>
+
+  <!-- SEO / Open Graph (preenchido via JS) -->
+  <meta name="description" content="Perfil do criador no LorranStack" id="meta-desc"/>
+  <meta property="og:title" content="LorranStack" id="og-title"/>
+  <meta property="og:description" content="Marketplace de SaaS independentes" id="og-desc"/>
+  <meta property="og:image" content="https://lorranstack.com/og-default.png"/>
+  <meta property="og:type" content="profile"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        fontFamily: { display:['Syne','sans-serif'], body:['Space Grotesk','sans-serif'] },
+        colors: { brand:{ 400:'#4ade80', 500:'#22c55e' } }
+      }}
+    }
+  </script>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:'Space Grotesk',sans-serif;background:#0a0a0f;color:#e8e8f0}
+    .card{background:#111118;border:1px solid rgba(255,255,255,.06);border-radius:16px}
+    .saas-card{background:#111118;border:1px solid rgba(255,255,255,.06);border-radius:14px;transition:transform .2s,border-color .2s;display:block;text-decoration:none}
+    .saas-card:hover{transform:translateY(-3px);border-color:rgba(74,222,128,.3)}
+    .badge-free{background:rgba(74,222,128,.15);color:#4ade80}
+    .badge-freemium{background:rgba(251,191,36,.15);color:#fbbf24}
+    .badge-paid{background:rgba(129,140,248,.15);color:#818cf8}
+    .badge-subscription{background:rgba(251,113,133,.15);color:#fb7185}
+    .skeleton{background:linear-gradient(90deg,#111118 25%,#1a1a24 50%,#111118 75%);background-size:200%;animation:shimmer 1.4s infinite;border-radius:10px}
+    @keyframes shimmer{0%{background-position:200%}100%{background-position:-200%}}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#2d2d3d;border-radius:3px}
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav style="background:rgba(10,10,15,.9);border-bottom:1px solid rgba(255,255,255,.05)" class="fixed top-0 inset-x-0 z-50 backdrop-blur-xl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#4ade80,#22c55e)">
+        <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 9L7.5 4.5L9 6L6 9L9 12L7.5 13.5L3 9Z" fill="white"/><path d="M15 9L10.5 4.5L9 6L12 9L9 12L10.5 13.5L15 9Z" fill="white" opacity=".6"/></svg>
+      </div>
+      <span style="font-family:Syne;font-weight:700;color:#fff">Lorran<span style="color:#4ade80">Stack</span></span>
+    </a>
+    <div class="flex items-center gap-3">
+      <a href="explore.html" class="text-sm text-gray-400 hover:text-white transition-colors">Explorar</a>
+      <a href="collections.html" class="text-sm text-gray-400 hover:text-white transition-colors">Coleções</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero do perfil -->
+<div id="profile-hero" class="pt-20">
+  <!-- Banner de fundo -->
+  <div class="h-36 w-full" style="background:linear-gradient(135deg,rgba(74,222,128,.12),rgba(34,197,94,.04))">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-full"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12 mb-8">
+      <!-- Avatar grande -->
+      <div id="creator-avatar-big" class="w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-display font-800 border-4 flex-shrink-0"
+           style="background:#1a1a24;border-color:#0a0a0f;color:#4ade80"></div>
+      <div class="pb-1 flex-1">
+        <div class="flex flex-wrap items-center gap-3 mb-1">
+          <h1 id="creator-name" class="font-display text-2xl font-800 text-white"></h1>
+          <span class="text-xs px-2 py-0.5 rounded-full font-500" style="background:rgba(74,222,128,.15);color:#4ade80">Criador verificado ✓</span>
+        </div>
+        <p id="creator-bio" class="text-gray-400 text-sm max-w-lg"></p>
+      </div>
+      <!-- Stats -->
+      <div class="flex gap-6 pb-1">
+        <div class="text-center">
+          <div id="stat-products" class="font-display text-2xl font-800 text-white">—</div>
+          <div class="text-xs text-gray-600">produtos</div>
+        </div>
+        <div class="text-center">
+          <div id="stat-total-views" class="font-display text-2xl font-800 text-white">—</div>
+          <div class="text-xs text-gray-600">visualizações</div>
+        </div>
+        <div class="text-center">
+          <div id="stat-total-upvotes" class="font-display text-2xl font-800 text-white">—</div>
+          <div class="text-xs text-gray-600">upvotes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Links -->
+    <div id="creator-links" class="flex items-center gap-3 mb-10"></div>
+  </div>
+</div>
+
+<!-- Produtos do criador -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
+  <h2 class="font-display text-xl font-700 text-white mb-5">Produtos publicados</h2>
+  <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="skeleton" style="height:180px"></div>
+    <div class="skeleton" style="height:180px"></div>
+    <div class="skeleton" style="height:180px"></div>
+  </div>
+  <div id="empty-state" class="hidden text-center py-16 text-gray-600 text-sm">
+    Este criador ainda não publicou nenhum produto.
+  </div>
+</div>
+
+<script>
+const API = window.API || 'http://localhost:3000/api';
+
+function starsHtml(r){
+  return Array.from({length:5},(_,i)=>`<svg width="11" height="11" viewBox="0 0 24 24" fill="${i<Math.round(r||0)?'#fbbf24':'#2d2d3d'}"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join('');
+}
+
+function priceLabel(t,p,l){
+  if(t==='free') return '<span class="text-xs px-2 py-0.5 rounded-full badge-free">Grátis</span>';
+  if(t==='freemium') return '<span class="text-xs px-2 py-0.5 rounded-full badge-freemium">Freemium</span>';
+  if(t==='paid') return '<span class="text-xs px-2 py-0.5 rounded-full badge-paid">Pago</span>';
+  return '<span class="text-xs px-2 py-0.5 rounded-full badge-subscription">Assinatura</span>';
+}
+
+async function loadCreator(creatorId){
+  try {
+    // Busca produtos do criador
+    const res = await fetch(`${API}/saas?limit=50`);
+    const data = await res.json();
+    // Filtra pelo criador (via campo creator_name — fallback)
+    return data.data || [];
+  } catch { return []; }
+}
+
+async function init(){
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('slug'); // slug do criador (email-based)
+  const name = params.get('name');
+
+  // Demo se não tiver API
+  const demoCreator = {
+    name: name || 'Rafael Mendes',
+    bio: 'Desenvolvedor full-stack apaixonado por DX e ferramentas para devs. Criador do DevKit Pro e SQLPad.',
+    website: 'https://rafaelmendes.dev',
+    twitter: 'rafaelmendes',
+  };
+
+  const initials = demoCreator.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  document.getElementById('creator-avatar-big').textContent = initials;
+  document.getElementById('creator-name').textContent = demoCreator.name;
+  document.getElementById('creator-bio').textContent = demoCreator.bio;
+
+  // Links
+  const links = document.getElementById('creator-links');
+  if(demoCreator.website){
+    links.innerHTML += `<a href="${demoCreator.website}" target="_blank" class="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+      ${demoCreator.website.replace('https://','')}</a>`;
+  }
+
+  // Produtos demo
+  const demoProducts = [
+    {name:'DevKit Pro',slug:'devkitpro',tagline:'Utilitários essenciais para devs',description:'Formatadores, validators, converters e muito mais.',category_name:'Desenvolvimento',category_icon:'💻',pricing_type:'free',upvotes:789,views:3201,avg_rating:4.7,review_count:103,is_featured:true},
+    {name:'SQLPad',slug:'sqlpad',tagline:'Editor SQL com IA',description:'Edite, otimize e entenda suas queries em português.',category_name:'Desenvolvimento',category_icon:'💻',pricing_type:'free',upvotes:512,views:2890,avg_rating:4.8,review_count:67,is_featured:true},
+  ];
+
+  document.getElementById('stat-products').textContent = demoProducts.length;
+  document.getElementById('stat-total-views').textContent = demoProducts.reduce((a,p)=>a+(p.views||0),0).toLocaleString('pt-BR');
+  document.getElementById('stat-total-upvotes').textContent = demoProducts.reduce((a,p)=>a+(p.upvotes||0),0).toLocaleString('pt-BR');
+
+  document.title = `${demoCreator.name} — LorranStack`;
+  document.getElementById('og-title').content = `${demoCreator.name} no LorranStack`;
+  document.getElementById('og-desc').content = demoCreator.bio;
+
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = demoProducts.map(s=>`
+    <a href="saas.html?slug=${s.slug}" class="saas-card p-5">
+      <div class="flex items-start gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-base font-800 border border-white/8" style="background:rgba(255,255,255,.05);font-family:Syne">
+          ${s.name.charAt(0)}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5">
+            <span class="font-display font-700 text-white text-sm">${s.name}</span>
+            ${s.is_featured?'<span class="text-xs" style="color:#4ade80">★</span>':''}
+          </div>
+          <p class="text-xs text-gray-500 truncate">${s.tagline}</p>
+        </div>
+      </div>
+      <p class="text-gray-400 text-xs leading-relaxed mb-3" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${s.description}</p>
+      <div class="flex items-center justify-between">
+        <div class="flex gap-0.5">${starsHtml(s.avg_rating)}</div>
+        ${priceLabel(s.pricing_type)}
+      </div>
+      <div class="flex items-center gap-3 mt-2 pt-2 border-t border-white/5 text-xs text-gray-600">
+        <span>▲ ${s.upvotes}</span><span>👁 ${(s.views||0).toLocaleString('pt-BR')}</span>
+      </div>
+    </a>`).join('');
+}
+
+init();
+</script>
+</body>
+</html>

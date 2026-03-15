@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ranking da Semana — LorranStack</title>
+  <meta name="description" content="Os SaaS mais votados, mais vistos e mais clicados da semana no LorranStack."/>
+  <meta property="og:title" content="Ranking da Semana — LorranStack"/>
+  <meta property="og:description" content="Os SaaS mais votados da semana."/>
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <script src="config.js"></script>
+  <script src="supabase.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script>tailwind.config={theme:{extend:{fontFamily:{display:['Syne','sans-serif']},colors:{brand:{400:'#4ade80',500:'#22c55e'}}}}}</script>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:'Space Grotesk',sans-serif;background:#0a0a0f;color:#e8e8f0}
+    .row{background:#111118;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;transition:border-color .2s;text-decoration:none}
+    .row:hover{border-color:rgba(74,222,128,.3)}
+    .rank-num{font-family:Syne,sans-serif;font-size:20px;font-weight:800;min-width:32px;text-align:center}
+    .rank-1{color:#fbbf24}
+    .rank-2{color:#9ca3af}
+    .rank-3{color:#cd7c2f}
+    .rank-other{color:#374151}
+    .tab-btn{cursor:pointer;padding:8px 20px;border-radius:10px;font-size:13px;font-weight:500;transition:all .2s;border:none;background:transparent;color:#6b7280;font-family:inherit}
+    .tab-btn.active{background:rgba(74,222,128,.1);color:#4ade80}
+    .badge-free{background:rgba(74,222,128,.15);color:#4ade80}
+    .badge-freemium{background:rgba(251,191,36,.15);color:#fbbf24}
+    .badge-paid{background:rgba(129,140,248,.15);color:#818cf8}
+    .badge-sub{background:rgba(251,113,133,.15);color:#fb7185}
+    .hero-grid{background-image:linear-gradient(rgba(74,222,128,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(74,222,128,.04) 1px,transparent 1px);background-size:60px 60px}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#2d2d3d;border-radius:3px}
+  </style>
+</head>
+<body>
+
+<nav style="background:rgba(10,10,15,.9);border-bottom:1px solid rgba(255,255,255,.05)" class="fixed top-0 inset-x-0 z-50 backdrop-blur-xl">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#4ade80,#22c55e)">
+        <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 9L7.5 4.5L9 6L6 9L9 12L7.5 13.5L3 9Z" fill="white"/><path d="M15 9L10.5 4.5L9 6L12 9L9 12L10.5 13.5L15 9Z" fill="white" opacity=".6"/></svg>
+      </div>
+      <span style="font-family:Syne;font-weight:700;color:#fff">Lorran<span style="color:#4ade80">Stack</span></span>
+    </a>
+    <div class="flex items-center gap-3">
+      <a href="explore.html" class="text-sm text-gray-400 hover:text-white transition-colors">Explorar</a>
+      <a href="collections.html" class="text-sm text-gray-400 hover:text-white transition-colors">Coleções</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero-grid pt-32 pb-14 px-4 relative overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-40 rounded-full opacity-20 blur-3xl" style="background:radial-gradient(ellipse,#fbbf24,transparent 70%)"></div>
+  </div>
+  <div class="max-w-5xl mx-auto text-center relative z-10">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-500 mb-5 border" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:#fbbf24">
+      Atualizado toda segunda-feira
+    </div>
+    <h1 class="font-display text-4xl sm:text-5xl font-800 text-white mb-3">
+      🏆 Ranking da semana
+    </h1>
+    <p class="text-gray-400 text-lg">Os SaaS mais votados, vistos e clicados desta semana</p>
+    <p class="text-gray-600 text-sm mt-2" id="week-label"></p>
+  </div>
+</section>
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 pb-20">
+
+  <!-- Tabs -->
+  <div class="flex items-center gap-1 mb-8 p-1 rounded-xl border border-white/8 w-fit" style="background:rgba(255,255,255,.02)">
+    <button class="tab-btn active" onclick="switchTab('upvotes',this)">▲ Mais votados</button>
+    <button class="tab-btn" onclick="switchTab('views',this)">👁 Mais vistos</button>
+    <button class="tab-btn" onclick="switchTab('clicks',this)">🖱 Mais clicados</button>
+    <button class="tab-btn" onclick="switchTab('rating',this)">⭐ Melhor avaliados</button>
+  </div>
+
+  <!-- Pódio Top 3 -->
+  <div id="podium" class="grid grid-cols-3 gap-4 mb-8"></div>
+
+  <!-- Lista completa -->
+  <div id="ranking-list" class="space-y-3"></div>
+
+</div>
+
+<script>
+const API = window.API || 'http://localhost:3000/api';
+let allData = [];
+let currentSort = 'upvotes';
+
+// Label da semana atual
+const now = new Date();
+const monday = new Date(now);
+monday.setDate(now.getDate() - now.getDay() + 1);
+const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+document.getElementById('week-label').textContent =
+  `${monday.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})} — ${sunday.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'})}`;
+
+const DEMO = [
+  {name:'DevDocs BR',slug:'devdocs-br',icon:'📖',cat:'Dev',pricing:'free',upvotes:891,views:4521,clicks:1203,avg_rating:4.9,review_count:203,tagline:'Documentação técnica em português'},
+  {name:'APIForge',slug:'apiforge',icon:'⚡',cat:'Dev',pricing:'freemium',upvotes:634,views:3102,clicks:891,avg_rating:4.6,review_count:89,tagline:'APIs REST sem escrever servidor'},
+  {name:'DevKit Pro',slug:'devkitpro',icon:'💻',cat:'Dev',pricing:'free',upvotes:789,views:3201,clicks:412,avg_rating:4.7,review_count:103,tagline:'Utilitários essenciais para devs'},
+  {name:'SQLPad',slug:'sqlpad',icon:'🗄️',cat:'Dev',pricing:'free',upvotes:512,views:2890,clicks:734,avg_rating:4.8,review_count:67,tagline:'Editor SQL com IA explicativa'},
+  {name:'Resumo.ai',slug:'resumo-ai',icon:'📄',cat:'Prod',pricing:'freemium',upvotes:445,views:2234,clicks:612,avg_rating:4.4,review_count:54,tagline:'Resuma qualquer conteúdo em segundos'},
+  {name:'DesignFlow',slug:'designflow',icon:'🎨',cat:'Design',pricing:'subscription',upvotes:421,views:2103,clicks:356,avg_rating:4.8,review_count:67,tagline:'Design colaborativo para times modernos'},
+  {name:'Logosfera',slug:'logosfera',icon:'✨',cat:'Design',pricing:'paid',upvotes:341,views:1789,clicks:523,avg_rating:4.2,review_count:38,tagline:'Logotipos com IA em minutos'},
+  {name:'FlowAI',slug:'flowai',icon:'🤖',cat:'IA',pricing:'freemium',upvotes:342,views:1204,clicks:287,avg_rating:4.5,review_count:28,tagline:'Automatize fluxos com IA'},
+  {name:'CopyGenius',slug:'copygenius',icon:'✍️',cat:'Mkt',pricing:'freemium',upvotes:287,views:1456,clicks:398,avg_rating:4.3,review_count:41,tagline:'Copies em português com IA'},
+  {name:'FormBlocks',slug:'formblocks',icon:'📋',cat:'Auto',pricing:'freemium',upvotes:278,views:1345,clicks:367,avg_rating:4.1,review_count:29,tagline:'Formulários bonitos sem código'},
+];
+
+function priceBadge(t){
+  return {free:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-free">Grátis</span>',freemium:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-freemium">Freemium</span>',paid:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-paid">Pago</span>',subscription:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-sub">Assinatura</span>'}[t]||'';
+}
+
+function starsHtml(r){
+  return Array.from({length:5},(_,i)=>`<svg width="11" height="11" viewBox="0 0 24 24" fill="${i<Math.round(r||0)?'#fbbf24':'#2d2d3d'}"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join('');
+}
+
+function metricLabel(s, item){
+  const map = {
+    upvotes: `▲ ${item.upvotes.toLocaleString('pt-BR')} upvotes`,
+    views:   `👁 ${item.views.toLocaleString('pt-BR')} views`,
+    clicks:  `🖱 ${item.clicks.toLocaleString('pt-BR')} cliques`,
+    rating:  `⭐ ${Number(item.avg_rating||0).toFixed(1)} / 5 (${item.review_count || 0})`,
+  };
+  return map[s] || '';
+}
+
+function renderPodium(top3){
+  const order = [1,0,2]; // 2º, 1º, 3º no layout
+  const podiumColors = ['rgba(156,163,175,.15)','rgba(251,191,36,.15)','rgba(205,124,47,.15)'];
+  const borderColors = ['rgba(156,163,175,.3)','rgba(251,191,36,.4)','rgba(205,124,47,.3)'];
+  const rankEmoji = ['🥇','🥈','🥉'];
+  const heights = ['h-28','h-36','h-24'];
+
+  return `<div class="col-span-3 grid grid-cols-3 gap-4 items-end">
+    ${order.map(pos => {
+      const s = top3[pos];
+      if(!s) return '<div></div>';
+      return `<a href="saas.html?slug=${s.slug}" class="block rounded-2xl p-4 text-center border transition-all hover:scale-105"
+        style="background:${podiumColors[pos]};border-color:${borderColors[pos]}">
+        <div class="text-2xl mb-1">${rankEmoji[pos]}</div>
+        <div class="text-2xl mb-2">${s.icon}</div>
+        <div class="font-display font-700 text-white text-sm mb-1">${s.name}</div>
+        <div class="text-xs text-gray-400 mb-2">${s.tagline}</div>
+        <div class="text-xs font-500" style="color:${pos===0?'#fbbf24':pos===1?'#4ade80':'#cd7c2f'}">${metricLabel(currentSort,s)}</div>
+      </a>`;
+    }).join('')}
+  </div>`;
+}
+
+function render(sortKey){
+  currentSort = sortKey;
+  const sorted = [...DEMO].sort((a,b)=>(b[sortKey]||0)-(a[sortKey]||0));
+
+  document.getElementById('podium').innerHTML = renderPodium(sorted.slice(0,3));
+
+  document.getElementById('ranking-list').innerHTML = sorted.slice(3).map((s, i) => `
+    <a href="saas.html?slug=${s.slug}" class="row">
+      <span class="rank-num rank-other">${i+4}</span>
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style="background:rgba(255,255,255,.05)">${s.icon}</div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-500 text-white text-sm">${s.name}</span>
+          ${priceBadge(s.pricing)}
+          <span class="text-xs px-1.5 py-0.5 rounded-full text-gray-600" style="background:rgba(255,255,255,.04)">${s.cat}</span>
+        </div>
+        <p class="text-xs text-gray-500 truncate mt-0.5">${s.tagline}</p>
+      </div>
+      <div class="text-right flex-shrink-0">
+        <div class="text-sm font-500 text-white">${metricLabel(sortKey, s).split(' ')[1]||''}</div>
+        <div class="text-xs text-gray-600">${metricLabel(sortKey, s).split(' ')[0]||''}</div>
+      </div>
+      <div class="hidden sm:flex items-center gap-0.5 flex-shrink-0">${starsHtml(s.avg_rating)}</div>
+    </a>`).join('');
+}
+
+function switchTab(key, btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render(key);
+}
+
+// Tenta carregar dados reais
+DB.getSaas({ sort: 'upvotes', order: 'desc', limit: 15 }).then(rows => {
+  if (rows && rows.length) {
+    DEMO.length = 0;
+    rows.forEach(function(s) {
+      DEMO.push({
+        name: s.name, slug: s.slug,
+        icon: s.category_icon || '🔧',
+        cat: s.category_name || '',
+        pricing: s.pricing_type || 'free',
+        upvotes: s.upvotes || 0,
+        views: s.views || 0,
+        clicks: s.clicks || 0,
+        avg_rating: parseFloat(s.avg_rating) || 0,
+        review_count: s.review_count || 0,
+        tagline: s.tagline || ''
+      });
+    });
+  }
+  render('upvotes');
+}).catch(function() { render('upvotes'); });
+</script>
+</body>
+</html>

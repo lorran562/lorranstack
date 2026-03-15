@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Coleções — LorranStack</title>
+  <meta name="description" content="Coleções curadas das melhores ferramentas SaaS por categoria e caso de uso."/>
+  <meta property="og:title" content="Coleções — LorranStack"/>
+  <meta property="og:description" content="Coleções curadas das melhores ferramentas SaaS."/>
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <script src="config.js"></script>
+  <script src="supabase.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme:{extend:{
+        fontFamily:{display:['Syne','sans-serif'],body:['Space Grotesk','sans-serif']},
+        colors:{brand:{400:'#4ade80',500:'#22c55e'}}
+      }}
+    }
+  </script>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:'Space Grotesk',sans-serif;background:#0a0a0f;color:#e8e8f0}
+    .coll-card{background:#111118;border:1px solid rgba(255,255,255,.06);border-radius:20px;transition:transform .2s,border-color .2s,box-shadow .2s;cursor:pointer;text-decoration:none;display:block}
+    .coll-card:hover{transform:translateY(-4px);border-color:rgba(74,222,128,.3);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+    .mini-card{background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.06);border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:8px}
+    .badge-free{background:rgba(74,222,128,.15);color:#4ade80}
+    .badge-freemium{background:rgba(251,191,36,.15);color:#fbbf24}
+    .badge-paid{background:rgba(129,140,248,.15);color:#818cf8}
+    .badge-subscription{background:rgba(251,113,133,.15);color:#fb7185}
+    .hero-grid{background-image:linear-gradient(rgba(74,222,128,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(74,222,128,.04) 1px,transparent 1px);background-size:60px 60px}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#2d2d3d;border-radius:3px}
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav style="background:rgba(10,10,15,.9);border-bottom:1px solid rgba(255,255,255,.05)" class="fixed top-0 inset-x-0 z-50 backdrop-blur-xl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#4ade80,#22c55e)">
+        <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 9L7.5 4.5L9 6L6 9L9 12L7.5 13.5L3 9Z" fill="white"/><path d="M15 9L10.5 4.5L9 6L12 9L9 12L10.5 13.5L15 9Z" fill="white" opacity=".6"/></svg>
+      </div>
+      <span style="font-family:Syne;font-weight:700;color:#fff">Lorran<span style="color:#4ade80">Stack</span></span>
+    </a>
+    <div class="flex items-center gap-3">
+      <a href="explore.html" class="text-sm text-gray-400 hover:text-white transition-colors">Explorar</a>
+      <a href="index.html" class="text-sm px-3 py-1.5 rounded-lg border border-white/10 text-gray-300 hover:border-white/20 transition-colors">Entrar</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero-grid pt-32 pb-16 px-4 relative overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-48 rounded-full opacity-15 blur-3xl" style="background:radial-gradient(ellipse,#4ade80 0%,transparent 70%)"></div>
+  </div>
+  <div class="max-w-3xl mx-auto text-center relative z-10">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-500 mb-5 border" style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.25);color:#4ade80">
+      Curado pela equipe LorranStack
+    </div>
+    <h1 class="font-display text-4xl sm:text-5xl font-800 text-white mb-4">
+      Coleções de ferramentas<br/><span style="color:#4ade80">para cada necessidade</span>
+    </h1>
+    <p class="text-gray-400 text-lg max-w-xl mx-auto">Seleções curadas para você encontrar o SaaS certo mais rápido.</p>
+  </div>
+</section>
+
+<!-- Coleções oficiais -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 pb-10">
+  <div class="flex items-center gap-2 mb-6">
+    <span class="text-lg">⭐</span>
+    <h2 class="font-display text-xl font-700 text-white">Coleções oficiais</h2>
+    <span class="text-xs px-2 py-0.5 rounded-full font-500" style="background:rgba(74,222,128,.15);color:#4ade80">curado pelo time</span>
+  </div>
+  <div id="official-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-14"></div>
+</section>
+
+<!-- Todas as coleções / categorias rápidas -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
+  <h2 class="font-display text-xl font-700 text-white mb-6">Por categoria</h2>
+  <div id="category-collections" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+</section>
+
+<!-- Modal de coleção -->
+<div id="collection-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;align-items:flex-start;justify-content:center;padding-top:80px;overflow-y:auto">
+  <div style="background:#111118;border:1px solid rgba(255,255,255,.1);border-radius:24px;width:100%;max-width:680px;margin:0 16px 40px;position:relative">
+    <button onclick="closeModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#6b7280;font-size:20px;cursor:pointer">✕</button>
+    <div id="modal-content" class="p-8"></div>
+  </div>
+</div>
+
+<script>
+const API = window.API || 'http://localhost:3000/api';
+
+const COLLECTIONS = [
+  {
+    title:'Essenciais para Devs',emoji:'💻',
+    desc:'As ferramentas que todo desenvolvedor deveria conhecer.',
+    color:'rgba(74,222,128,.1)',border:'rgba(74,222,128,.3)',
+    products:[
+      {name:'DevKit Pro',slug:'devkitpro',icon:'💻',pricing:'free',rating:4.7,votes:789},
+      {name:'SQLPad',slug:'sqlpad',icon:'🗄️',pricing:'free',rating:4.8,votes:512},
+      {name:'APIForge',slug:'apiforge',icon:'⚡',pricing:'freemium',rating:4.6,votes:634},
+      {name:'DevDocs BR',slug:'devdocs-br',icon:'📖',pricing:'free',rating:4.9,votes:891},
+    ]
+  },
+  {
+    title:'Stack de Marketing',emoji:'📣',
+    desc:'Tudo para crescer sua presença online.',
+    color:'rgba(251,191,36,.08)',border:'rgba(251,191,36,.25)',
+    products:[
+      {name:'PostScheduler',slug:'postscheduler',icon:'📅',pricing:'freemium',rating:4.0,votes:256},
+      {name:'CopyGenius',slug:'copygenius',icon:'✍️',pricing:'freemium',rating:4.3,votes:287},
+      {name:'FlowAI',slug:'flowai',icon:'🤖',pricing:'freemium',rating:4.5,votes:342},
+    ]
+  },
+  {
+    title:'IA que funciona',emoji:'🤖',
+    desc:'Sem hype — ferramentas de IA com resultado real.',
+    color:'rgba(129,140,248,.08)',border:'rgba(129,140,248,.25)',
+    products:[
+      {name:'FlowAI',slug:'flowai',icon:'🤖',pricing:'freemium',rating:4.5,votes:342},
+      {name:'CopyGenius',slug:'copygenius',icon:'✍️',pricing:'freemium',rating:4.3,votes:287},
+      {name:'Resumo.ai',slug:'resumo-ai',icon:'📄',pricing:'freemium',rating:4.4,votes:445},
+      {name:'Logosfera',slug:'logosfera',icon:'🎨',pricing:'paid',rating:4.2,votes:341},
+    ]
+  },
+  {
+    title:'Ferramentas Gratuitas',emoji:'🆓',
+    desc:'Poder real sem pagar nada.',
+    color:'rgba(29,158,117,.08)',border:'rgba(29,158,117,.3)',
+    products:[
+      {name:'DevKit Pro',slug:'devkitpro',icon:'💻',pricing:'free',rating:4.7,votes:789},
+      {name:'SQLPad',slug:'sqlpad',icon:'🗄️',pricing:'free',rating:4.8,votes:512},
+      {name:'DevDocs BR',slug:'devdocs-br',icon:'📖',pricing:'free',rating:4.9,votes:891},
+      {name:'FlowAI',slug:'flowai',icon:'🤖',pricing:'freemium',rating:4.5,votes:342},
+    ]
+  },
+];
+
+const CATEGORY_COLLECTIONS = [
+  {emoji:'🤖',title:'Inteligência Artificial',slug_filter:'inteligencia-artificial',count:3,desc:'Automação, geração de texto e análise de dados com IA.'},
+  {emoji:'💻',title:'Ferramentas para Devs',slug_filter:'desenvolvimento',count:4,desc:'Editor, SQL, docs e APIs — tudo que dev precisa.'},
+  {emoji:'📣',title:'Marketing Digital',slug_filter:'marketing',count:3,desc:'Agendamento, copy e análise de campanhas.'},
+  {emoji:'🚀',title:'Produtividade',slug_filter:'produtividade',count:3,desc:'Timer, planejador e resumidor para render mais.'},
+  {emoji:'⚡',title:'Automação',slug_filter:'automacao',count:2,desc:'Formulários, pipelines e integrações sem código.'},
+  {emoji:'🎨',title:'Design',slug_filter:'design',count:2,desc:'Logos, UI e identidade visual em minutos.'},
+];
+
+function priceBadge(t){
+  return {free:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-free">Grátis</span>',freemium:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-freemium">Freemium</span>',paid:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-paid">Pago</span>',subscription:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-subscription">Assinatura</span>'}[t]||'';
+}
+
+function stars(r){
+  return Array.from({length:5},(_,i)=>`<svg width="10" height="10" viewBox="0 0 24 24" fill="${i<Math.round(r||0)?'#fbbf24':'#2d2d3d'}"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join('');
+}
+
+function renderOfficialCard(c, idx){
+  const colors = [
+    'rgba(74,222,128,.08)','rgba(251,191,36,.08)',
+    'rgba(129,140,248,.08)','rgba(29,158,117,.08)'
+  ];
+  const borders = [
+    'rgba(74,222,128,.25)','rgba(251,191,36,.2)',
+    'rgba(129,140,248,.2)','rgba(29,158,117,.25)'
+  ];
+  return `
+    <div class="coll-card p-6" style="border-color:${borders[idx%4]};background:${colors[idx%4]}" onclick="openCollection(${idx})">
+      <div class="text-3xl mb-4">${c.emoji}</div>
+      <h3 class="font-display font-700 text-white text-base mb-2">${c.title}</h3>
+      <p class="text-gray-400 text-xs leading-relaxed mb-4">${c.desc}</p>
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-gray-600">${c.products.length} ferramentas</span>
+        <div class="flex -space-x-1">
+          ${c.products.slice(0,3).map(p=>`<div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-700 border border-white/10" style="background:#1a1a24;color:#4ade80">${p.name.charAt(0)}</div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderCategoryCard(c){
+  return `
+    <a href="explore.html?category=${c.slug_filter}" class="coll-card p-6">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="text-2xl">${c.emoji}</span>
+        <div>
+          <h3 class="font-display font-700 text-white text-base">${c.title}</h3>
+          <span class="text-xs text-gray-600">${c.count} ferramentas</span>
+        </div>
+      </div>
+      <p class="text-gray-400 text-sm">${c.desc}</p>
+      <div class="mt-4 text-xs text-brand-400 font-500">Ver coleção →</div>
+    </a>`;
+}
+
+function openCollection(idx){
+  const c = COLLECTIONS[idx];
+  const modal = document.getElementById('collection-modal');
+  document.getElementById('modal-content').innerHTML = `
+    <div class="flex items-center gap-3 mb-6">
+      <span class="text-4xl">${c.emoji}</span>
+      <div>
+        <h2 class="font-display text-2xl font-800 text-white">${c.title}</h2>
+        <p class="text-gray-400 text-sm mt-0.5">${c.desc}</p>
+      </div>
+    </div>
+    <div class="space-y-3">
+      ${c.products.map(p=>`
+        <a href="saas.html?slug=${p.slug}" class="mini-card hover:border-brand-500/30 transition-colors">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style="background:rgba(255,255,255,.05)">${p.icon}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-500 text-white text-sm">${p.name}</span>
+              ${priceBadge(p.pricing)}
+            </div>
+            <div class="flex items-center gap-1 mt-0.5">${stars(p.rating)}<span class="text-xs text-gray-600 ml-1">${p.rating}</span></div>
+          </div>
+          <span class="text-xs text-gray-600">▲ ${p.votes}</span>
+        </a>`).join('')}
+    </div>
+    <div class="mt-6 pt-5 border-t border-white/5">
+      <a href="explore.html" class="text-sm text-brand-400 hover:text-brand-300">Ver todos os SaaS →</a>
+    </div>`;
+  modal.style.display = 'flex';
+}
+
+function closeModal(){
+  document.getElementById('collection-modal').style.display = 'none';
+}
+
+document.getElementById('collection-modal').addEventListener('click', function(e){
+  if(e.target === this) closeModal();
+});
+
+document.getElementById('official-grid').innerHTML = COLLECTIONS.map((c,i)=>renderOfficialCard(c,i)).join('');
+document.getElementById('category-collections').innerHTML = CATEGORY_COLLECTIONS.map(renderCategoryCard).join('');
+// Enriquece com dados reais do banco
+DB.getCollections().then(cols => {
+  if(!cols||!cols.length) return;
+  const grid = document.getElementById('official-grid');
+  const items = cols.map((c,i) => {
+    const emoji = c.cover_emoji || '📦';
+    const count = Array.isArray(c.saas_ids) ? c.saas_ids.length : 0;
+    const colors = ['rgba(74,222,128,.08)','rgba(251,191,36,.08)','rgba(129,140,248,.08)','rgba(29,158,117,.08)'];
+    const borders = ['rgba(74,222,128,.25)','rgba(251,191,36,.2)','rgba(129,140,248,.2)','rgba(29,158,117,.25)'];
+    return '<div class="coll-card p-6" style="border-color:'+borders[i%4]+';background:'+colors[i%4]+'" onclick="openModal('+i+')">'
+      +'<div class="text-3xl mb-4">'+emoji+'</div>'
+      +'<h3 class="font-display font-700 text-white text-base mb-2">'+c.title+'</h3>'
+      +'<p class="text-gray-400 text-xs leading-relaxed mb-4">'+c.description+'</p>'
+      +'<div class="flex items-center justify-between"><span class="text-xs text-gray-600">'+count+' ferramentas</span></div>'
+      +'</div>';
+  });
+  grid.innerHTML = items.join('');
+}).catch(()=>{});
+</script>
+</body>
+</html>
