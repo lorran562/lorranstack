@@ -10,6 +10,7 @@
   <meta name="twitter:card" content="summary_large_image"/>
 
   <script src="config.js"></script>
+  <script src="supabase.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script>tailwind.config={theme:{extend:{fontFamily:{display:['Syne','sans-serif']},colors:{brand:{400:'#4ade80',500:'#22c55e'}}}}}</script>
@@ -184,7 +185,27 @@ function switchTab(key, btn){
   render(key);
 }
 
-render('upvotes');
+// Tenta carregar dados reais
+DB.getSaas({ sort: 'upvotes', order: 'desc', limit: 15 }).then(rows => {
+  if (rows && rows.length) {
+    DEMO.length = 0;
+    rows.forEach(function(s) {
+      DEMO.push({
+        name: s.name, slug: s.slug,
+        icon: s.category_icon || '🔧',
+        cat: s.category_name || '',
+        pricing: s.pricing_type || 'free',
+        upvotes: s.upvotes || 0,
+        views: s.views || 0,
+        clicks: s.clicks || 0,
+        avg_rating: parseFloat(s.avg_rating) || 0,
+        review_count: s.review_count || 0,
+        tagline: s.tagline || ''
+      });
+    });
+  }
+  render('upvotes');
+}).catch(function() { render('upvotes'); });
 </script>
 </body>
 </html>
