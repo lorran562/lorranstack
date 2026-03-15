@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Explorar — LorranStack</title>
   <script src="config.js"></script>
+  <script src="supabase.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script>
@@ -171,8 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Categorias ────────────────────────────────
 async function loadCategories() {
   try {
-    const res = await fetch(`${API}/categories`);
-    const cats = await res.json();
+    const cats = await DB.getCategories();
     const sidebar = document.getElementById('sidebar-cats');
     const mobile = document.getElementById('cat-pills-mobile');
 
@@ -227,8 +227,12 @@ async function loadProducts() {
   if (state.search)   params.set('search', state.search);
 
   try {
-    const res = await fetch(`${API}/saas?${params}`);
-    const data = await res.json();
+    const data_raw = await DB.getSaas({
+      sort: state.sort, page: state.page, limit: 12,
+      category: state.category || undefined,
+      search: state.search || undefined
+    });
+    const data = { data: data_raw, pagination: { total: data_raw.length, page: state.page, limit: 12, pages: Math.ceil(data_raw.length/12)||1 } };
     state.total = data.pagination?.total || 0;
 
     // Filtro de preço (client-side já que a API não tem esse filtro ainda)
