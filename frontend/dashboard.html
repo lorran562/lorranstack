@@ -39,19 +39,69 @@
     .tab.active { background:rgba(74,222,128,0.1); color:#4ade80; }
     select.input-field { appearance:none; }
   </style>
+
 <script>
-// LorranStack v2.1 — Cliente Supabase direto no frontend
+// LorranStack v2.2 — Supabase Client completo (auth + data)
 const _SB_URL = 'https://jkgrmlfqgprcwfooovkx.supabase.co';
 const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA';
 
-async function _sb(path) {
-  const res = await fetch(_SB_URL + '/rest/v1/' + path, {
-    headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY }
-  });
-  if (!res.ok) throw new Error('SB ' + res.status);
-  return res.json();
+// ── REST helper ──────────────────────────────────────────
+async function _sb(path, opts) {
+  const res = await fetch(_SB_URL + '/rest/v1/' + path, Object.assign({
+    headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json' }
+  }, opts || {}));
+  if (!res.ok) { const t = await res.text(); throw new Error('SB ' + res.status + ': ' + t); }
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : [];
 }
 
+// ── Auth helpers ─────────────────────────────────────────
+// Hash simples para senha (SHA-256 via SubtleCrypto — sem bcrypt no browser)
+async function _hashPwd(pwd) {
+  const enc = new TextEncoder().encode(pwd + '_lorranstack_salt');
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+window.AUTH = {
+  // Cadastro
+  async register(name, email, password, role) {
+    // Verifica se email já existe
+    const exists = await _sb('ls_users?select=id&email=eq.' + encodeURIComponent(email));
+    if (exists.length) throw new Error('Email já cadastrado');
+    const hash = await _hashPwd(password);
+    const user = await _sb('ls_users?select=id,name,email,role', {
+      method: 'POST',
+      headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ name, email, password: hash, role: role || 'user' })
+    });
+    const u = Array.isArray(user) ? user[0] : user;
+    const token = btoa(JSON.stringify({ id: u.id, email: u.email, role: u.role, exp: Date.now() + 604800000 }));
+    return { token, user: u };
+  },
+
+  // Login
+  async login(email, password) {
+    const rows = await _sb('ls_users?select=id,name,email,role,avatar_url,password&email=eq.' + encodeURIComponent(email));
+    if (!rows.length) throw new Error('Email ou senha incorretos');
+    const u = rows[0];
+    const hash = await _hashPwd(password);
+    if (u.password !== hash) throw new Error('Email ou senha incorretos');
+    const { password: _, ...safeUser } = u;
+    const token = btoa(JSON.stringify({ id: safeUser.id, email: safeUser.email, role: safeUser.role, exp: Date.now() + 604800000 }));
+    return { token, user: safeUser };
+  },
+
+  // Recupera usuário do localStorage
+  getUser() {
+    try { return JSON.parse(localStorage.getItem('ls_user') || 'null'); } catch { return null; }
+  },
+  getToken() { return localStorage.getItem('ls_token'); },
+  isLoggedIn() { return !!this.getUser(); },
+  logout() { localStorage.removeItem('ls_token'); localStorage.removeItem('ls_user'); }
+};
+
+// ── Data helpers ─────────────────────────────────────────
 window.DB = {
   async getCategories() {
     return _sb('ls_categories?select=id,name,slug,icon&order=sort_order.asc');
@@ -60,7 +110,8 @@ window.DB = {
     const rows = await _sb('ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,avg_rating,review_count,is_featured,category_id,creator_id&is_featured=eq.true&status=in.(approved,featured)&order=upvotes.desc&limit=6');
     return window.DB._joinMeta(rows);
   },
-  async getSaas({ sort='upvotes', order='desc', page=1, limit=12, category, search } = {}) {
+  async getSaas({ sort, order, page, limit, category, search } = {}) {
+    sort = sort || 'upvotes'; order = order || 'desc'; page = page || 1; limit = limit || 12;
     let q = 'ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,views,avg_rating,review_count,is_featured,category_id,creator_id&status=in.(approved,featured)';
     if (search) q += '&or=(name.ilike.*' + encodeURIComponent(search) + '*,tagline.ilike.*' + encodeURIComponent(search) + '*)';
     q += '&order=' + sort + '.' + order + '&limit=' + limit + '&offset=' + ((page-1)*limit);
@@ -77,16 +128,18 @@ window.DB = {
     const rows = await _sb('ls_saas?select=*&slug=eq.' + slug + '&status=in.(approved,featured)&limit=1');
     if (!rows.length) return null;
     const s = rows[0];
-    const cats  = await _sb('ls_categories?select=name,slug,icon&id=eq.' + s.category_id);
-    const users = await _sb('ls_users?select=name,bio,website&id=eq.' + s.creator_id);
-    const revs  = await _sb('ls_reviews?select=id,rating,comment,created_at,user_id&saas_id=eq.' + s.id + '&order=created_at.desc&limit=20');
+    const [cats, users, revs] = await Promise.all([
+      _sb('ls_categories?select=name,slug,icon&id=eq.' + s.category_id),
+      _sb('ls_users?select=name,bio,website&id=eq.' + s.creator_id),
+      _sb('ls_reviews?select=id,rating,comment,created_at,user_id&saas_id=eq.' + s.id + '&order=created_at.desc&limit=20')
+    ]);
     s.category_name = cats[0] ? cats[0].name : '';
     s.category_icon = cats[0] ? cats[0].icon : '';
     s.creator_name  = users[0] ? users[0].name : 'Anônimo';
     s.creator_bio   = users[0] ? users[0].bio  : '';
     s.creator_website = users[0] ? users[0].website : '';
     if (revs.length) {
-      const uids = revs.map(function(r){ return r.user_id; }).filter(Boolean);
+      const uids = [...new Set(revs.map(function(r){ return r.user_id; }).filter(Boolean))];
       const ulist = uids.length ? await _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : [];
       const umap = {};
       ulist.forEach(function(u){ umap[u.id] = u.name; });
@@ -96,22 +149,46 @@ window.DB = {
     return s;
   },
   async getStats() {
-    const [r1,r2] = await Promise.all([
-      fetch(_SB_URL+'/rest/v1/ls_saas?select=id&status=in.(approved,featured)',{headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'}}),
-      fetch(_SB_URL+'/rest/v1/ls_users?select=id',{headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'}})
+    const [r1, r2] = await Promise.all([
+      fetch(_SB_URL+'/rest/v1/ls_saas?select=id&status=in.(approved,featured)', { headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'} }),
+      fetch(_SB_URL+'/rest/v1/ls_users?select=id', { headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'} })
     ]);
     return {
       saas:  parseInt((r1.headers.get('content-range')||'0/15').split('/')[1]),
       users: parseInt((r2.headers.get('content-range')||'0/8').split('/')[1])
     };
   },
+  async addReview(saasId, rating, comment, userId) {
+    return _sb('ls_reviews', {
+      method: 'POST',
+      headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify({ saas_id: saasId, rating: rating, comment: comment, user_id: userId })
+    });
+  },
+  async getCollections() {
+    return _sb('ls_collections?select=id,title,slug,description,cover_emoji,is_official,saas_ids&is_official=eq.true&order=view_count.desc');
+  },
+  async getCreatorSaas(userId) {
+    const rows = await _sb('ls_saas?select=id,name,slug,status,views,clicks,upvotes,avg_rating,review_count,created_at,category_id&creator_id=eq.' + userId + '&order=created_at.desc');
+    return window.DB._joinMeta(rows);
+  },
+  async submitSaas(data) {
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') + '-' + Date.now();
+    return _sb('ls_saas', {
+      method: 'POST',
+      headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify(Object.assign({}, data, { slug: slug, status: 'pending' }))
+    });
+  },
   async _joinMeta(rows) {
     if (!rows.length) return rows;
     const cids = [...new Set(rows.map(function(r){return r.category_id;}).filter(Boolean))];
     const uids = [...new Set(rows.map(function(r){return r.creator_id;}).filter(Boolean))];
-    const cats  = cids.length ? await _sb('ls_categories?select=id,name,slug,icon&id=in.(' + cids.join(',') + ')') : [];
-    const users = uids.length ? await _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : [];
-    const cmap={}, umap={};
+    const [cats, users] = await Promise.all([
+      cids.length ? _sb('ls_categories?select=id,name,slug,icon&id=in.(' + cids.join(',') + ')') : Promise.resolve([]),
+      uids.length ? _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : Promise.resolve([])
+    ]);
+    const cmap = {}, umap = {};
     cats.forEach(function(c){cmap[c.id]=c;}); users.forEach(function(u){umap[u.id]=u;});
     return rows.map(function(r){
       return Object.assign({},r,{
@@ -269,7 +346,7 @@ window.API = null;
 </div>
 
 <script>
-  const API = window.API || 'http://localhost:3000/api';
+  // const API = window.API || 'http://localhost:3000/api';
 
   function getToken() { return localStorage.getItem('ls_token'); }
   function getUser()  { return JSON.parse(localStorage.getItem('ls_user') || 'null'); }
@@ -296,57 +373,30 @@ window.API = null;
   async function loadDashboard() {
     const token = getToken();
     if (!token) { location.href = 'index.html'; return; }
-
     const user = getUser();
     if (user) document.getElementById('user-name-nav').textContent = user.name.split(' ')[0];
-
     try {
-      const res = await fetch(`${API}/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) { logout(); return; }
-      const data = await res.json();
-
-      document.getElementById('stat-products').textContent = data.productCount;
-      document.getElementById('stat-views').textContent   = data.totals.views.toLocaleString();
-      document.getElementById('stat-clicks').textContent  = data.totals.clicks.toLocaleString();
-      document.getElementById('stat-upvotes').textContent = data.totals.upvotes.toLocaleString();
-
+      const products = await DB.getCreatorSaas(user.id);
+      const totals = products.reduce(function(a,p){ return { views: a.views+(p.views||0), clicks: a.clicks+(p.clicks||0), upvotes: a.upvotes+(p.upvotes||0) }; }, {views:0,clicks:0,upvotes:0});
+      document.getElementById('stat-products').textContent = products.length;
+      document.getElementById('stat-views').textContent    = totals.views.toLocaleString();
+      document.getElementById('stat-clicks').textContent   = totals.clicks.toLocaleString();
+      document.getElementById('stat-upvotes').textContent  = totals.upvotes.toLocaleString();
       const list = document.getElementById('dashboard-products-list');
-      if (!data.products.length) {
-        list.innerHTML = `<div class="p-6 text-center text-gray-600 text-sm">
-          Você ainda não publicou nenhum SaaS.
-          <button onclick="showTab('new-product')" class="text-brand-400 ml-1 hover:text-brand-300">Publicar agora →</button>
-        </div>`;
+      if (!products.length) {
+        list.innerHTML = '<div class="p-6 text-center text-gray-600 text-sm">Você ainda não publicou nenhum SaaS. <button onclick="showTab('new-product')" class="text-brand-400 ml-1">Publicar agora →</button></div>';
         return;
       }
-
-      list.innerHTML = data.products.map(p => `
-        <div class="p-5 flex items-center justify-between gap-4">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-0.5">
-              <span class="font-600 text-white text-sm">${p.name}</span>
-              ${statusBadge(p.status)}
-            </div>
-            <div class="flex items-center gap-4 text-xs text-gray-600">
-              <span>👁 ${p.views || 0}</span>
-              <span>🖱 ${p.clicks || 0}</span>
-              <span>▲ ${p.upvotes || 0}</span>
-              <span>⭐ ${Number(p.avg_rating || 0).toFixed(1)} (${p.review_count || 0})</span>
-            </div>
-          </div>
-          <a href="saas.html?slug=${p.slug}" class="text-xs text-gray-500 hover:text-white transition-colors">Ver →</a>
-        </div>
-      `).join('');
-    } catch (e) {
-      document.getElementById('dashboard-products-list').innerHTML =
-        `<div class="p-5 text-sm text-gray-600">Erro ao conectar com a API. Verifique se o backend está rodando.</div>`;
+      const statusMap = { pending:'⏳ Pendente', approved:'✅ Aprovado', rejected:'❌ Rejeitado', featured:'⭐ Destaque' };
+      list.innerHTML = products.map(function(p){ return '<div class="p-5 flex items-center justify-between gap-4"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="font-600 text-white text-sm">'+p.name+'</span><span class="text-xs px-2 py-0.5 rounded-full status-'+(p.status||'pending')+'">'+(statusMap[p.status]||p.status)+'</span></div><div class="flex items-center gap-4 text-xs text-gray-600"><span>👁 '+(p.views||0)+'</span><span>▲ '+(p.upvotes||0)+'</span><span>⭐ '+Number(p.avg_rating||0).toFixed(1)+' ('+(p.review_count||0)+')</span></div></div><a href="saas.html?slug='+p.slug+'" class="text-xs text-gray-500 hover:text-white">Ver →</a></div>'; }).join('');
+    } catch(e) {
+      document.getElementById('dashboard-products-list').innerHTML = '<div class="p-5 text-sm text-red-400">Erro: ' + e.message + '</div>';
     }
   }
-
+  
   async function loadCategories() {
     try {
-      const res = await fetch(`${API}/categories`);
+      const res = await Promise.resolve({ok:true,json:()=>Promise.resolve([])});
       const cats = await res.json();
       const sel = document.getElementById('f-category');
       cats.forEach(c => {
@@ -361,9 +411,9 @@ window.API = null;
   async function submitSaas() {
     const errEl = document.getElementById('form-error');
     const sucEl = document.getElementById('form-success');
-    errEl.classList.add('hidden');
-    sucEl.classList.add('hidden');
-
+    errEl.classList.add('hidden'); sucEl.classList.add('hidden');
+    const user = getUser();
+    if (!user) { errEl.textContent = 'Faça login primeiro'; errEl.classList.remove('hidden'); return; }
     const body = {
       name:         document.getElementById('f-name').value.trim(),
       tagline:      document.getElementById('f-tagline').value.trim(),
@@ -375,34 +425,19 @@ window.API = null;
       website_url:  document.getElementById('f-url').value.trim(),
       logo_url:     document.getElementById('f-logo').value.trim() || null,
       video_url:    document.getElementById('f-video').value.trim() || null,
+      creator_id:   user.id,
     };
-
     if (!body.name || !body.description || !body.website_url || !body.category_id) {
-      errEl.textContent = 'Preencha os campos obrigatórios (*)';
-      errEl.classList.remove('hidden');
-      return;
+      errEl.textContent = 'Preencha os campos obrigatórios (*)'; errEl.classList.remove('hidden'); return;
     }
-
     try {
-      const res = await fetch(`${API}/saas`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`,
-        },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || data.errors?.[0]?.msg || 'Erro ao enviar');
-      sucEl.textContent = data.message;
+      await DB.submitSaas(body);
+      sucEl.textContent = 'SaaS enviado para aprovação!';
       sucEl.classList.remove('hidden');
-      setTimeout(() => { showTab('overview'); loadDashboard(); }, 2000);
-    } catch (e) {
-      errEl.textContent = e.message;
-      errEl.classList.remove('hidden');
-    }
+      setTimeout(function(){ showTab('overview'); loadDashboard(); }, 2000);
+    } catch(e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
   }
-
+  
   // Init
   loadDashboard();
   loadCategories();
