@@ -10,6 +10,7 @@
   <meta name="twitter:card" content="summary_large_image"/>
 
   <script src="config.js"></script>
+  <script src="supabase.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script>
@@ -237,6 +238,24 @@ document.getElementById('collection-modal').addEventListener('click', function(e
 
 document.getElementById('official-grid').innerHTML = COLLECTIONS.map((c,i)=>renderOfficialCard(c,i)).join('');
 document.getElementById('category-collections').innerHTML = CATEGORY_COLLECTIONS.map(renderCategoryCard).join('');
+// Enriquece com dados reais do banco
+DB.getCollections().then(cols => {
+  if(!cols||!cols.length) return;
+  const grid = document.getElementById('official-grid');
+  const items = cols.map((c,i) => {
+    const emoji = c.cover_emoji || '📦';
+    const count = Array.isArray(c.saas_ids) ? c.saas_ids.length : 0;
+    const colors = ['rgba(74,222,128,.08)','rgba(251,191,36,.08)','rgba(129,140,248,.08)','rgba(29,158,117,.08)'];
+    const borders = ['rgba(74,222,128,.25)','rgba(251,191,36,.2)','rgba(129,140,248,.2)','rgba(29,158,117,.25)'];
+    return '<div class="coll-card p-6" style="border-color:'+borders[i%4]+';background:'+colors[i%4]+'" onclick="openModal('+i+')">'
+      +'<div class="text-3xl mb-4">'+emoji+'</div>'
+      +'<h3 class="font-display font-700 text-white text-base mb-2">'+c.title+'</h3>'
+      +'<p class="text-gray-400 text-xs leading-relaxed mb-4">'+c.description+'</p>'
+      +'<div class="flex items-center justify-between"><span class="text-xs text-gray-600">'+count+' ferramentas</span></div>'
+      +'</div>';
+  });
+  grid.innerHTML = items.join('');
+}).catch(()=>{});
 </script>
 </body>
 </html>
