@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — LorranStack</title>
+  <script src="config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family:'Space Grotesk',sans-serif; background:#0a0a0f; color:#e8e8f0; }
+    .card { background:#111118; border:1px solid rgba(255,255,255,0.06); border-radius:16px; }
+    .tab { cursor:pointer; padding:8px 20px; border-radius:10px; font-size:14px; font-weight:500; transition:all 0.2s; color:#6b7280; }
+    .tab.active { background:rgba(74,222,128,0.1); color:#4ade80; }
+    .badge { font-size:11px; padding:3px 8px; border-radius:20px; font-weight:500; }
+    .badge-pending  { background:rgba(251,191,36,0.15); color:#fbbf24; }
+    .badge-approved { background:rgba(74,222,128,0.15); color:#4ade80; }
+    .badge-rejected { background:rgba(239,68,68,0.15); color:#ef4444; }
+    .badge-featured { background:rgba(129,140,248,0.15); color:#818cf8; }
+    .action-btn { font-size:12px; padding:4px 12px; border-radius:8px; cursor:pointer; border:1px solid; transition:all 0.2s; font-family:inherit; font-weight:500; }
+  </style>
+</head>
+<body>
+
+<nav style="background:rgba(10,10,15,0.9); border-bottom:1px solid rgba(255,255,255,0.05);" class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#4ade80,#22c55e);">
+          <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 9L7.5 4.5L9 6L6 9L9 12L7.5 13.5L3 9Z" fill="white"/></svg>
+        </div>
+        <span style="font-family:Syne; font-weight:700; color:white;">Lorran<span style="color:#4ade80">Stack</span></span>
+      </a>
+      <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(239,68,68,0.15);color:#ef4444;">Admin</span>
+    </div>
+    <button onclick="logout()" class="text-sm text-gray-600 hover:text-white transition-colors">Sair</button>
+  </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-6 pt-24 pb-16">
+  <div class="mb-8">
+    <h1 style="font-family:Syne; font-weight:800;" class="text-3xl text-white mb-1">Painel Admin</h1>
+    <p class="text-gray-500 text-sm">Gerenciamento completo da plataforma LorranStack</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex items-center gap-2 mb-8">
+    <div class="tab active" onclick="showTab('stats')">Estatísticas</div>
+    <div class="tab" onclick="showTab('pending')">Pendentes <span id="pending-count" class="ml-1 text-xs px-1.5 py-0.5 rounded-full badge-pending hidden"></span></div>
+    <div class="tab" onclick="showTab('all-saas')">Todos os SaaS</div>
+    <div class="tab" onclick="showTab('users')">Usuários</div>
+  </div>
+
+  <!-- STATS -->
+  <div id="tab-stats">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="card p-5"><p class="text-xs text-gray-500 mb-1">Usuários</p><p class="text-3xl font-display font-700 text-white" id="a-users">—</p></div>
+      <div class="card p-5"><p class="text-xs text-gray-500 mb-1">SaaS ativos</p><p class="text-3xl font-display font-700 text-white" id="a-saas">—</p></div>
+      <div class="card p-5"><p class="text-xs text-gray-500 mb-1">Avaliações</p><p class="text-3xl font-display font-700 text-white" id="a-reviews">—</p></div>
+      <div class="card p-5"><p class="text-xs text-gray-500 mb-1">Pendentes</p><p class="text-3xl font-display font-700 text-white" id="a-pending">—</p></div>
+    </div>
+    <div class="card p-6">
+      <h2 class="font-600 text-white mb-4">Top SaaS por visualizações</h2>
+      <div id="top-saas-list"></div>
+    </div>
+  </div>
+
+  <!-- PENDENTES -->
+  <div id="tab-pending" class="hidden">
+    <div class="card overflow-hidden">
+      <div class="p-5 border-b border-white/5">
+        <h2 class="font-600 text-white">SaaS aguardando aprovação</h2>
+      </div>
+      <div id="pending-list"></div>
+    </div>
+  </div>
+
+  <!-- ALL SAAS -->
+  <div id="tab-all-saas" class="hidden">
+    <div class="card overflow-hidden">
+      <div class="p-5 border-b border-white/5 flex items-center justify-between">
+        <h2 class="font-600 text-white">Todos os SaaS</h2>
+        <select id="status-filter" onchange="loadAllSaas()"
+          class="text-sm px-3 py-1.5 rounded-lg border border-white/10 text-gray-300 outline-none"
+          style="background:rgba(255,255,255,0.04);">
+          <option value="approved">Aprovados</option>
+          <option value="featured">Destaque</option>
+          <option value="pending">Pendentes</option>
+          <option value="rejected">Rejeitados</option>
+          <option value="all">Todos</option>
+        </select>
+      </div>
+      <div id="all-saas-list"></div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div id="tab-users" class="hidden">
+    <div class="card overflow-hidden">
+      <div class="p-5 border-b border-white/5">
+        <h2 class="font-600 text-white">Usuários cadastrados</h2>
+      </div>
+      <div id="users-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = window.API || 'http://localhost:3000/api';
+  function getToken() { return localStorage.getItem('ls_token'); }
+  function logout() { localStorage.clear(); location.href = 'index.html'; }
+
+  function showTab(name) {
+    const tabs = ['stats','pending','all-saas','users'];
+    tabs.forEach((t, i) => {
+      document.getElementById(`tab-${t}`).classList.add('hidden');
+      document.querySelectorAll('.tab')[i].classList.remove('active');
+    });
+    document.getElementById(`tab-${name}`).classList.remove('hidden');
+    document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+    if (name === 'pending') loadPending();
+    if (name === 'all-saas') loadAllSaas();
+    if (name === 'users') loadUsers();
+  }
+
+  function authHeaders() {
+    return { 'Content-Type':'application/json', Authorization:`Bearer ${getToken()}` };
+  }
+
+  async function loadStats() {
+    try {
+      const res = await fetch(`${API}/admin/stats`, { headers: authHeaders() });
+      if (res.status === 403) { alert('Acesso admin necessário'); logout(); return; }
+      const d = await res.json();
+      document.getElementById('a-users').textContent   = d.users;
+      document.getElementById('a-saas').textContent    = d.saas;
+      document.getElementById('a-reviews').textContent = d.reviews;
+      document.getElementById('a-pending').textContent = d.pending;
+
+      if (d.pending > 0) {
+        const badge = document.getElementById('pending-count');
+        badge.textContent = d.pending;
+        badge.classList.remove('hidden');
+      }
+
+      document.getElementById('top-saas-list').innerHTML = d.topSaas.map(s => `
+        <div class="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
+          <span class="text-sm text-white">${s.name}</span>
+          <div class="flex items-center gap-4 text-xs text-gray-500">
+            <span>👁 ${s.views}</span>
+            <span>🖱 ${s.clicks}</span>
+            <span>▲ ${s.upvotes}</span>
+            <span>⭐ ${Number(s.avg_rating||0).toFixed(1)}</span>
+          </div>
+        </div>
+      `).join('');
+    } catch { document.getElementById('a-users').textContent = 'Erro'; }
+  }
+
+  async function loadPending() {
+    const res = await fetch(`${API}/admin/saas/pending`, { headers: authHeaders() });
+    const data = await res.json();
+    const el = document.getElementById('pending-list');
+    if (!data.length) { el.innerHTML = '<div class="p-6 text-center text-gray-600 text-sm">Nenhum SaaS pendente 🎉</div>'; return; }
+    el.innerHTML = data.map(s => `
+      <div class="p-5 border-b border-white/5">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-600 text-white">${s.name}</span>
+              <span class="badge badge-pending">Pendente</span>
+            </div>
+            <p class="text-xs text-gray-500 mb-1">${s.tagline || ''}</p>
+            <p class="text-xs text-gray-600">por ${s.creator_name} (${s.creator_email}) · ${s.category_name || 'Sem categoria'}</p>
+            <a href="${s.website_url}" target="_blank" class="text-xs text-brand-400 hover:text-brand-300 mt-1 block">${s.website_url}</a>
+          </div>
+          <div class="flex flex-col gap-2">
+            <button onclick="updateStatus('${s.id}','approved')"
+              class="action-btn" style="background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.3);color:#4ade80;">
+              ✅ Aprovar
+            </button>
+            <button onclick="updateStatus('${s.id}','featured')"
+              class="action-btn" style="background:rgba(129,140,248,0.1);border-color:rgba(129,140,248,0.3);color:#818cf8;">
+              ⭐ Destaque
+            </button>
+            <button onclick="updateStatus('${s.id}','rejected')"
+              class="action-btn" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#ef4444;">
+              ❌ Rejeitar
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function updateStatus(id, status) {
+    const res = await fetch(`${API}/admin/saas/${id}/status`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) { loadPending(); loadStats(); }
+  }
+
+  async function deleteSaas(id) {
+    if (!confirm('Remover este SaaS permanentemente?')) return;
+    await fetch(`${API}/admin/saas/${id}`, { method: 'DELETE', headers: authHeaders() });
+    loadAllSaas();
+  }
+
+  async function loadAllSaas() {
+    const status = document.getElementById('status-filter').value;
+    const params = status === 'all' ? 'status=all&limit=50' : `status=${status}&limit=50`;
+    const res = await fetch(`${API}/saas?${params}`, { headers: authHeaders() });
+    const data = await res.json();
+    const el = document.getElementById('all-saas-list');
+    if (!data.data?.length) { el.innerHTML = '<div class="p-5 text-center text-gray-600 text-sm">Nenhum resultado</div>'; return; }
+    el.innerHTML = data.data.map(s => `
+      <div class="p-4 border-b border-white/5 flex items-center justify-between gap-4">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-0.5">
+            <span class="font-500 text-white text-sm">${s.name}</span>
+            <span class="badge badge-${s.status}">${s.status}</span>
+          </div>
+          <p class="text-xs text-gray-600">${s.creator_name} · ${s.category_name || '—'} · ▲${s.upvotes} · 👁${s.views}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="updateStatus('${s.id}','featured')"
+            class="action-btn" style="background:transparent;border-color:rgba(129,140,248,0.3);color:#818cf8;">⭐</button>
+          <button onclick="deleteSaas('${s.id}')"
+            class="action-btn" style="background:transparent;border-color:rgba(239,68,68,0.3);color:#ef4444;">🗑</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function loadUsers() {
+    const res = await fetch(`${API}/admin/users`, { headers: authHeaders() });
+    const data = await res.json();
+    const el = document.getElementById('users-list');
+    el.innerHTML = data.map(u => `
+      <div class="p-4 border-b border-white/5 flex items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-0.5">
+            <span class="font-500 text-white text-sm">${u.name}</span>
+            <span class="badge ${u.role === 'admin' ? 'badge-rejected' : u.role === 'creator' ? 'badge-featured' : 'badge-approved'}">${u.role}</span>
+          </div>
+          <p class="text-xs text-gray-600">${u.email} · ${u.saas_count} produtos · ${new Date(u.created_at).toLocaleDateString('pt-BR')}</p>
+        </div>
+        <select onchange="updateUserRole('${u.id}', this.value)"
+          class="text-xs px-2 py-1 rounded-lg border border-white/10 text-gray-400 outline-none"
+          style="background:rgba(255,255,255,0.04);">
+          <option ${u.role==='user'?'selected':''} value="user">user</option>
+          <option ${u.role==='creator'?'selected':''} value="creator">creator</option>
+          <option ${u.role==='admin'?'selected':''} value="admin">admin</option>
+        </select>
+      </div>
+    `).join('');
+  }
+
+  async function updateUserRole(id, role) {
+    await fetch(`${API}/admin/users/${id}/role`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ role }),
+    });
+  }
+
+  // Init
+  const user = JSON.parse(localStorage.getItem('ls_user') || '{}');
+  if (user.role !== 'admin') {
+    alert('Acesso restrito a administradores.');
+    location.href = 'index.html';
+  } else {
+    loadStats();
+  }
+</script>
+</body>
+</html>
