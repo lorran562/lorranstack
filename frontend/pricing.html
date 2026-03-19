@@ -481,8 +481,8 @@ footer {
   <a href="ranking.html" class="nav-link">Ranking</a>
   <a href="pricing.html" class="nav-link" style="color:var(--text)">Planos</a>
   <div class="nav-cta">
-    <a href="index.html#login" class="btn-ghost">Entrar</a>
-    <a href="index.html#cadastro" class="btn-primary">Começar grátis</a>
+    <a href="index.html" onclick="sessionStorage.setItem('openModal','login-modal')" class="btn-ghost">Entrar</a>
+    <a href="index.html" onclick="sessionStorage.setItem('openModal','register-modal')" class="btn-primary">Começar grátis</a>
   </div>
 </nav>
 
@@ -526,7 +526,7 @@ footer {
       <li><span class="feat-icon">✓</span> Receber reviews e upvotes</li>
       <li><span class="feat-icon">✓</span> Badge Creator na plataforma</li>
     </ul>
-    <a href="index.html#cadastro" class="plan-btn outline">Começar grátis</a>
+    <a href="index.html" onclick="sessionStorage.setItem('openModal','register-modal')" class="plan-btn outline">Começar grátis</a>
   </div>
 
   <!-- CREATOR PRO — DESTAQUE -->
@@ -662,7 +662,7 @@ footer {
       Upgrades a qualquer momento quando precisar de mais.
     </p>
     <div class="cta-buttons">
-      <a href="index.html#cadastro" class="btn-primary" style="padding:.7rem 1.6rem;font-size:.95rem">
+      <a href="index.html" onclick="sessionStorage.setItem('openModal','register-modal')" class="btn-primary" style="padding:.7rem 1.6rem;font-size:.95rem">
         Criar conta grátis
       </a>
       <a href="index.html" class="btn-ghost" style="padding:.7rem 1.4rem;font-size:.95rem">

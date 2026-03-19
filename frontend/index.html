@@ -974,6 +974,13 @@ window.API = null;
     loadFeatured();
     loadProducts();
 
+    // Abrir modal se veio de outra página (ex: pricing.html)
+    const pendingModal = sessionStorage.getItem('openModal');
+    if (pendingModal) {
+      sessionStorage.removeItem('openModal');
+      setTimeout(() => openModal(pendingModal), 300);
+    }
+
     // Carregar contadores reais do banco
     DB.getStats().then(stats => {
       const elSaas  = document.getElementById('stat-saas');
