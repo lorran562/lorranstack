@@ -3,11 +3,35 @@
   "name": "lorranstack",
   "builds": [
     {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "frontend/**",
       "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/api/create-checkout",
+      "dest": "/api/create-checkout.js"
+    },
+    {
+      "src": "/api/stripe-webhook",
+      "dest": "/api/stripe-webhook.js"
+    },
+    {
+      "src": "/stripe-checkout.js",
+      "dest": "/frontend/stripe-checkout.js"
+    },
+    {
+      "src": "/pricing.html",
+      "dest": "/frontend/pricing.html"
+    },
+    {
+      "src": "/pricing",
+      "dest": "/frontend/pricing.html"
+    },
     {
       "src": "/supabase.js",
       "dest": "/frontend/supabase.js"

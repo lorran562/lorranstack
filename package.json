@@ -1,0 +1,9 @@
+{
+  "name": "lorranstack",
+  "version": "2.2.0",
+  "description": "Marketplace de SaaS em português",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "stripe": "^14.18.0"
+  }
+}
