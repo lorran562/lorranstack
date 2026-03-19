@@ -209,7 +209,7 @@ window.API = null;
 <!-- Navbar -->
 <nav style="background:rgba(10,10,15,0.9); border-bottom:1px solid rgba(255,255,255,0.05);" class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl">
   <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-    <a href="index.html" class="flex items-center gap-2">
+    <a href="/" class="flex items-center gap-2">
       <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#4ade80,#22c55e);">
         <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 9L7.5 4.5L9 6L6 9L9 12L7.5 13.5L3 9Z" fill="white"/><path d="M15 9L10.5 4.5L9 6L12 9L9 12L10.5 13.5L15 9Z" fill="white" opacity="0.6"/></svg>
       </div>
@@ -217,7 +217,7 @@ window.API = null;
     </a>
     <div class="flex items-center gap-4">
       <a href="pricing.html" class="text-sm text-green-400 hover:text-green-300 transition-colors border border-green-400/30 px-3 py-1 rounded-full hover:border-green-400/60">💎 Planos</a>
-      <a href="index.html" class="text-sm text-gray-400 hover:text-white transition-colors">Explorar</a>
+      <a href="/" class="text-sm text-gray-400 hover:text-white transition-colors">Explorar</a>
       <span class="text-sm text-gray-400" id="user-name-nav">Dashboard</span>
       <button onclick="logout()" class="text-sm text-gray-600 hover:text-white transition-colors">Sair</button>
     </div>
@@ -355,7 +355,7 @@ window.API = null;
 
   function logout() {
     localStorage.clear();
-    location.href = 'index.html';
+    location.href = '/';
   }
 
   function showTab(name) {
@@ -374,7 +374,7 @@ window.API = null;
 
   async function loadDashboard() {
     const token = getToken();
-    if (!token) { location.href = 'index.html'; return; }
+    if (!token) { location.href = '/'; return; }
     const user = getUser();
     if (user) document.getElementById('user-name-nav').textContent = user.name.split(' ')[0];
     try {

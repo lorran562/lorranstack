@@ -25,7 +25,7 @@ async function startCheckout(planSlug, saasId = null) {
   // Se não está logado, redirecionar para cadastro
   if (!user) {
     const returnUrl = encodeURIComponent(`/pricing.html?plan=${planSlug}`);
-    sessionStorage.setItem('openModal','register-modal'); window.location.href = '/index.html';
+    sessionStorage.setItem('openModal','register-modal'); window.location.href = '/';
     return;
   }
 

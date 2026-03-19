@@ -74,12 +74,21 @@ const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 
 // ── REST helper ──────────────────────────────────────────
 async function _sb(path, opts) {
-  const res = await fetch(_SB_URL + '/rest/v1/' + path, Object.assign({
-    headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json' }
-  }, opts || {}));
-  if (!res.ok) { const t = await res.text(); throw new Error('SB ' + res.status + ': ' + t); }
-  const txt = await res.text();
-  return txt ? JSON.parse(txt) : [];
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(_SB_URL + '/rest/v1/' + path, Object.assign({
+      headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json' },
+      signal: controller.signal
+    }, opts || {}));
+    clearTimeout(timer);
+    if (!res.ok) { const t = await res.text(); throw new Error('SB ' + res.status + ': ' + t); }
+    const txt = await res.text();
+    return txt ? JSON.parse(txt) : [];
+  } catch(e) {
+    clearTimeout(timer);
+    throw e;
+  }
 }
 
 // ── Auth helpers ─────────────────────────────────────────
@@ -236,7 +245,7 @@ window.API = null;
 <!-- Navbar -->
 <nav style="background:rgba(10,10,15,.9);border-bottom:1px solid rgba(255,255,255,.05);" class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-    <a href="index.html" class="flex items-center gap-2">
+    <a href="/" class="flex items-center gap-2">
       <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#4ade80,#22c55e);">
         <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 9L7.5 4.5L9 6L6 9L9 12L7.5 13.5L3 9Z" fill="white"/><path d="M15 9L10.5 4.5L9 6L12 9L9 12L10.5 13.5L15 9Z" fill="white" opacity=".6"/></svg>
       </div>
@@ -255,7 +264,7 @@ window.API = null;
 <!-- Breadcrumb -->
 <div class="pt-20 pb-0 px-4 sm:px-6 max-w-7xl mx-auto">
   <nav class="flex items-center gap-2 text-sm text-gray-600 py-3">
-    <a href="index.html" class="hover:text-white transition-colors">Início</a>
+    <a href="/" class="hover:text-white transition-colors">Início</a>
     <span>›</span>
     <a href="explore.html" class="text-sm text-gray-400 hover:text-white transition-colors">Explorar</a>
     <span>›</span>
@@ -461,7 +470,7 @@ window.API = null;
   <div class="text-5xl mb-4">😕</div>
   <h2 class="font-display text-2xl font-700 text-white mb-2">SaaS não encontrado</h2>
   <p class="text-gray-500 text-sm mb-6">Este produto não existe ou foi removido.</p>
-  <a href="index.html" class="btn-primary inline-block">Voltar ao início</a>
+  <a href="/" class="btn-primary inline-block">Voltar ao início</a>
 </div>
 
 <!-- Modal login simples -->
@@ -476,7 +485,7 @@ window.API = null;
       <input id="lm-password" type="password" placeholder="Senha" class="input-field"/>
       <button onclick="handleModalLogin()" class="btn-primary w-full">Entrar</button>
     </div>
-    <p class="text-xs text-center text-gray-600 mt-4">Não tem conta? <a href="index.html" class="text-brand-400">Cadastre-se</a></p>
+    <p class="text-xs text-center text-gray-600 mt-4">Não tem conta? <a href="/" class="text-brand-400">Cadastre-se</a></p>
   </div>
 </div>
 
@@ -527,8 +536,9 @@ async function loadSaas(slug) {
     saasData = data;
     currentSaasId = data.id;
     renderSaas(data);
-  } catch {
-    renderDemoSaas();
+  } catch(err) {
+    console.error('[LorranStack] Erro:', err.message);
+    showError();
   }
 }
 
