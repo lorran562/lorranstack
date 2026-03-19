@@ -161,7 +161,9 @@ window.DB = {
     return joined;
   },
   async getSaasBySlug(slug) {
-    const rows = await _sb('ls_saas?select=*&slug=eq.' + slug + '&status=in.(approved,featured)&limit=1');
+    console.log('[DB] Buscando produto:', slug);
+    const rows = await _sb('ls_saas?select=*&slug=eq.' + encodeURIComponent(slug) + '&status=in.(approved,featured)&limit=1');
+    console.log('[DB] Resultado:', rows.length, 'produto(s)');
     if (!rows.length) return null;
     const s = rows[0];
     const [cats, users, revs] = await Promise.all([
@@ -738,7 +740,7 @@ function registerClick() {
       headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json'},
       body: JSON.stringify({clicks: (saasData.clicks||0)+1})
     }).catch(function(){});
-  }/saas/${currentSaasId}/click`, { method:'POST' }).catch(()=>{});
+  }
 }
 
 // ── Share ─────────────────────────────────────
