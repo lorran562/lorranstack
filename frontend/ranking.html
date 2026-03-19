@@ -228,7 +228,7 @@ function renderPodium(top3){
     ${order.map(pos => {
       const s = top3[pos];
       if(!s) return '<div></div>';
-      return `<a href="saas.html?slug=${s.slug}" class="block rounded-2xl p-4 text-center border transition-all hover:scale-105"
+      return `<a href="produto.html?slug=${s.slug}" class="block rounded-2xl p-4 text-center border transition-all hover:scale-105"
         style="background:${podiumColors[pos]};border-color:${borderColors[pos]}">
         <div class="text-2xl mb-1">${rankEmoji[pos]}</div>
         <div class="text-2xl mb-2">${s.icon}</div>
@@ -247,7 +247,7 @@ function render(sortKey){
   document.getElementById('podium').innerHTML = renderPodium(sorted.slice(0,3));
 
   document.getElementById('ranking-list').innerHTML = sorted.slice(3).map((s, i) => `
-    <a href="saas.html?slug=${s.slug}" class="row">
+    <a href="produto.html?slug=${s.slug}" class="row">
       <span class="rank-num rank-other">${i+4}</span>
       <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style="background:rgba(255,255,255,.05)">${s.icon}</div>
       <div class="flex-1 min-w-0">

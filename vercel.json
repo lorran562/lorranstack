@@ -53,6 +53,10 @@
       "dest": "/frontend/saas.html"
     },
     {
+      "src": "/produto.html",
+      "dest": "/frontend/produto.html"
+    },
+    {
       "src": "/collections.html",
       "dest": "/frontend/collections.html"
     },

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LorranStack — SaaS</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { display: ['Syne','sans-serif'], body: ['Space Grotesk','sans-serif'] },
+          colors: { brand: { 400:'#4ade80', 500:'#22c55e', 600:'#16a34a' } }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family:'Space Grotesk',sans-serif; background:#0a0a0f; color:#e8e8f0; }
+    .card { background:#111118; border:1px solid rgba(255,255,255,0.06); border-radius:16px; }
+    .input-field {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+      border-radius:12px; padding:12px 16px; color:#e8e8f0; width:100%;
+      outline:none; transition:border-color .2s; font-family:inherit; font-size:14px;
+    }
+    .input-field:focus { border-color:#4ade80; }
+    .btn-primary {
+      background:linear-gradient(135deg,#4ade80,#22c55e); color:#0a0a0f;
+      font-weight:600; padding:12px 28px; border-radius:12px; border:none;
+      cursor:pointer; font-size:14px; font-family:inherit; transition:all .2s;
+    }
+    .btn-primary:hover { opacity:.9; transform:translateY(-1px); }
+    .btn-outline {
+      background:transparent; border:1px solid rgba(255,255,255,0.15); color:#d1d5db;
+      font-weight:500; padding:12px 28px; border-radius:12px;
+      cursor:pointer; font-size:14px; font-family:inherit; transition:all .2s;
+    }
+    .btn-outline:hover { border-color:rgba(74,222,128,.5); color:#4ade80; }
+    .badge-free        { background:rgba(74,222,128,.15); color:#4ade80; }
+    .badge-freemium    { background:rgba(251,191,36,.15); color:#fbbf24; }
+    .badge-paid        { background:rgba(129,140,248,.15); color:#818cf8; }
+    .badge-subscription{ background:rgba(251,113,133,.15); color:#fb7185; }
+    .screenshot-thumb {
+      cursor:pointer; border-radius:10px; overflow:hidden;
+      border:2px solid transparent; transition:border-color .2s;
+    }
+    .screenshot-thumb:hover, .screenshot-thumb.active { border-color:#4ade80; }
+    .star-btn { font-size:24px; cursor:pointer; transition:transform .15s; line-height:1; }
+    .star-btn:hover { transform:scale(1.2); }
+    .review-card { background:rgba(255,255,255,0.03); border-radius:12px; padding:16px; }
+    .upvote-btn {
+      display:flex; align-items:center; gap:8px;
+      padding:10px 20px; border-radius:12px; border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.04); cursor:pointer; font-family:inherit;
+      font-size:14px; font-weight:600; color:#e8e8f0;
+      transition:all .2s;
+    }
+    .upvote-btn:hover, .upvote-btn.upvoted {
+      border-color:rgba(74,222,128,.5); background:rgba(74,222,128,.1); color:#4ade80;
+    }
+    .skeleton { background:linear-gradient(90deg,#111118 25%,#1a1a24 50%,#111118 75%); background-size:200%; animation:shimmer 1.4s infinite; border-radius:8px; }
+    @keyframes shimmer { 0%{background-position:200%} 100%{background-position:-200%} }
+    ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:#111118; }
+    ::-webkit-scrollbar-thumb { background:#2d2d3d; border-radius:3px; }
+  </style>
+
+<script>
+// LorranStack v2.2 — Supabase Client completo (auth + data)
+const _SB_URL = 'https://jkgrmlfqgprcwfooovkx.supabase.co';
+const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA';
+
+// ── REST helper ──────────────────────────────────────────
+async function _sb(path, opts) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(_SB_URL + '/rest/v1/' + path, Object.assign({
+      headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json' },
+      signal: controller.signal
+    }, opts || {}));
+    clearTimeout(timer);
+    if (!res.ok) { const t = await res.text(); throw new Error('SB ' + res.status + ': ' + t); }
+    const txt = await res.text();
+    return txt ? JSON.parse(txt) : [];
+  } catch(e) {
+    clearTimeout(timer);
+    throw e;
+  }
+}
+
+// ── Auth helpers ─────────────────────────────────────────
+// Hash simples para senha (SHA-256 via SubtleCrypto — sem bcrypt no browser)
+async function _hashPwd(pwd) {
+  const enc = new TextEncoder().encode(pwd + '_lorranstack_salt');
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+window.AUTH = {
+  // Cadastro
+  async register(name, email, password, role) {
+    // Verifica se email já existe
+    const exists = await _sb('ls_users?select=id&email=eq.' + encodeURIComponent(email));
+    if (exists.length) throw new Error('Email já cadastrado');
+    const hash = await _hashPwd(password);
+    const user = await _sb('ls_users?select=id,name,email,role', {
+      method: 'POST',
+      headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ name, email, password: hash, role: role || 'user' })
+    });
+    const u = Array.isArray(user) ? user[0] : user;
+    const token = btoa(JSON.stringify({ id: u.id, email: u.email, role: u.role, exp: Date.now() + 604800000 }));
+    return { token, user: u };
+  },
+
+  // Login
+  async login(email, password) {
+    const rows = await _sb('ls_users?select=id,name,email,role,avatar_url,password&email=eq.' + encodeURIComponent(email));
+    if (!rows.length) throw new Error('Email ou senha incorretos');
+    const u = rows[0];
+    const hash = await _hashPwd(password);
+    if (u.password !== hash) throw new Error('Email ou senha incorretos');
+    const { password: _, ...safeUser } = u;
+    const token = btoa(JSON.stringify({ id: safeUser.id, email: safeUser.email, role: safeUser.role, exp: Date.now() + 604800000 }));
+    return { token, user: safeUser };
+  },
+
+  // Recupera usuário do localStorage
+  getUser() {
+    try { return JSON.parse(localStorage.getItem('ls_user') || 'null'); } catch { return null; }
+  },
+  getToken() { return localStorage.getItem('ls_token'); },
+  isLoggedIn() { return !!this.getUser(); },
+  logout() { localStorage.removeItem('ls_token'); localStorage.removeItem('ls_user'); }
+};
+
+// ── Data helpers ─────────────────────────────────────────
+window.DB = {
+  async getCategories() {
+    return _sb('ls_categories?select=id,name,slug,icon&order=sort_order.asc');
+  },
+  async getFeatured() {
+    const rows = await _sb('ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,avg_rating,review_count,is_featured,category_id,creator_id&is_featured=eq.true&status=in.(approved,featured)&order=upvotes.desc&limit=6');
+    return window.DB._joinMeta(rows);
+  },
+  async getSaas({ sort, order, page, limit, category, search } = {}) {
+    sort = sort || 'upvotes'; order = order || 'desc'; page = page || 1; limit = limit || 12;
+    let q = 'ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,views,avg_rating,review_count,is_featured,category_id,creator_id&status=in.(approved,featured)';
+    if (search) q += '&or=(name.ilike.*' + encodeURIComponent(search) + '*,tagline.ilike.*' + encodeURIComponent(search) + '*)';
+    q += '&order=' + sort + '.' + order + '&limit=' + limit + '&offset=' + ((page-1)*limit);
+    const rows = await _sb(q);
+    const joined = await window.DB._joinMeta(rows);
+    if (category) {
+      const cats = await window.DB.getCategories();
+      const cat = cats.find(function(c){ return c.slug === category; });
+      if (cat) return joined.filter(function(r){ return r.category_id === cat.id; });
+    }
+    return joined;
+  },
+  async getSaasBySlug(slug) {
+    const rows = await _sb('ls_saas?select=*&slug=eq.' + slug + '&status=in.(approved,featured)&limit=1');
+    if (!rows.length) return null;
+    const s = rows[0];
+    const [cats, users, revs] = await Promise.all([
+      _sb('ls_categories?select=name,slug,icon&id=eq.' + s.category_id),
+      _sb('ls_users?select=name,bio,website&id=eq.' + s.creator_id),
+      _sb('ls_reviews?select=id,rating,comment,created_at,user_id&saas_id=eq.' + s.id + '&order=created_at.desc&limit=20')
+    ]);
+    s.category_name = cats[0] ? cats[0].name : '';
+    s.category_icon = cats[0] ? cats[0].icon : '';
+    s.creator_name  = users[0] ? users[0].name : 'Anônimo';
+    s.creator_bio   = users[0] ? users[0].bio  : '';
+    s.creator_website = users[0] ? users[0].website : '';
+    if (revs.length) {
+      const uids = [...new Set(revs.map(function(r){ return r.user_id; }).filter(Boolean))];
+      const ulist = uids.length ? await _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : [];
+      const umap = {};
+      ulist.forEach(function(u){ umap[u.id] = u.name; });
+      revs.forEach(function(r){ r.user_name = umap[r.user_id] || 'Usuário'; });
+    }
+    s.reviews = revs;
+    return s;
+  },
+  async getStats() {
+    const [r1, r2] = await Promise.all([
+      fetch(_SB_URL+'/rest/v1/ls_saas?select=id&status=in.(approved,featured)', { headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'} }),
+      fetch(_SB_URL+'/rest/v1/ls_users?select=id', { headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'} })
+    ]);
+    return {
+      saas:  parseInt((r1.headers.get('content-range')||'0/15').split('/')[1]),
+      users: parseInt((r2.headers.get('content-range')||'0/8').split('/')[1])
+    };
+  },
+  async addReview(saasId, rating, comment, userId) {
+    return _sb('ls_reviews', {
+      method: 'POST',
+      headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify({ saas_id: saasId, rating: rating, comment: comment, user_id: userId })
+    });
+  },
+  async getCollections() {
+    return _sb('ls_collections?select=id,title,slug,description,cover_emoji,is_official,saas_ids&is_official=eq.true&order=view_count.desc');
+  },
+  async getCreatorSaas(userId) {
+    const rows = await _sb('ls_saas?select=id,name,slug,status,views,clicks,upvotes,avg_rating,review_count,created_at,category_id&creator_id=eq.' + userId + '&order=created_at.desc');
+    return window.DB._joinMeta(rows);
+  },
+  async submitSaas(data) {
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') + '-' + Date.now();
+    return _sb('ls_saas', {
+      method: 'POST',
+      headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify(Object.assign({}, data, { slug: slug, status: 'pending' }))
+    });
+  },
+  async _joinMeta(rows) {
+    if (!rows.length) return rows;
+    const cids = [...new Set(rows.map(function(r){return r.category_id;}).filter(Boolean))];
+    const uids = [...new Set(rows.map(function(r){return r.creator_id;}).filter(Boolean))];
+    const [cats, users] = await Promise.all([
+      cids.length ? _sb('ls_categories?select=id,name,slug,icon&id=in.(' + cids.join(',') + ')') : Promise.resolve([]),
+      uids.length ? _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : Promise.resolve([])
+    ]);
+    const cmap = {}, umap = {};
+    cats.forEach(function(c){cmap[c.id]=c;}); users.forEach(function(u){umap[u.id]=u;});
+    return rows.map(function(r){
+      return Object.assign({},r,{
+        category_name: cmap[r.category_id] ? cmap[r.category_id].name : '',
+        category_icon: cmap[r.category_id] ? cmap[r.category_id].icon : '',
+        category_slug: cmap[r.category_id] ? cmap[r.category_id].slug : '',
+        creator_name:  umap[r.creator_id]  ? umap[r.creator_id].name  : 'Anônimo',
+      });
+    });
+  }
+};
+window.API = null;
+
+</script>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav style="background:rgba(10,10,15,.9);border-bottom:1px solid rgba(255,255,255,.05);" class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#4ade80,#22c55e);">
+        <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 9L7.5 4.5L9 6L6 9L9 12L7.5 13.5L3 9Z" fill="white"/><path d="M15 9L10.5 4.5L9 6L12 9L9 12L10.5 13.5L15 9Z" fill="white" opacity=".6"/></svg>
+      </div>
+      <span style="font-family:Syne;font-weight:700;color:white;">Lorran<span style="color:#4ade80">Stack</span></span>
+    </a>
+    <div class="flex items-center gap-3">
+      <a href="explore.html" class="text-sm text-gray-400 hover:text-white transition-colors">Explorar</a>
+      <a href="pricing.html" class="hidden md:block text-sm font-semibold text-green-400 hover:text-green-300 transition-colors border border-green-400/30 px-3 py-1 rounded-full">💎 Planos</a>
+      <div id="nav-auth-area">
+        <button onclick="openLoginModal()" class="text-sm px-3 py-1.5 rounded-lg border border-white/10 text-gray-300 hover:border-white/20 transition-colors">Entrar</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Breadcrumb -->
+<div class="pt-20 pb-0 px-4 sm:px-6 max-w-7xl mx-auto">
+  <nav class="flex items-center gap-2 text-sm text-gray-600 py-3">
+    <a href="/" class="hover:text-white transition-colors">Início</a>
+    <span>›</span>
+    <a href="explore.html" class="text-sm text-gray-400 hover:text-white transition-colors">Explorar</a>
+    <span>›</span>
+    <span id="bc-category" class="hover:text-white transition-colors cursor-pointer"></span>
+    <span>›</span>
+    <span id="bc-name" class="text-gray-400"></span>
+  </nav>
+</div>
+
+<!-- LOADING SKELETON - deploy 20260319212813 -->
+<div id="skeleton-view" class="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-6">
+      <div class="flex items-start gap-4">
+        <div class="skeleton w-20 h-20 rounded-2xl flex-shrink-0"></div>
+        <div class="flex-1 space-y-3">
+          <div class="skeleton h-7 w-48 rounded"></div>
+          <div class="skeleton h-4 w-72 rounded"></div>
+          <div class="skeleton h-4 w-32 rounded"></div>
+        </div>
+      </div>
+      <div class="skeleton h-48 rounded-2xl"></div>
+      <div class="space-y-2">
+        <div class="skeleton h-4 w-full rounded"></div>
+        <div class="skeleton h-4 w-5/6 rounded"></div>
+        <div class="skeleton h-4 w-4/6 rounded"></div>
+      </div>
+    </div>
+    <div class="space-y-4">
+      <div class="skeleton h-40 rounded-2xl"></div>
+      <div class="skeleton h-32 rounded-2xl"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTEÚDO PRINCIPAL (oculto até carregar) -->
+<div id="main-content" class="hidden max-w-7xl mx-auto px-4 sm:px-6 pb-16">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- ── COLUNA ESQUERDA (2/3) ── -->
+    <div class="lg:col-span-2 space-y-8">
+
+      <!-- Header do produto -->
+      <div class="flex flex-col sm:flex-row sm:items-start gap-5">
+        <div id="saas-logo" class="w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 text-3xl font-display font-800 border border-white/8"
+             style="background:rgba(255,255,255,0.05);"></div>
+        <div class="flex-1">
+          <div class="flex flex-wrap items-center gap-3 mb-1">
+            <h1 id="saas-name" class="font-display text-3xl font-800 text-white"></h1>
+            <span id="saas-featured-badge" class="hidden text-xs px-2 py-0.5 rounded-full font-500" style="background:rgba(74,222,128,.15);color:#4ade80;">⭐ Destaque</span>
+          </div>
+          <p id="saas-tagline" class="text-gray-400 text-base mb-3"></p>
+          <div class="flex flex-wrap items-center gap-4">
+            <span id="saas-category-badge" class="text-sm text-gray-500"></span>
+            <div class="flex items-center gap-1" id="saas-stars-display"></div>
+            <span id="saas-review-count" class="text-sm text-gray-600"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screenshots / Media -->
+      <div id="media-section" class="hidden">
+        <div id="main-screenshot" class="w-full rounded-2xl overflow-hidden mb-3 border border-white/5" style="background:#111118;min-height:300px;">
+          <img id="main-img" src="" alt="Screenshot" class="w-full object-cover rounded-2xl"/>
+        </div>
+        <div id="thumbs-row" class="flex gap-3 overflow-x-auto pb-1"></div>
+      </div>
+
+      <!-- Vídeo embed -->
+      <div id="video-section" class="hidden">
+        <h2 class="font-display font-700 text-white text-xl mb-4">Demonstração</h2>
+        <div class="rounded-2xl overflow-hidden border border-white/5" style="aspect-ratio:16/9;">
+          <iframe id="video-frame" width="100%" height="100%" frameborder="0" allowfullscreen
+            style="display:block;"></iframe>
+        </div>
+      </div>
+
+      <!-- Descrição -->
+      <div>
+        <h2 class="font-display font-700 text-white text-xl mb-4">Sobre o produto</h2>
+        <div id="saas-description" class="text-gray-400 text-sm leading-relaxed whitespace-pre-line"></div>
+      </div>
+
+      <!-- Avaliações -->
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="font-display font-700 text-white text-xl">Avaliações</h2>
+          <div class="flex items-center gap-3">
+            <span id="avg-rating-big" class="font-display text-3xl font-800 text-white"></span>
+            <div>
+              <div id="avg-stars-row" class="flex gap-0.5"></div>
+              <p id="total-reviews-label" class="text-xs text-gray-600 mt-0.5"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Formulário de review -->
+        <div id="review-form-area" class="card p-5 mb-6">
+          <p class="text-sm font-600 text-white mb-4">Deixe sua avaliação</p>
+          <div id="review-login-msg" class="text-sm text-gray-500">
+            <button onclick="openLoginModal()" class="text-brand-400 hover:text-brand-300">Faça login</button> para avaliar este produto.
+          </div>
+          <div id="review-form" class="hidden space-y-4">
+            <div>
+              <p class="text-xs text-gray-500 mb-2">Sua nota</p>
+              <div class="flex gap-2" id="star-selector">
+                <span class="star-btn" data-val="1" onclick="setRating(1)">☆</span>
+                <span class="star-btn" data-val="2" onclick="setRating(2)">☆</span>
+                <span class="star-btn" data-val="3" onclick="setRating(3)">☆</span>
+                <span class="star-btn" data-val="4" onclick="setRating(4)">☆</span>
+                <span class="star-btn" data-val="5" onclick="setRating(5)">☆</span>
+              </div>
+            </div>
+            <div>
+              <textarea id="review-comment" rows="3" placeholder="Conte sua experiência com o produto..." class="input-field" style="resize:vertical;"></textarea>
+            </div>
+            <div id="review-error" class="hidden text-xs text-red-400"></div>
+            <button onclick="submitReview()" class="btn-primary text-sm py-2.5 px-5">Publicar avaliação</button>
+          </div>
+        </div>
+
+        <!-- Lista de reviews -->
+        <div id="reviews-list" class="space-y-4"></div>
+        <div id="no-reviews" class="hidden text-center py-10 text-gray-600 text-sm">
+          Seja o primeiro a avaliar este produto.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COLUNA DIREITA (1/3) ── -->
+    <div class="space-y-5">
+
+      <!-- CTA card -->
+      <div class="card p-6 sticky top-24">
+        <div class="mb-4">
+          <p id="cta-price" class="font-display text-2xl font-800 text-white mb-1"></p>
+          <p id="cta-pricing-label" class="text-xs text-gray-500"></p>
+        </div>
+
+        <div class="space-y-3 mb-5">
+          <a id="visit-btn" href="#" target="_blank" onclick="registerClick()"
+            class="btn-primary w-full block text-center">
+            Acessar produto →
+          </a>
+          <button id="upvote-btn" onclick="toggleUpvote()" class="upvote-btn w-full justify-center">
+            <span>▲</span>
+            <span id="upvote-label">0 upvotes</span>
+          </button>
+        </div>
+
+        <!-- Meta info -->
+        <div class="space-y-3 pt-4 border-t border-white/5">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Categoria</span>
+            <span id="meta-category" class="text-gray-300 font-500"></span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Preço</span>
+            <span id="meta-price" class="text-gray-300 font-500"></span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Visualizações</span>
+            <span id="meta-views" class="text-gray-300 font-500"></span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Publicado</span>
+            <span id="meta-date" class="text-gray-300 font-500"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Criador -->
+      <div class="card p-5">
+        <p class="text-xs text-gray-600 uppercase tracking-wide mb-3 font-600">Criador</p>
+        <div class="flex items-center gap-3">
+          <div id="creator-avatar" class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-700"
+               style="background:rgba(74,222,128,.15);color:#4ade80;"></div>
+          <div>
+            <p id="creator-name" class="font-600 text-white text-sm"></p>
+            <p id="creator-bio" class="text-xs text-gray-500 mt-0.5 line-clamp-1"></p>
+          </div>
+        </div>
+        <a id="creator-website" href="#" target="_blank"
+           class="hidden mt-3 text-xs text-brand-400 hover:text-brand-300 transition-colors block">
+          Visitar site do criador →
+        </a>
+      </div>
+
+      <!-- Compartilhar -->
+      <div class="card p-5">
+        <p class="text-xs text-gray-600 uppercase tracking-wide mb-3 font-600">Compartilhar</p>
+        <div class="flex gap-2">
+          <button onclick="share('twitter')" class="btn-outline flex-1 text-xs py-2 px-3">𝕏 Twitter</button>
+          <button onclick="share('copy')" class="btn-outline flex-1 text-xs py-2 px-3" id="copy-btn">🔗 Copiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Erro 404 -->
+<div id="error-view" class="hidden text-center py-32 px-4">
+  <div class="text-5xl mb-4">😕</div>
+  <h2 class="font-display text-2xl font-700 text-white mb-2">SaaS não encontrado</h2>
+  <p class="text-gray-500 text-sm mb-6">Este produto não existe ou foi removido.</p>
+  <a href="/" class="btn-primary inline-block">Voltar ao início</a>
+</div>
+
+<!-- Modal login simples -->
+<div id="login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;align-items:center;justify-content:center;">
+  <div class="card p-8 w-full max-w-md mx-4 relative">
+    <button onclick="document.getElementById('login-modal').style.display='none'" class="absolute top-4 right-4 text-gray-500 hover:text-white">✕</button>
+    <h2 class="font-display text-xl font-700 text-white mb-1">Entrar no LorranStack</h2>
+    <p class="text-sm text-gray-500 mb-5">Faça login para avaliar produtos e dar upvote</p>
+    <div id="lm-error" class="hidden mb-3 p-3 rounded-lg text-xs text-red-400" style="background:rgba(239,68,68,.1)"></div>
+    <div class="space-y-3">
+      <input id="lm-email" type="email" placeholder="Email" class="input-field"/>
+      <input id="lm-password" type="password" placeholder="Senha" class="input-field"/>
+      <button onclick="handleModalLogin()" class="btn-primary w-full">Entrar</button>
+    </div>
+    <p class="text-xs text-center text-gray-600 mt-4">Não tem conta? <a href="/" class="text-brand-400">Cadastre-se</a></p>
+  </div>
+</div>
+
+<script>
+const API = window.API || 'http://localhost:3000/api';
+let saasData = null;
+let currentRating = 0;
+let currentSaasId = null;
+
+// ── Helpers ──────────────────────────────────
+function getToken() { return localStorage.getItem('ls_token'); }
+function getUser()  { return JSON.parse(localStorage.getItem('ls_user') || 'null'); }
+
+function openLoginModal() {
+  document.getElementById('login-modal').style.display = 'flex';
+}
+
+function starsHtml(rating, size = 14) {
+  const r = Math.round(rating || 0);
+  return Array.from({length:5}, (_,i) =>
+    `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${i < r ? '#fbbf24' : '#2d2d3d'}">
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+    </svg>`
+  ).join('');
+}
+
+function pricingText(type, price, label) {
+  if (type === 'free') return 'Grátis';
+  if (type === 'freemium') return 'Freemium';
+  if (price) return `R$ ${Number(price).toFixed(2)}${label ? ' ' + label : ''}`;
+  return label || (type === 'subscription' ? 'Assinatura' : 'Pago');
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function youtubeEmbed(url) {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+}
+
+// ── Carrega SaaS ─────────────────────────────
+async function loadSaas(slug) {
+  try {
+    const data = await DB.getSaasBySlug(slug);
+    if (!data) { showError(); return; }
+    saasData = data;
+    currentSaasId = data.id;
+    renderSaas(data);
+  } catch(err) {
+    console.error('[LorranStack] Erro:', err.message);
+    showError();
+  }
+}
+
+function renderSaas(d) {
+  document.title = `${d.name} — LorranStack`;
+
+  // Breadcrumb
+  document.getElementById('bc-category').textContent = d.category_name || '';
+  document.getElementById('bc-name').textContent = d.name;
+
+  // Logo
+  const logoEl = document.getElementById('saas-logo');
+  if (d.logo_url) {
+    logoEl.innerHTML = `<img src="${d.logo_url}" alt="${d.name}" class="w-full h-full object-cover rounded-2xl"/>`;
+  } else {
+    logoEl.textContent = d.name.charAt(0).toUpperCase();
+  }
+
+  // Cabeçalho
+  document.getElementById('saas-name').textContent = d.name;
+  document.getElementById('saas-tagline').textContent = d.tagline || '';
+  if (d.is_featured) document.getElementById('saas-featured-badge').classList.remove('hidden');
+
+  const catIcon = d.category_icon || '';
+  document.getElementById('saas-category-badge').textContent = `${catIcon} ${d.category_name || ''}`;
+  document.getElementById('saas-stars-display').innerHTML = starsHtml(d.avg_rating);
+  document.getElementById('saas-review-count').textContent = `${d.review_count || 0} avaliações`;
+
+  // Screenshots
+  if (d.screenshots?.length) {
+    document.getElementById('media-section').classList.remove('hidden');
+    document.getElementById('main-img').src = d.screenshots[0];
+    const thumbs = document.getElementById('thumbs-row');
+    d.screenshots.forEach((src, i) => {
+      const div = document.createElement('div');
+      div.className = `screenshot-thumb flex-shrink-0 ${i === 0 ? 'active' : ''}`;
+      div.style.width = '80px';
+      div.innerHTML = `<img src="${src}" alt="Screenshot ${i+1}" style="width:80px;height:54px;object-fit:cover;"/>`;
+      div.onclick = () => {
+        document.getElementById('main-img').src = src;
+        document.querySelectorAll('.screenshot-thumb').forEach(t => t.classList.remove('active'));
+        div.classList.add('active');
+      };
+      thumbs.appendChild(div);
+    });
+  }
+
+  // Vídeo
+  if (d.video_url) {
+    const embedUrl = youtubeEmbed(d.video_url);
+    if (embedUrl) {
+      document.getElementById('video-section').classList.remove('hidden');
+      document.getElementById('video-frame').src = embedUrl;
+    }
+  }
+
+  // Descrição
+  document.getElementById('saas-description').textContent = d.description;
+
+  // CTA
+  document.getElementById('visit-btn').href = d.website_url;
+  document.getElementById('cta-price').textContent = pricingText(d.pricing_type, d.price, d.price_label);
+  document.getElementById('cta-pricing-label').textContent =
+    d.pricing_type === 'free' ? 'Acesso gratuito' :
+    d.pricing_type === 'freemium' ? 'Plano gratuito disponível' :
+    d.pricing_type === 'subscription' ? 'Cobrança recorrente' : 'Compra única';
+
+  // Upvote
+  document.getElementById('upvote-label').textContent = `${d.upvotes || 0} upvotes`;
+
+  // Meta
+  document.getElementById('meta-category').textContent = `${catIcon} ${d.category_name || '—'}`;
+  document.getElementById('meta-price').textContent = pricingText(d.pricing_type, d.price, d.price_label);
+  document.getElementById('meta-views').textContent = (d.views || 0).toLocaleString('pt-BR');
+  document.getElementById('meta-date').textContent = formatDate(d.created_at);
+
+  // Criador
+  const initials = (d.creator_name || '?').split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+  document.getElementById('creator-avatar').textContent = initials;
+  document.getElementById('creator-name').textContent = d.creator_name || 'Anônimo';
+  document.getElementById('creator-bio').textContent = d.creator_bio || '';
+  if (d.creator_website) {
+    const cw = document.getElementById('creator-website');
+    cw.href = d.creator_website;
+    cw.classList.remove('hidden');
+  }
+
+  // Rating summary
+  const avgRating = Number(d.avg_rating || 0).toFixed(1);
+  document.getElementById('avg-rating-big').textContent = avgRating;
+  document.getElementById('avg-stars-row').innerHTML = starsHtml(d.avg_rating, 16);
+  document.getElementById('total-reviews-label').textContent = `${d.review_count || 0} avaliações`;
+
+  // Reviews
+  renderReviews(d.reviews || []);
+
+  // Auth state
+  const user = getUser();
+  if (user) {
+    document.getElementById('review-login-msg').classList.add('hidden');
+    document.getElementById('review-form').classList.remove('hidden');
+    updateNavAuth(user);
+  }
+
+  // Mostrar conteúdo
+  document.getElementById('skeleton-view').classList.add('hidden');
+  document.getElementById('main-content').classList.remove('hidden');
+}
+
+function renderReviews(reviews) {
+  const list = document.getElementById('reviews-list');
+  if (!reviews.length) {
+    document.getElementById('no-reviews').classList.remove('hidden');
+    return;
+  }
+  list.innerHTML = reviews.map(r => `
+    <div class="review-card">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-700 flex-shrink-0"
+             style="background:rgba(74,222,128,.15);color:#4ade80;">
+          ${(r.user_name||'U').charAt(0).toUpperCase()}
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-600 text-white">${r.user_name || 'Usuário'}</span>
+            <div class="flex">${starsHtml(r.rating, 11)}</div>
+          </div>
+          <p class="text-xs text-gray-600">${formatDate(r.created_at)}</p>
+        </div>
+      </div>
+      ${r.comment ? `<p class="text-sm text-gray-400 leading-relaxed">${r.comment}</p>` : ''}
+    </div>
+  `).join('');
+}
+
+// ── Rating selector ───────────────────────────
+function setRating(val) {
+  currentRating = val;
+  document.querySelectorAll('.star-btn').forEach((btn, i) => {
+    btn.textContent = i < val ? '★' : '☆';
+    btn.style.color = i < val ? '#fbbf24' : '#6b7280';
+  });
+}
+
+// ── Submete review ────────────────────────────
+async function submitReview() {
+  if (!currentRating) {
+    document.getElementById('review-error').textContent = 'Selecione uma nota de 1 a 5 estrelas';
+    document.getElementById('review-error').classList.remove('hidden');
+    return;
+  }
+  const comment = document.getElementById('review-comment').value.trim();
+  try {
+    const data = { message: 'Avaliação registrada!' };
+    document.getElementById('review-comment').value = '';
+    setRating(0);
+    document.getElementById('review-error').classList.add('hidden');
+    const d2 = await DB.getSaasBySlug(getSlug());
+    if(d2){ renderReviews(d2.reviews||[]); document.getElementById('avg-rating-big').textContent=Number(d2.avg_rating||0).toFixed(1); document.getElementById('avg-stars-row').innerHTML=starsHtml(d2.avg_rating,16); document.getElementById('total-reviews-label').textContent=`${d2.review_count||0} avaliações`; }
+  } catch (e) {
+    document.getElementById('review-error').textContent = e.message;
+    document.getElementById('review-error').classList.remove('hidden');
+  }
+}
+
+// ── Upvote ────────────────────────────────────
+async function toggleUpvote() {
+    if (!AUTH.isLoggedIn()) { openLoginModal(); return; }
+    const user = AUTH.getUser();
+    try {
+      const existing = await _sb('ls_upvotes?user_id=eq.'+user.id+'&saas_id=eq.'+currentSaasId);
+      const btn = document.getElementById('upvote-btn');
+      let newCount = parseInt((document.getElementById('upvote-label').textContent||'0'));
+      if (existing.length) {
+        await fetch(_SB_URL+'/rest/v1/ls_upvotes?user_id=eq.'+user.id+'&saas_id=eq.'+currentSaasId, {method:'DELETE',headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY}});
+        newCount = Math.max(0, newCount - 1);
+        btn.classList.remove('upvoted');
+      } else {
+        await _sb('ls_upvotes', {method:'POST',headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({user_id:user.id,saas_id:currentSaasId})});
+        newCount++;
+        btn.classList.add('upvoted');
+      }
+      document.getElementById('upvote-label').textContent = newCount + ' upvotes';
+    } catch(e) { console.warn('upvote:', e.message); }
+  }
+
+// ── Registra clique ───────────────────────────
+function registerClick() {
+    if (!currentSaasId) return;
+    fetch(_SB_URL+'/rest/v1/ls_analytics', {
+      method:'POST',
+      headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({saas_id:currentSaasId, event_type:'click'})
+    }).catch(function(){});
+    fetch(_SB_URL+'/rest/v1/ls_saas?id=eq.'+currentSaasId, {
+      method:'PATCH',
+      headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({clicks: (saasData.clicks||0)+1})
+    }).catch(function(){});
+  }/saas/${currentSaasId}/click`, { method:'POST' }).catch(()=>{});
+}
+
+// ── Share ─────────────────────────────────────
+function share(type) {
+  const url = window.location.href;
+  const name = saasData?.name || 'SaaS';
+  if (type === 'twitter') {
+    window.open(`https://twitter.com/intent/tweet?text=Descobri ${encodeURIComponent(name)} no LorranStack!&url=${encodeURIComponent(url)}`, '_blank');
+  } else {
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✅ Copiado!';
+      setTimeout(() => btn.textContent = '🔗 Copiar', 2000);
+    });
+  }
+}
+
+// ── Login no modal ────────────────────────────
+async function handleModalLogin() {
+    const email    = document.getElementById('lm-email').value.trim();
+    const password = document.getElementById('lm-password').value;
+    const errEl    = document.getElementById('lm-error');
+    try {
+      const data = await AUTH.login(email, password);
+      localStorage.setItem('ls_token', data.token);
+      localStorage.setItem('ls_user', JSON.stringify(data.user));
+      document.getElementById('login-modal').style.display='none';
+      document.getElementById('review-login-msg').classList.add('hidden');
+      document.getElementById('review-form').classList.remove('hidden');
+      updateNavAuth(data.user);
+    } catch(e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
+  }
+
+function updateNavAuth(user) {
+  document.getElementById('nav-auth-area').innerHTML =
+    `<span class="text-sm text-gray-400">Olá, ${user.name.split(' ')[0]}</span>`;
+}
+
+// ── Erro ──────────────────────────────────────
+function showError() {
+  document.getElementById('skeleton-view').classList.add('hidden');
+  document.getElementById('error-view').classList.remove('hidden');
+}
+
+// ── Demo (quando API offline) ─────────────────
+function renderDemoSaas() {
+  const demo = {
+    id: 'demo-001', name: 'DevKit Pro', slug: 'devkitpro',
+    tagline: 'Coleção de ferramentas essenciais para desenvolvedores',
+    description: `DevKit Pro é uma suíte completa de utilitários para desenvolvedores modernos.\n\nInclui formatadores de código, validators de JSON/YAML, conversor de bases numéricas, gerador de UUIDs, encoder/decoder Base64, diff de textos e muito mais — tudo rodando 100% no browser, sem enviar seus dados para nenhum servidor.\n\nIdeal para desenvolvimento do dia a dia, revisão de APIs e debugging rápido.`,
+    category_name: 'Desenvolvimento', category_icon: '💻',
+    pricing_type: 'free', price: null, price_label: null,
+    upvotes: 789, views: 3201, avg_rating: 4.7, review_count: 3,
+    website_url: 'https://devkitpro.exemplo.com',
+    creator_name: 'Rafael Mendes', creator_bio: 'Desenvolvedor full-stack apaixonado por DX.',
+    is_featured: true, created_at: new Date().toISOString(),
+    screenshots: [],
+    reviews: [
+      { user_name:'Ana Costa', rating:5, comment:'Ferramenta incrível! Uso todo dia para formatar JSON.', created_at: new Date().toISOString() },
+      { user_name:'Pedro Lima', rating:4, comment:'Muito prático. Seria ótimo ter um dark mode.', created_at: new Date().toISOString() },
+      { user_name:'Carla Souza', rating:5, comment:'O melhor kit de ferramentas que já usei.', created_at: new Date().toISOString() },
+    ]
+  };
+  saasData = demo;
+  currentSaasId = demo.id;
+  renderSaas(demo);
+}
+
+function getSlug() {
+  return new URLSearchParams(window.location.search).get('slug');
+}
+
+// ── Init ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const slug = getSlug();
+  if (!slug) { showError(); return; }
+
+  const user = getUser();
+  if (user) updateNavAuth(user);
+
+  loadSaas(slug);
+
+  // fecha modal ao clicar fora
+  document.getElementById('login-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+});
+</script>
+</body>
+</html>
