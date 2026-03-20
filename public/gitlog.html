@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GitLog — Gerador de CHANGELOG Profissional a partir de Commits</title>
+<meta name="description" content="Cole seus commits git e gere um CHANGELOG.md profissional em segundos. Segue o padrão Conventional Commits e Keep a Changelog."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04060f;--bg2:#080d1a;--bg3:#0d1525;
+  --border:rgba(0,120,255,.1);--border-h:rgba(0,160,255,.28);
+  --text:#ddeeff;--muted:#3a5070;--muted2:#6080a8;
+  --b1:#0055ff;--b2:#0099ff;--b3:#00ccff;
+  --brand:linear-gradient(135deg,#0055ff,#0099ff,#00ccff);
+  --green:#00ffaa;--yellow:#ffcc00;--red:#ff5566;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --display:'Rajdhani',system-ui,sans-serif;
+  --mono:'DM Mono','Fira Code',monospace;
+  --r:10px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none}
+
+nav{position:sticky;top:0;z-index:100;height:54px;display:flex;align-items:center;
+  padding:0 1.5rem;gap:.75rem;background:rgba(4,6,15,.96);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:.5rem;font-family:var(--display);font-size:1.2rem;font-weight:700}
+.logo-icon{width:28px;height:28px;border-radius:6px;background:var(--brand);
+  display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#fff;font-weight:700}
+.logo-w{color:#fff}.logo-b{background:var(--brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-badge{font-size:.67rem;font-weight:700;padding:.17rem .52rem;border-radius:5px;background:rgba(0,255,170,.08);color:var(--green);border:1px solid rgba(0,255,170,.2)}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:.6rem}
+.nav-back{font-size:.79rem;color:var(--muted2);padding:.33rem .7rem;border-radius:7px;border:1px solid var(--border);transition:all .15s}
+.nav-back:hover{color:var(--text);border-color:var(--border-h)}
+.nav-pro{font-size:.79rem;font-weight:700;padding:.36rem .88rem;border-radius:8px;background:var(--brand);color:#fff;letter-spacing:.03em;font-family:var(--display);transition:all .2s;box-shadow:0 0 14px rgba(0,100,255,.3)}
+.nav-pro:hover{box-shadow:0 0 24px rgba(0,100,255,.55);transform:translateY(-1px)}
+
+.hero{text-align:center;padding:48px 1.5rem 36px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:500px;height:200px;pointer-events:none;background:radial-gradient(ellipse,rgba(0,80,255,.13) 0%,transparent 70%);filter:blur(35px)}
+.hero-tag{display:inline-flex;align-items:center;gap:.4rem;padding:.28rem .82rem;border-radius:999px;background:rgba(0,80,200,.09);border:1px solid rgba(0,150,255,.18);font-size:.71rem;color:rgba(0,200,255,.8);font-weight:500;letter-spacing:.06em;margin-bottom:1rem;text-transform:uppercase}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hero-h1{font-family:var(--display);font-size:clamp(2rem,5vw,3.4rem);font-weight:700;color:#fff;letter-spacing:.03em;margin-bottom:.5rem}
+.hero-h1 span{background:var(--brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:.93rem;color:var(--muted2);max-width:500px;margin:0 auto 1.4rem;line-height:1.6;font-weight:300}
+.hero-pills{display:flex;justify-content:center;gap:.4rem;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:.28rem;padding:.25rem .65rem;border-radius:999px;background:var(--bg2);border:1px solid var(--border);font-size:.72rem;color:var(--muted2)}
+.pill-g{color:var(--green);border-color:rgba(0,255,170,.18);background:rgba(0,255,170,.04)}
+
+/* PRICING */
+.pricing-wrap{max-width:700px;margin:1.5rem auto 0;padding:0 1.5rem}
+.pricing-bar{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.plan{background:var(--bg2);padding:1.1rem 1.3rem}
+.plan.pro{background:linear-gradient(135deg,rgba(0,50,180,.1),rgba(0,120,255,.05))}
+.plan-name{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem}
+.plan-price{font-family:var(--display);font-size:1.6rem;font-weight:700;color:#fff;line-height:1;margin-bottom:.2rem}
+.plan-price span{font-size:.8rem;color:var(--muted2);font-weight:400}
+.plan-feats{list-style:none;margin:.6rem 0 .85rem}
+.plan-feats li{font-size:.76rem;color:var(--muted2);padding:.18rem 0;display:flex;gap:.4rem}
+.plan-feats li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+.plan-feats li.no::before{content:'—';color:var(--muted)}
+.btn-free{width:100%;padding:.55rem;border-radius:7px;border:1px solid var(--border);color:var(--muted2);font-size:.8rem;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-free:hover{color:var(--text);border-color:var(--border-h)}
+.btn-pro{width:100%;padding:.55rem;border-radius:7px;background:var(--brand);color:#fff;font-size:.8rem;font-weight:700;font-family:var(--display);letter-spacing:.04em;border:none;cursor:pointer;transition:all .2s;box-shadow:0 3px 14px rgba(0,80,255,.28)}
+.btn-pro:hover{box-shadow:0 5px 22px rgba(0,80,255,.48);transform:translateY(-1px)}
+
+/* APP */
+.app{max-width:1150px;margin:1.5rem auto 0;padding:0 1.5rem 4rem;display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start}
+
+/* PANELS */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.panel-header{padding:.8rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.panel-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.panel-actions{display:flex;gap:.35rem;flex-wrap:wrap}
+.pact{padding:.28rem .65rem;border-radius:6px;border:1px solid var(--border);font-size:.73rem;color:var(--muted2);cursor:pointer;transition:all .15s;font-family:var(--sans)}
+.pact:hover{border-color:var(--border-h);color:var(--text)}
+.pact.primary{background:rgba(0,100,255,.12);border-color:rgba(0,120,255,.3);color:#00aaff;font-weight:600}
+.pact.green{background:rgba(0,255,170,.08);border-color:rgba(0,255,170,.2);color:var(--green);font-weight:600}
+
+.commits-textarea{width:100%;min-height:320px;padding:.9rem 1.1rem;background:transparent;border:none;outline:none;resize:vertical;font-family:var(--mono);font-size:.8rem;color:var(--text);line-height:1.7}
+.commits-textarea::placeholder{color:var(--muted)}
+
+/* CONFIG */
+.config-row{display:flex;align-items:center;gap:1rem;padding:.75rem 1.1rem;border-top:1px solid var(--border);flex-wrap:wrap}
+.config-field{display:flex;flex-direction:column;gap:.3rem;flex:1;min-width:120px}
+.config-label{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.config-input{padding:.4rem .7rem;border-radius:7px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:.8rem;outline:none;font-family:var(--sans);transition:border-color .15s}
+.config-input:focus{border-color:rgba(0,160,255,.4)}
+
+/* CHANGELOG OUTPUT */
+.changelog-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:sticky;top:66px}
+.changelog-header{padding:.8rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.changelog-body{padding:1rem 1.1rem;max-height:calc(100vh - 200px);overflow-y:auto}
+.changelog-body::-webkit-scrollbar{width:4px}
+.changelog-body::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:3px}
+
+/* Rendered CHANGELOG */
+.cl-version{font-family:var(--display);font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:.04em;margin-bottom:.2rem;margin-top:1.2rem;display:flex;align-items:center;gap:.65rem}
+.cl-version:first-child{margin-top:0}
+.cl-date{font-size:.75rem;color:var(--muted2)}
+.cl-version-badge{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:999px}
+.vb-major{background:rgba(255,85,102,.1);color:#ff5566;border:1px solid rgba(255,85,102,.2)}
+.vb-minor{background:rgba(0,200,255,.1);color:#00ccff;border:1px solid rgba(0,200,255,.2)}
+.vb-patch{background:rgba(0,255,170,.08);color:var(--green);border:1px solid rgba(0,255,170,.18)}
+.cl-section{margin:.6rem 0 .25rem;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.cl-feat{color:var(--green)}.cl-fix{color:#ff8844}.cl-break{color:#ff5566}
+.cl-docs{color:#88aaff}.cl-perf{color:#ffcc00}.cl-refactor{color:#a78bfa}.cl-other{color:var(--muted2)}
+.cl-item{display:flex;gap:.5rem;padding:.22rem 0;font-size:.82rem;color:var(--muted2);line-height:1.45}
+.cl-item::before{content:'•';color:var(--muted);flex-shrink:0}
+.cl-scope{color:var(--b2);font-weight:600;margin-right:.25rem}
+.cl-hash{font-family:var(--mono);font-size:.71rem;color:var(--muted);margin-left:.35rem}
+.cl-sep{border:none;border-top:1px solid var(--border);margin:.9rem 0}
+
+/* Raw markdown */
+.raw-view{background:var(--bg3);padding:1rem;font-family:var(--mono);font-size:.75rem;color:#8db4d8;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:calc(100vh - 200px);overflow-y:auto}
+.raw-view::-webkit-scrollbar{width:4px}
+.raw-view::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:3px}
+
+/* Empty */
+.cl-empty{text-align:center;padding:3rem 1.5rem;color:var(--muted)}
+.cl-empty-icon{font-size:2.2rem;margin-bottom:.7rem}
+.cl-empty-title{font-size:.9rem;color:var(--muted2);margin-bottom:.3rem}
+.cl-empty-text{font-size:.78rem;line-height:1.55}
+
+.tc{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.45rem}
+.toast{display:flex;align-items:center;gap:.6rem;padding:.7rem .95rem;border-radius:10px;background:var(--bg3);border:1px solid var(--border-h);color:var(--text);font-size:.81rem;box-shadow:0 8px 28px rgba(0,0,0,.6);animation:sIn .3s ease}
+@keyframes sIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+footer{border-top:1px solid var(--border);padding:1.6rem;text-align:center;font-size:.75rem;color:var(--muted)}
+footer a{color:var(--muted2)}
+footer a:hover{color:var(--b2)}
+
+@media(max-width:900px){.app{grid-template-columns:1fr}.changelog-wrap{position:static}.pricing-bar{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="tc" id="tc"></div>
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">GIT</div>
+    <span class="logo-w">Git</span><span class="logo-b">Log</span>
+  </div>
+  <span class="nav-badge">Para Devs</span>
+  <div class="nav-r">
+    <a href="/" class="nav-back">← LorranStack</a>
+    <button class="nav-pro" onclick="assinarPro()">💎 Pro — R$24/mês</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag"><span class="hero-dot"></span>Changelog automatizado</div>
+  <h1 class="hero-h1"><span>CHANGELOG</span> profissional<br/>em segundos</h1>
+  <p class="hero-sub">Cole seus commits git e gere um CHANGELOG.md completo. Segue Conventional Commits e Keep a Changelog automaticamente.</p>
+  <div class="hero-pills">
+    <span class="pill pill-g">✓ Conventional Commits</span>
+    <span class="pill pill-g">✓ Keep a Changelog</span>
+    <span class="pill pill-g">✓ Semver automático</span>
+    <span class="pill">Preview em tempo real</span>
+  </div>
+</section>
+
+<div class="pricing-wrap">
+  <div class="pricing-bar">
+    <div class="plan">
+      <div class="plan-name" style="color:var(--muted2)">Gratuito</div>
+      <div class="plan-price">R$ 0<span>/sempre</span></div>
+      <ul class="plan-feats">
+        <li>Até 50 commits por sessão</li>
+        <li>Conventional Commits</li>
+        <li>Export Markdown</li>
+        <li class="no">Múltiplas versões</li>
+        <li class="no">Links para PR/Issues</li>
+        <li class="no">Templates customizados</li>
+      </ul>
+      <button class="btn-free" onclick="document.getElementById('commits-input').focus()">Usar grátis</button>
+    </div>
+    <div class="plan pro">
+      <div class="plan-name" style="color:var(--b2)">⚡ Pro</div>
+      <div class="plan-price">R$ 24<span>/mês</span></div>
+      <ul class="plan-feats">
+        <li>Commits ilimitados</li>
+        <li>Múltiplas versões no changelog</li>
+        <li>Links automáticos GitHub/GitLab</li>
+        <li>Templates customizados</li>
+        <li>Export HTML + PDF</li>
+        <li>Integração via CLI (npm)</li>
+      </ul>
+      <button class="btn-pro" onclick="assinarPro()">Assinar Pro — R$24/mês</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- ESQUERDA: INPUT -->
+  <div style="display:flex;flex-direction:column;gap:.75rem">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Commits Git</span>
+        <div class="panel-actions">
+          <button class="pact primary" onclick="generate()">⚡ Gerar</button>
+          <button class="pact" onclick="loadExample()">📋 Exemplo</button>
+          <button class="pact" onclick="clearAll()">✕ Limpar</button>
+        </div>
+      </div>
+      <textarea id="commits-input" class="commits-textarea"
+        placeholder="Cole aqui a saída do git log:
+
+feat(auth): adicionar login com Google
+fix(api): corrigir timeout nas requisições
+feat!: nova versão da API de pagamentos
+docs: atualizar README com exemplos
+chore: atualizar dependências
+fix(ui): corrigir modal no mobile
+
+Ou use: git log --oneline --no-merges"
+        oninput="generate()"></textarea>
+      <div class="config-row">
+        <div class="config-field">
+          <label class="config-label">Versão</label>
+          <input id="version" class="config-input" type="text" placeholder="1.2.0" value="1.0.0"/>
+        </div>
+        <div class="config-field">
+          <label class="config-label">Data</label>
+          <input id="release-date" class="config-input" type="date"/>
+        </div>
+        <div class="config-field">
+          <label class="config-label">Repo URL (opcional)</label>
+          <input id="repo-url" class="config-input" type="text" placeholder="https://github.com/user/repo"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMO USAR -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Como obter os commits</span></div>
+      <div style="padding:.85rem 1.1rem">
+        <div style="font-size:.78rem;color:var(--muted2);margin-bottom:.75rem">Rode um destes comandos no terminal do seu projeto:</div>
+        <div style="background:var(--bg3);border-radius:8px;padding:.7rem .9rem;font-family:var(--mono);font-size:.77rem;color:#8db4d8;margin-bottom:.5rem;border:1px solid var(--border)">
+          <div style="color:var(--muted);font-size:.68rem;margin-bottom:.3rem"># Última versão</div>
+          git log --oneline --no-merges
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:.7rem .9rem;font-family:var(--mono);font-size:.77rem;color:#8db4d8;margin-bottom:.5rem;border:1px solid var(--border)">
+          <div style="color:var(--muted);font-size:.68rem;margin-bottom:.3rem"># Entre tags</div>
+          git log v1.0.0..HEAD --oneline --no-merges
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:.7rem .9rem;font-family:var(--mono);font-size:.77rem;color:#8db4d8;border:1px solid var(--border)">
+          <div style="color:var(--muted);font-size:.68rem;margin-bottom:.3rem"># Formato completo</div>
+          git log --pretty=format:"%s" --no-merges
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIREITA: CHANGELOG -->
+  <div class="changelog-wrap">
+    <div class="changelog-header">
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <span class="panel-title">CHANGELOG.md</span>
+        <div style="display:flex;gap:.3rem">
+          <button class="pact active" id="view-rendered" onclick="switchView('rendered',this)" style="background:rgba(0,100,255,.1);border-color:rgba(0,120,255,.3);color:#00aaff">Preview</button>
+          <button class="pact" id="view-raw" onclick="switchView('raw',this)">Markdown</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:.35rem">
+        <button class="pact" onclick="copyMd()">⎘ Copiar</button>
+        <button class="pact green" onclick="downloadMd()">⬇ Baixar .md</button>
+      </div>
+    </div>
+    <div id="rendered-view" class="changelog-body">
+      <div class="cl-empty">
+        <div class="cl-empty-icon">📋</div>
+        <div class="cl-empty-title">Seu CHANGELOG aparecerá aqui</div>
+        <div class="cl-empty-text">Cole seus commits ao lado<br/>e o changelog será gerado em tempo real</div>
+      </div>
+    </div>
+    <div id="raw-view" class="raw-view" style="display:none"><!-- markdown raw --></div>
+  </div>
+
+</div>
+
+<footer>
+  <div style="margin-bottom:.4rem"><a href="/">LorranStack</a> · Ferramentas para Devs</div>
+  © 2026 GitLog — Uma ferramenta do <a href="/">LorranStack</a>
+</footer>
+
+<script>
+// Inicializar data
+document.getElementById('release-date').value = new Date().toISOString().split('T')[0];
+
+const TYPES = {
+  feat:     { label:'✨ Novas funcionalidades', cls:'cl-feat', emoji:'✨' },
+  fix:      { label:'🐛 Correções de bugs',     cls:'cl-fix',  emoji:'🐛' },
+  perf:     { label:'⚡ Melhorias de performance', cls:'cl-perf', emoji:'⚡' },
+  refactor: { label:'♻️ Refatorações',          cls:'cl-refactor', emoji:'♻️' },
+  docs:     { label:'📝 Documentação',           cls:'cl-docs', emoji:'📝' },
+  test:     { label:'🧪 Testes',                 cls:'cl-other', emoji:'🧪' },
+  build:    { label:'🔨 Build',                  cls:'cl-other', emoji:'🔨' },
+  ci:       { label:'⚙️ CI/CD',                  cls:'cl-other', emoji:'⚙️' },
+  chore:    { label:'🔧 Manutenção',             cls:'cl-other', emoji:'🔧' },
+  style:    { label:'💅 Estilo',                 cls:'cl-other', emoji:'💅' },
+};
+
+let currentMd = '';
+let currentView = 'rendered';
+
+function parseCommits(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const commits = [];
+
+  lines.forEach(line => {
+    // Formato: abc1234 feat(scope): description
+    // ou: feat(scope): description
+    // ou: feat: description
+    const withHash = line.match(/^([a-f0-9]{5,12})\s+(.+)$/i);
+    const msg = withHash ? withHash[2] : line;
+    const hash = withHash ? withHash[1] : null;
+
+    // Conventional commits: type(scope)!: description
+    const cc = msg.match(/^(\w+)(\(([^)]+)\))?(!)?\s*:\s*(.+)$/);
+    if (cc) {
+      const [, type, , scope, breaking, desc] = cc;
+      commits.push({
+        type: type.toLowerCase(),
+        scope: scope || null,
+        breaking: !!breaking || type === 'feat' && msg.includes('BREAKING'),
+        description: desc.trim(),
+        hash,
+        raw: msg,
+      });
+    } else {
+      // Commit não convencional — classificar como 'other'
+      commits.push({ type: 'other', scope: null, breaking: false, description: msg, hash, raw: msg });
+    }
+  });
+
+  return commits;
+}
+
+function generate() {
+  const text = document.getElementById('commits-input').value.trim();
+  const version = document.getElementById('version').value || '1.0.0';
+  const date = document.getElementById('release-date').value || new Date().toISOString().split('T')[0];
+  const repoUrl = document.getElementById('repo-url').value.trim().replace(/\/$/, '');
+
+  if (!text) {
+    document.getElementById('rendered-view').innerHTML = `<div class="cl-empty"><div class="cl-empty-icon">📋</div><div class="cl-empty-title">Seu CHANGELOG aparecerá aqui</div><div class="cl-empty-text">Cole seus commits ao lado</div></div>`;
+    document.getElementById('raw-view').textContent = '';
+    return;
+  }
+
+  const commits = parseCommits(text);
+  if (!commits.length) return;
+
+  // Separar por tipo
+  const breaking = commits.filter(c => c.breaking);
+  const byType = {};
+  commits.forEach(c => {
+    const key = c.breaking ? 'breaking' : (c.type in TYPES ? c.type : 'other');
+    if (!byType[key]) byType[key] = [];
+    byType[key].push(c);
+  });
+
+  // Detectar tipo de versão
+  const hasMajor = breaking.length > 0;
+  const hasMinor = byType.feat?.length > 0;
+  const versionType = hasMajor ? 'major' : hasMinor ? 'minor' : 'patch';
+  const versionLabels = { major:'⚠️ BREAKING', minor:'Funcionalidade', patch:'Patch' };
+
+  // Renderizar HTML
+  let html = `
+    <div class="cl-version">
+      [${version}]
+      <span class="cl-date">${date}</span>
+      <span class="cl-version-badge vb-${versionType}">${versionLabels[versionType]}</span>
+    </div>`;
+
+  // Breaking changes primeiro
+  if (breaking.length) {
+    html += `<div class="cl-section cl-break">⚠️ BREAKING CHANGES</div>`;
+    html += breaking.map(c => renderItem(c, repoUrl)).join('');
+    html += `<hr class="cl-sep"/>`;
+  }
+
+  // Ordem dos tipos
+  const ORDER = ['feat','fix','perf','refactor','docs','test','build','ci','chore','style','other'];
+  ORDER.forEach(t => {
+    if (!byType[t] || !byType[t].length) return;
+    const info = TYPES[t] || { label:`🔧 ${t}`, cls:'cl-other' };
+    html += `<div class="cl-section ${info.cls}">${info.label}</div>`;
+    html += byType[t].filter(c => !c.breaking).map(c => renderItem(c, repoUrl)).join('');
+  });
+
+  document.getElementById('rendered-view').innerHTML = html;
+
+  // Gerar markdown
+  currentMd = generateMarkdown(version, date, commits, byType, breaking, repoUrl);
+  document.getElementById('raw-view').textContent = currentMd;
+}
+
+function renderItem(c, repoUrl) {
+  const scope = c.scope ? `<span class="cl-scope">${c.scope}:</span>` : '';
+  const hash = c.hash && repoUrl
+    ? ` <a href="${repoUrl}/commit/${c.hash}" target="_blank" class="cl-hash">${c.hash}</a>`
+    : c.hash ? `<span class="cl-hash">${c.hash}</span>` : '';
+  return `<div class="cl-item">${scope}${c.description}${hash}</div>`;
+}
+
+function generateMarkdown(version, date, commits, byType, breaking, repoUrl) {
+  let md = `# Changelog\n\nTodas as mudanças notáveis são documentadas aqui.\n\n`;
+  md += `## [${version}] - ${date}\n\n`;
+
+  if (breaking.length) {
+    md += `### ⚠️ BREAKING CHANGES\n\n`;
+    md += breaking.map(c => {
+      const scope = c.scope ? `**${c.scope}:** ` : '';
+      const hash = c.hash ? (repoUrl ? ` ([${c.hash}](${repoUrl}/commit/${c.hash}))` : ` (${c.hash})`) : '';
+      return `- ${scope}${c.description}${hash}`;
+    }).join('\n');
+    md += '\n\n';
+  }
+
+  const ORDER = ['feat','fix','perf','refactor','docs','test','build','ci','chore','style','other'];
+  ORDER.forEach(t => {
+    if (!byType[t] || !byType[t].length) return;
+    const filtered = byType[t].filter(c => !c.breaking);
+    if (!filtered.length) return;
+    const info = TYPES[t] || { label:`${t}`, emoji:'🔧' };
+    md += `### ${info.emoji} ${info.label.replace(/[✨🐛⚡♻️📝🧪🔨⚙️🔧💅]/g,'').trim()}\n\n`;
+    md += filtered.map(c => {
+      const scope = c.scope ? `**${c.scope}:** ` : '';
+      const hash = c.hash ? (repoUrl ? ` ([${c.hash}](${repoUrl}/commit/${c.hash}))` : ` (${c.hash})`) : '';
+      return `- ${scope}${c.description}${hash}`;
+    }).join('\n');
+    md += '\n\n';
+  });
+
+  if (repoUrl) md += `[${version}]: ${repoUrl}/releases/tag/v${version}\n`;
+  return md;
+}
+
+function switchView(view, btn) {
+  currentView = view;
+  document.getElementById('rendered-view').style.display = view === 'rendered' ? 'block' : 'none';
+  document.getElementById('raw-view').style.display = view === 'raw' ? 'block' : 'none';
+  document.querySelectorAll('#view-rendered,#view-raw').forEach(b => {
+    b.style.background = ''; b.style.borderColor = ''; b.style.color = '';
+    b.className = 'pact';
+  });
+  btn.style.background = 'rgba(0,100,255,.1)';
+  btn.style.borderColor = 'rgba(0,120,255,.3)';
+  btn.style.color = '#00aaff';
+}
+
+function copyMd() {
+  if (!currentMd) { toast('Gere um changelog primeiro','error'); return; }
+  navigator.clipboard.writeText(currentMd).then(() => toast('Markdown copiado!','success'));
+}
+
+function downloadMd() {
+  if (!currentMd) { toast('Gere um changelog primeiro','error'); return; }
+  const blob = new Blob([currentMd], { type:'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'CHANGELOG.md'; a.click();
+  URL.revokeObjectURL(url);
+  toast('CHANGELOG.md baixado!','success');
+}
+
+function clearAll() {
+  document.getElementById('commits-input').value = '';
+  currentMd = '';
+  document.getElementById('rendered-view').innerHTML = `<div class="cl-empty"><div class="cl-empty-icon">📋</div><div class="cl-empty-title">Seu CHANGELOG aparecerá aqui</div><div class="cl-empty-text">Cole seus commits ao lado</div></div>`;
+  document.getElementById('raw-view').textContent = '';
+}
+
+function loadExample() {
+  document.getElementById('commits-input').value = `a3f9b12 feat(auth): adicionar login com Google OAuth2
+b8c2d45 feat(payments): integrar Mercado Pago para PIX e cartão
+c1e4f78 fix(api): corrigir timeout nas requisições POST
+d5a7b90 fix(ui): corrigir modal não fechando no mobile
+e2c9d13 feat!: nova versão da API v2 - breaking changes nos endpoints
+f6a1e24 perf(db): adicionar índices nas tabelas principais
+g8b3c56 refactor(auth): separar lógica de JWT em service dedicado
+h4d7f89 docs: atualizar README com exemplos de uso
+i9e2a01 fix(email): corrigir template de email de boas-vindas
+j3b6c78 chore: atualizar dependências para versão mais recente
+k1a4d90 test(auth): adicionar testes para fluxo de login
+l5c8f23 feat(dashboard): novo gráfico de analytics em tempo real`;
+  document.getElementById('version').value = '2.0.0';
+  generate();
+  toast('Exemplo carregado!','info');
+}
+
+function toast(msg,type='info'){
+  const c={success:'#00ffaa',error:'#ff5566',info:'#0099ff'};
+  const el=document.createElement('div');el.className='toast';
+  el.innerHTML=`<span style="color:${c[type]};font-weight:700">${type==='success'?'✓':type==='error'?'✗':'ℹ'}</span><span>${msg}</span>`;
+  document.getElementById('tc').appendChild(el);setTimeout(()=>el.remove(),4000);
+}
+
+function assinarPro(){
+  if(typeof lsCheckout==='function'){
+    lsCheckout({productName:'GitLog Pro',amount:24.00,planSlug:'gitlog-pro',onSuccess:()=>window.location.reload()});
+  } else { toast('Checkout indisponível','error'); }
+}
+</script>
+<script src="/checkout.js"></script>
+</body>
+</html>

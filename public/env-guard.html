@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ENV Guard — Gerencie e Valide Variáveis de Ambiente</title>
+<meta name="description" content="Cole seu .env e descubra variáveis faltando, expostas por engano, mal formatadas ou sem documentação. O guarda do seu .env."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04060f;--bg2:#080d1a;--bg3:#0d1525;
+  --border:rgba(0,120,255,.1);--border-h:rgba(0,160,255,.28);
+  --text:#ddeeff;--muted:#3a5070;--muted2:#6080a8;
+  --b1:#0055ff;--b2:#0099ff;--b3:#00ccff;
+  --brand:linear-gradient(135deg,#0055ff,#0099ff,#00ccff);
+  --green:#00ffaa;--yellow:#ffcc00;--red:#ff5566;--orange:#ff8844;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --display:'Rajdhani',system-ui,sans-serif;
+  --mono:'DM Mono','Fira Code',monospace;
+  --r:10px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none}
+
+nav{position:sticky;top:0;z-index:100;height:54px;display:flex;align-items:center;
+  padding:0 1.5rem;gap:.75rem;background:rgba(4,6,15,.96);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:.5rem;font-family:var(--display);font-size:1.2rem;font-weight:700}
+.logo-icon{width:28px;height:28px;border-radius:6px;background:var(--brand);
+  display:flex;align-items:center;justify-content:center;font-size:.65rem;color:#fff;font-weight:700;font-family:var(--mono)}
+.logo-w{color:#fff}.logo-b{background:var(--brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-badge{font-size:.67rem;font-weight:700;padding:.17rem .52rem;border-radius:5px;
+  background:rgba(0,255,170,.08);color:var(--green);border:1px solid rgba(0,255,170,.2)}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:.6rem}
+.nav-back{font-size:.79rem;color:var(--muted2);padding:.33rem .7rem;border-radius:7px;border:1px solid var(--border);transition:all .15s}
+.nav-back:hover{color:var(--text);border-color:var(--border-h)}
+.nav-pro{font-size:.79rem;font-weight:700;padding:.36rem .88rem;border-radius:8px;
+  background:var(--brand);color:#fff;letter-spacing:.03em;font-family:var(--display);
+  transition:all .2s;box-shadow:0 0 14px rgba(0,100,255,.3)}
+.nav-pro:hover{box-shadow:0 0 24px rgba(0,100,255,.55);transform:translateY(-1px)}
+
+.hero{text-align:center;padding:48px 1.5rem 36px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:500px;height:200px;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(0,80,255,.13) 0%,transparent 70%);filter:blur(35px)}
+.hero-tag{display:inline-flex;align-items:center;gap:.4rem;padding:.28rem .82rem;
+  border-radius:999px;background:rgba(0,80,200,.09);border:1px solid rgba(0,150,255,.18);
+  font-size:.71rem;color:rgba(0,200,255,.8);font-weight:500;letter-spacing:.06em;
+  margin-bottom:1rem;text-transform:uppercase}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hero-h1{font-family:var(--display);font-size:clamp(2rem,5vw,3.4rem);font-weight:700;color:#fff;letter-spacing:.03em;margin-bottom:.5rem}
+.hero-h1 span{background:var(--brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:.93rem;color:var(--muted2);max-width:500px;margin:0 auto 1.4rem;line-height:1.6;font-weight:300}
+
+/* MAIN LAYOUT */
+.app{max-width:1150px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
+
+/* INPUT PANEL */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.panel-header{padding:.8rem 1.1rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.panel-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.panel-actions{display:flex;gap:.35rem}
+.pact{padding:.28rem .65rem;border-radius:6px;border:1px solid var(--border);
+  font-size:.73rem;color:var(--muted2);cursor:pointer;transition:all .15s;font-family:var(--sans)}
+.pact:hover{border-color:var(--border-h);color:var(--text)}
+.pact.primary{background:rgba(0,100,255,.12);border-color:rgba(0,120,255,.3);color:#00aaff;font-weight:600}
+
+.env-textarea{width:100%;min-height:360px;padding:1rem 1.1rem;background:transparent;
+  border:none;outline:none;resize:vertical;font-family:var(--mono);font-size:.82rem;
+  color:var(--text);line-height:1.7;}
+.env-textarea::placeholder{color:var(--muted)}
+
+/* EXAMPLE .env */
+.example-btn{display:block;width:100%;padding:.6rem 1.1rem;background:rgba(0,100,255,.06);
+  border-top:1px solid var(--border);font-size:.78rem;color:#00aaff;cursor:pointer;
+  text-align:center;transition:all .15s;font-family:var(--sans)}
+.example-btn:hover{background:rgba(0,100,255,.12)}
+
+/* RESULTS PANEL */
+.results{display:flex;flex-direction:column;gap:.75rem}
+
+/* SCORE */
+.score-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:1.2rem 1.4rem;display:flex;align-items:center;gap:1.2rem}
+.score-ring{width:68px;height:68px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-family:var(--display);
+  font-size:1.5rem;font-weight:700;position:relative}
+.score-title{font-family:var(--display);font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:.2rem}
+.score-sub{font-size:.78rem;color:var(--muted2)}
+.score-pills{display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap}
+.spill{font-size:.7rem;font-weight:600;padding:.18rem .5rem;border-radius:999px}
+
+/* ISSUES */
+.issue-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.issue-header{padding:.75rem 1rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between}
+.issue-list{max-height:300px;overflow-y:auto}
+.issue-list::-webkit-scrollbar{width:4px}
+.issue-list::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:3px}
+.issue-item{display:flex;align-items:flex-start;gap:.7rem;padding:.7rem 1rem;
+  border-bottom:1px solid var(--border);transition:background .15s}
+.issue-item:last-child{border-bottom:none}
+.issue-item:hover{background:rgba(255,255,255,.02)}
+.issue-icon{font-size:1rem;flex-shrink:0;margin-top:.05rem}
+.issue-key{font-family:var(--mono);font-size:.8rem;font-weight:600;color:#fff;margin-bottom:.15rem}
+.issue-desc{font-size:.75rem;color:var(--muted2);line-height:1.45}
+.issue-badge{margin-left:auto;flex-shrink:0;font-size:.68rem;font-weight:700;padding:.15rem .48rem;border-radius:999px}
+.sev-critical{background:rgba(255,85,102,.12);color:#ff5566;border:1px solid rgba(255,85,102,.25)}
+.sev-warning{background:rgba(255,200,0,.1);color:#ffcc00;border:1px solid rgba(255,200,0,.2)}
+.sev-info{background:rgba(0,170,255,.1);color:#00aaff;border:1px solid rgba(0,170,255,.2)}
+
+/* VARS TABLE */
+.vars-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.var-row{display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;padding:.6rem 1rem;
+  border-bottom:1px solid var(--border);align-items:center;font-size:.8rem}
+.var-row:last-child{border-bottom:none}
+.var-row:hover{background:rgba(255,255,255,.02)}
+.var-row-head{background:rgba(0,80,255,.05);font-size:.7rem;font-weight:700;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.var-key{font-family:var(--mono);color:#00ccff;font-size:.78rem;overflow:hidden;text-overflow:ellipsis}
+.var-val{font-family:var(--mono);color:var(--muted2);font-size:.73rem;overflow:hidden;text-overflow:ellipsis}
+.var-status{font-size:.68rem;font-weight:700;padding:.14rem .45rem;border-radius:999px;flex-shrink:0}
+.vs-ok{background:rgba(0,255,170,.08);color:var(--green);border:1px solid rgba(0,255,170,.18)}
+.vs-empty{background:rgba(255,200,0,.08);color:#ffcc00;border:1px solid rgba(255,200,0,.18)}
+.vs-secret{background:rgba(255,85,102,.08);color:#ff5566;border:1px solid rgba(255,85,102,.18)}
+.vs-weak{background:rgba(255,136,68,.08);color:#ff8844;border:1px solid rgba(255,136,68,.18)}
+
+/* PRICING */
+.pricing-wrap{max-width:700px;margin:0 auto 2rem;padding:0 1.5rem}
+.pricing-bar{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);
+  border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.plan{background:var(--bg2);padding:1.1rem 1.3rem}
+.plan.pro{background:linear-gradient(135deg,rgba(0,50,180,.1),rgba(0,120,255,.05))}
+.plan-name{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem}
+.plan-price{font-family:var(--display);font-size:1.6rem;font-weight:700;color:#fff;line-height:1;margin-bottom:.2rem}
+.plan-price span{font-size:.8rem;color:var(--muted2);font-weight:400}
+.plan-feats{list-style:none;margin:.6rem 0 .85rem}
+.plan-feats li{font-size:.76rem;color:var(--muted2);padding:.18rem 0;display:flex;gap:.4rem}
+.plan-feats li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+.plan-feats li.no::before{content:'—';color:var(--muted)}
+.btn-free{width:100%;padding:.55rem;border-radius:7px;border:1px solid var(--border);color:var(--muted2);font-size:.8rem;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-free:hover{color:var(--text);border-color:var(--border-h)}
+.btn-pro{width:100%;padding:.55rem;border-radius:7px;background:var(--brand);color:#fff;font-size:.8rem;font-weight:700;font-family:var(--display);letter-spacing:.04em;border:none;cursor:pointer;transition:all .2s;box-shadow:0 3px 14px rgba(0,80,255,.28)}
+.btn-pro:hover{box-shadow:0 5px 22px rgba(0,80,255,.48);transform:translateY(-1px)}
+
+.tc{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.45rem}
+.toast{display:flex;align-items:center;gap:.6rem;padding:.7rem .95rem;border-radius:10px;
+  background:var(--bg3);border:1px solid var(--border-h);color:var(--text);font-size:.81rem;
+  box-shadow:0 8px 28px rgba(0,0,0,.6);animation:sIn .3s ease}
+@keyframes sIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+footer{border-top:1px solid var(--border);padding:1.6rem;text-align:center;font-size:.75rem;color:var(--muted)}
+footer a{color:var(--muted2)}
+footer a:hover{color:var(--b2)}
+
+@media(max-width:900px){.app{grid-template-columns:1fr}.pricing-bar{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="tc" id="tc"></div>
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">.ENV</div>
+    <span class="logo-w">ENV</span><span class="logo-b"> Guard</span>
+  </div>
+  <span class="nav-badge">Para Devs</span>
+  <div class="nav-r">
+    <a href="/" class="nav-back">← LorranStack</a>
+    <button class="nav-pro" onclick="assinarPro()">💎 Pro — R$22/mês</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag"><span class="hero-dot"></span>Segurança para seu .env</div>
+  <h1 class="hero-h1">O <span>guarda</span> do seu .env</h1>
+  <p class="hero-sub">Cole seu arquivo .env e descubra em segundos o que está faltando, exposto ou mal configurado antes de ir para produção.</p>
+</section>
+
+<!-- PRICING -->
+<div class="pricing-wrap">
+  <div class="pricing-bar">
+    <div class="plan">
+      <div class="plan-name" style="color:var(--muted2)">Gratuito</div>
+      <div class="plan-price">R$ 0<span>/sempre</span></div>
+      <ul class="plan-feats">
+        <li>Análise de até 20 variáveis</li>
+        <li>Detecção de secrets expostos</li>
+        <li>Validação de formato</li>
+        <li class="no">Comparação .env vs .env.example</li>
+        <li class="no">Gerador de .env.example</li>
+        <li class="no">Histórico de scans</li>
+      </ul>
+      <button class="btn-free" onclick="document.getElementById('env-input').focus()">Usar grátis</button>
+    </div>
+    <div class="plan pro">
+      <div class="plan-name" style="color:var(--b2)">⚡ Pro</div>
+      <div class="plan-price">R$ 22<span>/mês</span></div>
+      <ul class="plan-feats">
+        <li>Variáveis ilimitadas</li>
+        <li>Comparação .env vs .env.example</li>
+        <li>Gerador automático de .env.example</li>
+        <li>Sugestão de valores seguros</li>
+        <li>Histórico de 50 scans</li>
+        <li>Export relatório PDF</li>
+      </ul>
+      <button class="btn-pro" onclick="assinarPro()">Assinar Pro — R$22/mês</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- ESQUERDA: INPUT -->
+  <div>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Seu arquivo .env</span>
+        <div class="panel-actions">
+          <button class="pact primary" onclick="analyzeEnv()">🔍 Analisar</button>
+          <button class="pact" onclick="clearEnv()">✕ Limpar</button>
+          <button class="pact" onclick="generateExample()">⬇ .env.example</button>
+        </div>
+      </div>
+      <textarea id="env-input" class="env-textarea" placeholder="Cole seu .env aqui...
+
+# Exemplos:
+DATABASE_URL=postgresql://user:senha@localhost:5432/db
+SECRET_KEY=minha_chave_secreta
+API_KEY=
+DEBUG=true
+PORT=3000" oninput="analyzeEnv()"></textarea>
+      <button class="example-btn" onclick="loadExample()">📋 Carregar exemplo com problemas</button>
+    </div>
+
+    <!-- .env.example compare -->
+    <div class="panel" style="margin-top:.75rem;display:none" id="example-compare-panel">
+      <div class="panel-header">
+        <span class="panel-title">.env.example (compare)</span>
+        <button class="pact" onclick="document.getElementById('example-compare-panel').style.display='none'">✕</button>
+      </div>
+      <textarea id="example-input" class="env-textarea" style="min-height:150px" placeholder="Cole seu .env.example aqui..." oninput="analyzeEnv()"></textarea>
+    </div>
+    <button onclick="document.getElementById('example-compare-panel').style.display='block'"
+      style="margin-top:.5rem;padding:.45rem 1rem;border-radius:8px;border:1px solid var(--border);color:var(--muted2);font-size:.78rem;cursor:pointer;width:100%;font-family:var(--sans);transition:all .15s"
+      onmouseover="this.style.borderColor='var(--border-h)';this.style.color='var(--text)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted2)'">
+      + Comparar com .env.example
+    </button>
+  </div>
+
+  <!-- DIREITA: RESULTADOS -->
+  <div class="results" id="results">
+    <div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
+      <div style="font-size:2rem;margin-bottom:.6rem">🔍</div>
+      <div style="font-size:.88rem">Cole seu .env ao lado para<br/>começar a análise</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div style="margin-bottom:.4rem"><a href="/">LorranStack</a> · Ferramentas para Devs</div>
+  © 2026 ENV Guard — Uma ferramenta do <a href="/">LorranStack</a>
+</footer>
+
+<script>
+const DANGEROUS_PATTERNS = [
+  { pattern:/password\s*=\s*.+/i, key:'password', desc:'Senha em texto puro detectada' },
+  { pattern:/secret\s*=\s*.+/i,   key:'secret',   desc:'Chave secreta detectada' },
+  { pattern:/private_key\s*=\s*.+/i, key:'private_key', desc:'Chave privada detectada' },
+  { pattern:/token\s*=\s*[a-z0-9_\-\.]{20,}/i, key:'token', desc:'Token longo detectado — verifique se não é chave real' },
+  { pattern:/api_key\s*=\s*[a-z0-9_\-]{16,}/i, key:'api_key', desc:'API key com valor real detectada' },
+];
+
+const WEAK_VALUES = ['true','false','0','1','localhost','test','dev','development','production','secret','password','123456','changeme'];
+const URL_PATTERN = /^(https?|postgres|mysql|mongodb|redis):\/\/.+/i;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PORT_PATTERN = /^\d{1,5}$/;
+
+function parseEnv(text) {
+  const vars = [];
+  const lines = text.split('\n');
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return;
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) return;
+    const key = trimmed.slice(0, eq).trim();
+    const val = trimmed.slice(eq+1).trim().replace(/^["']|["']$/g, '');
+    if (key) vars.push({ key, value: val, line: idx+1 });
+  });
+  return vars;
+}
+
+function analyzeEnv() {
+  const text = document.getElementById('env-input').value.trim();
+  if (!text) {
+    document.getElementById('results').innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:var(--muted)"><div style="font-size:2rem;margin-bottom:.6rem">🔍</div><div style="font-size:.88rem">Cole seu .env ao lado</div></div>`;
+    return;
+  }
+
+  const vars = parseEnv(text);
+  if (!vars.length) {
+    document.getElementById('results').innerHTML = `<div style="color:var(--muted2);font-size:.85rem;padding:1rem">Nenhuma variável encontrada.</div>`;
+    return;
+  }
+
+  const issues = [];
+  const varStatuses = [];
+
+  vars.forEach(v => {
+    let status = 'ok';
+    const keyLower = v.key.toLowerCase();
+
+    // Vazio
+    if (!v.value) {
+      issues.push({ key:v.key, desc:'Variável sem valor definido', severity:'warning', icon:'⚠️' });
+      status = 'empty';
+    }
+
+    // Secrets expostos
+    if (v.value && (keyLower.includes('secret') || keyLower.includes('private') || keyLower.includes('password') || keyLower.includes('passwd'))) {
+      if (v.value.length > 4) {
+        issues.push({ key:v.key, desc:'Contém dado sensível — certifique que este .env não está no Git', severity:'critical', icon:'🚨' });
+        status = 'secret';
+      }
+    }
+
+    // Tokens vazados
+    if (v.value && (keyLower.includes('token') || keyLower.includes('api_key') || keyLower.includes('access_key'))) {
+      if (v.value.length > 20 && !v.value.includes('xxx') && !v.value.includes('your_')) {
+        issues.push({ key:v.key, desc:'Possível token/chave real — adicione ao .gitignore', severity:'critical', icon:'🔑' });
+        status = 'secret';
+      }
+    }
+
+    // Valores fracos
+    if (v.value && WEAK_VALUES.includes(v.value.toLowerCase()) && (keyLower.includes('secret') || keyLower.includes('key') || keyLower.includes('password'))) {
+      issues.push({ key:v.key, desc:`Valor fraco detectado: "${v.value}"`, severity:'warning', icon:'⚠️' });
+      if (status === 'ok') status = 'weak';
+    }
+
+    // DEBUG=true em produção
+    if (v.key === 'DEBUG' && v.value.toLowerCase() === 'true') {
+      issues.push({ key:'DEBUG', desc:'DEBUG=true detectado — não use em produção!', severity:'warning', icon:'⚠️' });
+    }
+
+    // NODE_ENV
+    if (v.key === 'NODE_ENV' && !['development','production','test'].includes(v.value.toLowerCase())) {
+      issues.push({ key:'NODE_ENV', desc:`Valor incomum: "${v.value}". Use: development, production ou test`, severity:'info', icon:'ℹ️' });
+    }
+
+    varStatuses.push({ ...v, status });
+  });
+
+  // Comparar com .env.example se tiver
+  const exampleText = document.getElementById('example-input').value.trim();
+  if (exampleText) {
+    const exampleVars = parseEnv(exampleText).map(v => v.key);
+    const currentKeys = vars.map(v => v.key);
+    exampleVars.forEach(k => {
+      if (!currentKeys.includes(k)) {
+        issues.push({ key:k, desc:'Variável presente no .env.example mas ausente no .env', severity:'critical', icon:'❌' });
+      }
+    });
+  }
+
+  // Score
+  const critical = issues.filter(i => i.severity === 'critical').length;
+  const warnings = issues.filter(i => i.severity === 'warning').length;
+  const score = Math.max(0, 100 - critical*20 - warnings*8);
+  const scoreColor = score >= 80 ? '#00ffaa' : score >= 50 ? '#ffcc00' : '#ff5566';
+  const scoreLabel = score >= 80 ? 'Seguro' : score >= 50 ? 'Atenção' : 'Crítico';
+
+  const html = `
+    <!-- SCORE -->
+    <div class="score-card">
+      <div class="score-ring" style="background:${scoreColor}18;border:3px solid ${scoreColor}">
+        <span style="color:${scoreColor}">${score}</span>
+      </div>
+      <div style="flex:1">
+        <div class="score-title">${scoreLabel}</div>
+        <div class="score-sub">${vars.length} variável${vars.length!==1?'s':''} · ${issues.length} problem${issues.length!==1?'as':'a'} encontrad${issues.length!==1?'os':'o'}</div>
+        <div class="score-pills">
+          ${critical?`<span class="spill sev-critical">${critical} crítico${critical!==1?'s':''}</span>`:''}
+          ${warnings?`<span class="spill sev-warning">${warnings} aviso${warnings!==1?'s':''}</span>`:''}
+          ${!issues.length?`<span class="spill" style="background:rgba(0,255,170,.08);color:var(--green);border:1px solid rgba(0,255,170,.18)">✓ Nenhum problema</span>`:''}
+        </div>
+      </div>
+    </div>
+
+    ${issues.length ? `
+    <!-- ISSUES -->
+    <div class="issue-card">
+      <div class="issue-header">
+        <span style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Problemas encontrados</span>
+        <span style="font-size:.72rem;font-weight:700;padding:.16rem .52rem;border-radius:999px;background:rgba(255,85,102,.1);color:#ff5566;border:1px solid rgba(255,85,102,.2)">${issues.length}</span>
+      </div>
+      <div class="issue-list">
+        ${issues.map(i => `
+          <div class="issue-item">
+            <span class="issue-icon">${i.icon}</span>
+            <div style="flex:1;min-width:0">
+              <div class="issue-key">${i.key}</div>
+              <div class="issue-desc">${i.desc}</div>
+            </div>
+            <span class="issue-badge sev-${i.severity}">${i.severity==='critical'?'Crítico':i.severity==='warning'?'Aviso':'Info'}</span>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- VARS TABLE -->
+    <div class="vars-card">
+      <div class="issue-header">
+        <span style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Todas as variáveis</span>
+      </div>
+      <div class="var-row var-row-head">
+        <span>VARIÁVEL</span><span>VALOR</span><span>STATUS</span>
+      </div>
+      ${varStatuses.map(v => `
+        <div class="var-row">
+          <span class="var-key">${v.key}</span>
+          <span class="var-val">${v.value ? maskValue(v.key, v.value) : '<span style="color:var(--muted)">vazio</span>'}</span>
+          <span class="var-status vs-${v.status}">${{ok:'OK',empty:'Vazio',secret:'Secret',weak:'Fraco'}[v.status]||'OK'}</span>
+        </div>`).join('')}
+    </div>
+  `;
+
+  document.getElementById('results').innerHTML = html;
+}
+
+function maskValue(key, val) {
+  const k = key.toLowerCase();
+  if (k.includes('secret') || k.includes('password') || k.includes('token') || k.includes('key')) {
+    if (val.length > 6) return val.slice(0,3) + '•'.repeat(val.length-3);
+  }
+  if (val.length > 40) return val.slice(0,37) + '...';
+  return val;
+}
+
+function generateExample() {
+  const text = document.getElementById('env-input').value.trim();
+  if (!text) { toast('Cole um .env primeiro','error'); return; }
+  const vars = parseEnv(text);
+  if (!vars.length) { toast('Nenhuma variável encontrada','error'); return; }
+
+  const lines = [`# .env.example — gerado pelo ENV Guard em ${new Date().toLocaleDateString('pt-BR')}`, ''];
+  vars.forEach(v => {
+    const k = v.key.toLowerCase();
+    let placeholder = '';
+    if (k.includes('url') || k.includes('uri')) placeholder = k.includes('database') ? 'postgresql://user:password@localhost:5432/db' : 'https://...';
+    else if (k.includes('port')) placeholder = '3000';
+    else if (k.includes('secret') || k.includes('key') || k.includes('token') || k.includes('password')) placeholder = 'YOUR_' + v.key + '_HERE';
+    else if (k.includes('debug')) placeholder = 'false';
+    else if (k.includes('env')) placeholder = 'development';
+    else placeholder = '';
+    lines.push(`${v.key}=${placeholder}`);
+  });
+
+  const content = lines.join('\n');
+  const blob = new Blob([content], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='.env.example'; a.click();
+  URL.revokeObjectURL(url);
+  toast('.env.example baixado!','success');
+}
+
+function clearEnv() {
+  document.getElementById('env-input').value = '';
+  document.getElementById('results').innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:var(--muted)"><div style="font-size:2rem;margin-bottom:.6rem">🔍</div><div style="font-size:.88rem">Cole seu .env ao lado</div></div>`;
+}
+
+function loadExample() {
+  document.getElementById('env-input').value = `# Configurações da aplicação
+NODE_ENV=development
+PORT=3000
+DEBUG=true
+
+# Banco de dados
+DATABASE_URL=postgresql://admin:senha123@localhost:5432/myapp
+REDIS_URL=redis://localhost:6379
+
+# Autenticação
+JWT_SECRET=secret
+JWT_EXPIRES_IN=7d
+
+# APIs externas
+STRIPE_SECRET_KEY=sua_chave_stripe_aqui
+SENDGRID_API_KEY=
+OPENAI_API_KEY=sua_chave_openai_aqui
+
+# App
+APP_URL=http://localhost:3000
+CORS_ORIGIN=*`;
+  analyzeEnv();
+  toast('Exemplo carregado com problemas para analisar!','info');
+}
+
+function toast(msg,type='info'){
+  const c={success:'#00ffaa',error:'#ff5566',info:'#0099ff'};
+  const el=document.createElement('div');el.className='toast';
+  el.innerHTML=`<span style="color:${c[type]};font-weight:700">${type==='success'?'✓':type==='error'?'✗':'ℹ'}</span><span>${msg}</span>`;
+  document.getElementById('tc').appendChild(el);
+  setTimeout(()=>el.remove(),4000);
+}
+
+function assinarPro(){
+  if(typeof lsCheckout==='function'){
+    lsCheckout({productName:'ENV Guard Pro',amount:22.00,planSlug:'env-guard-pro',onSuccess:()=>window.location.reload()});
+  } else { toast('Checkout indisponível','error'); }
+}
+</script>
+<script src="/checkout.js"></script>
+</body>
+</html>
