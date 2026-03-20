@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard — LorranStack</title>
+  <meta name="description" content="Gerencie seus produtos SaaS no LorranStack. Publique, edite e acompanhe analytics."/>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script>
@@ -384,9 +385,7 @@ window.API = null;
     const user = getUser();
     if (user) document.getElementById('user-name-nav').textContent = user.name.split(' ')[0];
     try {
-      console.log('[Dashboard] Carregando produtos para userId:', user.id);
       const products = await DB.getCreatorSaas(user.id);
-      console.log('[Dashboard] Produtos encontrados:', products.length);
       const totals = products.reduce(function(a,p){ return { views: a.views+(p.views||0), clicks: a.clicks+(p.clicks||0), upvotes: a.upvotes+(p.upvotes||0) }; }, {views:0,clicks:0,upvotes:0});
       document.getElementById('stat-products').textContent = products.length;
       document.getElementById('stat-views').textContent    = totals.views.toLocaleString();

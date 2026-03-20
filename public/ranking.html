@@ -193,18 +193,7 @@ const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
 document.getElementById('week-label').textContent =
   `${monday.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})} — ${sunday.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'})}`;
 
-const DEMO = [
-  {name:'DevDocs BR',slug:'devdocs-br',icon:'📖',cat:'Dev',pricing:'free',upvotes:891,views:4521,clicks:1203,avg_rating:4.9,review_count:203,tagline:'Documentação técnica em português'},
-  {name:'APIForge',slug:'apiforge',icon:'⚡',cat:'Dev',pricing:'freemium',upvotes:634,views:3102,clicks:891,avg_rating:4.6,review_count:89,tagline:'APIs REST sem escrever servidor'},
-  {name:'DevKit Pro',slug:'devkitpro',icon:'💻',cat:'Dev',pricing:'free',upvotes:789,views:3201,clicks:412,avg_rating:4.7,review_count:103,tagline:'Utilitários essenciais para devs'},
-  {name:'SQLPad',slug:'sqlpad',icon:'🗄️',cat:'Dev',pricing:'free',upvotes:512,views:2890,clicks:734,avg_rating:4.8,review_count:67,tagline:'Editor SQL com IA explicativa'},
-  {name:'Resumo.ai',slug:'resumo-ai',icon:'📄',cat:'Prod',pricing:'freemium',upvotes:445,views:2234,clicks:612,avg_rating:4.4,review_count:54,tagline:'Resuma qualquer conteúdo em segundos'},
-  {name:'DesignFlow',slug:'designflow',icon:'🎨',cat:'Design',pricing:'subscription',upvotes:421,views:2103,clicks:356,avg_rating:4.8,review_count:67,tagline:'Design colaborativo para times modernos'},
-  {name:'Logosfera',slug:'logosfera',icon:'✨',cat:'Design',pricing:'paid',upvotes:341,views:1789,clicks:523,avg_rating:4.2,review_count:38,tagline:'Logotipos com IA em minutos'},
-  {name:'FlowAI',slug:'flowai',icon:'🤖',cat:'IA',pricing:'freemium',upvotes:342,views:1204,clicks:287,avg_rating:4.5,review_count:28,tagline:'Automatize fluxos com IA'},
-  {name:'CopyGenius',slug:'copygenius',icon:'✍️',cat:'Mkt',pricing:'freemium',upvotes:287,views:1456,clicks:398,avg_rating:4.3,review_count:41,tagline:'Copies em português com IA'},
-  {name:'FormBlocks',slug:'formblocks',icon:'📋',cat:'Auto',pricing:'freemium',upvotes:278,views:1345,clicks:367,avg_rating:4.1,review_count:29,tagline:'Formulários bonitos sem código'},
-];
+const DEMO = []; // Dados carregados do Supabase abaixo
 
 function priceBadge(t){
   return {free:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-free">Grátis</span>',freemium:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-freemium">Freemium</span>',paid:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-paid">Pago</span>',subscription:'<span class="text-xs px-1.5 py-0.5 rounded-full badge-sub">Assinatura</span>'}[t]||'';

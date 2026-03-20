@@ -303,68 +303,93 @@ async function loadCreator(creatorId){
 
 async function init(){
   const params = new URLSearchParams(window.location.search);
-  const slug = params.get('slug'); // slug do criador (email-based)
-  const name = params.get('name');
+  const creatorId = params.get('id');
+  const creatorName = params.get('name');
 
-  // Demo se não tiver API
-  const demoCreator = {
-    name: name || 'Rafael Mendes',
-    bio: 'Desenvolvedor full-stack apaixonado por DX e ferramentas para devs. Criador do DevKit Pro e SQLPad.',
-    website: 'https://rafaelmendes.dev',
-    twitter: 'rafaelmendes',
-  };
+  try {
+    // Tentar carregar creator real do banco
+    let creator = null;
+    let products = [];
 
-  const initials = demoCreator.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
-  document.getElementById('creator-avatar-big').textContent = initials;
-  document.getElementById('creator-name').textContent = demoCreator.name;
-  document.getElementById('creator-bio').textContent = demoCreator.bio;
+    if (creatorId) {
+      const users = await _sb('ls_users?select=id,name,bio,website,role&id=eq.' + creatorId);
+      if (users.length) creator = users[0];
+      const rows = await _sb('ls_saas?select=id,name,slug,tagline,description,logo_url,pricing_type,upvotes,views,avg_rating,review_count,is_featured,category_id&creator_id=eq.' + creatorId + '&status=in.(approved,featured)&order=upvotes.desc');
+      const cids = [...new Set(rows.map(r=>r.category_id).filter(Boolean))];
+      const cats = cids.length ? await _sb('ls_categories?select=id,name,icon&id=in.('+cids.join(',')+')') : [];
+      const cm = Object.fromEntries(cats.map(c=>[c.id,c]));
+      products = rows.map(r=>({...r, cat_name: cm[r.category_id]?.name||'', cat_icon: cm[r.category_id]?.icon||''}));
+    }
 
-  // Links
-  const links = document.getElementById('creator-links');
-  if(demoCreator.website){
-    links.innerHTML += `<a href="${demoCreator.website}" target="_blank" class="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
-      ${demoCreator.website.replace('https://','')}</a>`;
-  }
+    // Fallback para name da URL se não achar creator
+    const displayName = creator?.name || creatorName || 'Creator';
+    const initials = displayName.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
 
-  // Produtos demo
-  const demoProducts = [
-    {name:'DevKit Pro',slug:'devkitpro',tagline:'Utilitários essenciais para devs',description:'Formatadores, validators, converters e muito mais.',category_name:'Desenvolvimento',category_icon:'💻',pricing_type:'free',upvotes:789,views:3201,avg_rating:4.7,review_count:103,is_featured:true},
-    {name:'SQLPad',slug:'sqlpad',tagline:'Editor SQL com IA',description:'Edite, otimize e entenda suas queries em português.',category_name:'Desenvolvimento',category_icon:'💻',pricing_type:'free',upvotes:512,views:2890,avg_rating:4.8,review_count:67,is_featured:true},
-  ];
+    document.getElementById('creator-avatar-big').textContent = initials;
+    document.getElementById('creator-name').textContent = displayName;
+    document.getElementById('creator-bio').textContent = creator?.bio || 'Creator no LorranStack';
+    document.title = displayName + ' — LorranStack';
 
-  document.getElementById('stat-products').textContent = demoProducts.length;
-  document.getElementById('stat-total-views').textContent = demoProducts.reduce((a,p)=>a+(p.views||0),0).toLocaleString('pt-BR');
-  document.getElementById('stat-total-upvotes').textContent = demoProducts.reduce((a,p)=>a+(p.upvotes||0),0).toLocaleString('pt-BR');
+    // Website
+    if (creator?.website) {
+      const links = document.getElementById('creator-links');
+      links.innerHTML = `<a href="${creator.website}" target="_blank" rel="noopener" class="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20"/></svg>
+        ${creator.website.replace('https://','').replace('http://','')}</a>`;
+    }
 
-  document.title = `${demoCreator.name} — LorranStack`;
-  document.getElementById('og-title').content = `${demoCreator.name} no LorranStack`;
-  document.getElementById('og-desc').content = demoCreator.bio;
+    // Stats
+    const totalViews = products.reduce((a,p) => a+(p.views||0), 0);
+    const totalUpvotes = products.reduce((a,p) => a+(p.upvotes||0), 0);
+    document.getElementById('stat-products').textContent = products.length;
+    document.getElementById('stat-total-views').textContent = totalViews.toLocaleString('pt-BR');
+    document.getElementById('stat-total-upvotes').textContent = totalUpvotes.toLocaleString('pt-BR');
 
-  const grid = document.getElementById('products-grid');
-  grid.innerHTML = demoProducts.map(s=>`
-    <a href="produto.html?slug=${s.slug}" class="saas-card p-5">
-      <div class="flex items-start gap-3 mb-3">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-base font-800 border border-white/8" style="background:rgba(255,255,255,.05);font-family:Syne">
-          ${s.name.charAt(0)}
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-1.5">
-            <span class="font-display font-700 text-white text-sm">${s.name}</span>
-            ${s.is_featured?'<span class="text-xs" style="color:#4ade80">★</span>':''}
+    // Produtos grid
+    const grid = document.getElementById('products-grid');
+    if (!products.length) {
+      grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-500">
+        <div class="text-3xl mb-3">📦</div>
+        <p class="text-sm">Nenhum produto publicado ainda.</p>
+      </div>`;
+      return;
+    }
+
+    const colors = ['#3b82f6','#8b5cf6','#22c55e','#f59e0b','#ef4444','#06b6d4'];
+    grid.innerHTML = products.map(s => {
+      const color = colors[s.name.charCodeAt(0) % colors.length];
+      const logoHtml = s.logo_url
+        ? `<img src="${s.logo_url}" alt="${s.name}" class="w-full h-full object-cover rounded-xl"/>`
+        : `<div class="w-full h-full flex items-center justify-center rounded-xl font-serif text-lg" style="background:${color}18;color:${color}">${s.name.charAt(0)}</div>`;
+      return `<a href="/produto.html?slug=${s.slug}" class="saas-card p-5">
+        <div class="flex items-start gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl flex-shrink-0 border border-white/8 overflow-hidden">${logoHtml}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span class="font-display font-700 text-white text-sm">${s.name}</span>
+              ${s.is_featured ? '<span class="text-xs" style="color:#4ade80">★</span>' : ''}
+            </div>
+            <p class="text-xs text-gray-500 truncate">${s.tagline||''}</p>
           </div>
-          <p class="text-xs text-gray-500 truncate">${s.tagline}</p>
         </div>
-      </div>
-      <p class="text-gray-400 text-xs leading-relaxed mb-3" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${s.description}</p>
-      <div class="flex items-center justify-between">
-        <div class="flex gap-0.5">${starsHtml(s.avg_rating)}</div>
-        ${priceLabel(s.pricing_type)}
-      </div>
-      <div class="flex items-center gap-3 mt-2 pt-2 border-t border-white/5 text-xs text-gray-600">
-        <span>▲ ${s.upvotes}</span><span>👁 ${(s.views||0).toLocaleString('pt-BR')}</span>
-      </div>
-    </a>`).join('');
+        ${s.description ? `<p class="text-gray-400 text-xs leading-relaxed mb-3" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${s.description}</p>` : ''}
+        <div class="flex items-center justify-between">
+          <div class="flex gap-0.5">${starsHtml(s.avg_rating)}</div>
+          ${priceLabel(s.pricing_type)}
+        </div>
+        <div class="flex items-center gap-3 mt-2 pt-2 border-t border-white/5 text-xs text-gray-600">
+          <span>▲ ${s.upvotes||0}</span>
+          <span>👁 ${(s.views||0).toLocaleString('pt-BR')}</span>
+          ${s.cat_name ? `<span>${s.cat_icon} ${s.cat_name}</span>` : ''}
+        </div>
+      </a>`;
+    }).join('');
+
+  } catch(e) {
+    console.warn('creator init:', e.message);
+    document.getElementById('creator-name').textContent = creatorName || 'Creator';
+    document.getElementById('creator-bio').textContent = 'Perfil de creator no LorranStack';
+  }
 }
 
 init();

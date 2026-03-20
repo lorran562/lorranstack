@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>LorranStack — SaaS</title>
+  <meta name="description" id="meta-desc" content="Descubra esta ferramenta SaaS no LorranStack — o marketplace de software em português."/>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
@@ -546,6 +547,8 @@ async function loadSaas(slug) {
 
 function renderSaas(d) {
   document.title = `${d.name} — LorranStack`;
+  const metaDesc = document.getElementById('meta-desc');
+  if (metaDesc) metaDesc.content = `${d.tagline || d.name} — Descubra no LorranStack, o marketplace de SaaS em português.`;
 
   // Breadcrumb
   document.getElementById('bc-category').textContent = d.category_name || '';

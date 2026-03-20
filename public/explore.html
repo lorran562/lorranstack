@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Explore todas as ferramentas SaaS no LorranStack. Filtre por categoria, avalie e descubra software em português."/>
   <title>Explorar — LorranStack</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -287,7 +288,7 @@ async function loadCategories() {
       pill.onclick = () => setCategory(c.slug, pill);
       mobile.appendChild(pill);
     });
-  } catch {}
+  } catch(e) { console.warn('loadCategories:', e.message); }
 }
 
 // ── Setters de filtro ─────────────────────────
@@ -349,8 +350,12 @@ async function loadProducts() {
     grid.innerHTML = products.map(renderCard).join('');
     renderPagination(data.pagination);
   } catch {
-    grid.innerHTML = getDemoData().map(renderCard).join('');
-    document.getElementById('result-summary').textContent = '6 ferramentas (modo demo)';
+    grid.innerHTML = `<div class="col-span-full text-center py-16 text-gray-500">
+      <div class="text-4xl mb-3">⚡</div>
+      <p class="font-medium text-gray-400 mb-1">Erro ao carregar ferramentas</p>
+      <p class="text-sm">Tente recarregar a página.</p>
+    </div>`;
+    document.getElementById('result-summary').textContent = 'Erro ao carregar';
   }
 }
 
@@ -431,17 +436,7 @@ function goPage(p) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── Demo ──────────────────────────────────────
-function getDemoData() {
-  return [
-    { name:'FlowAI', slug:'flowai', tagline:'Automatize fluxos com IA', description:'Crie automações poderosas usando inteligência artificial.', category_name:'IA', category_icon:'🤖', pricing_type:'freemium', upvotes:342, views:1204, avg_rating:4.5, review_count:28, is_featured:true },
-    { name:'BotMaker', slug:'botmaker', tagline:'Chatbots profissionais em minutos', description:'Plataforma drag-and-drop para construção de bots.', category_name:'Bots', category_icon:'🤖', pricing_type:'paid', upvotes:189, views:890, avg_rating:4.2, review_count:15, is_featured:false },
-    { name:'DesignFlow', slug:'designflow', tagline:'Design colaborativo para times', description:'Ferramenta de design UI/UX com componentes prontos.', category_name:'Design', category_icon:'🎨', pricing_type:'subscription', upvotes:421, views:2103, avg_rating:4.8, review_count:67, is_featured:true },
-    { name:'PostScheduler', slug:'postscheduler', tagline:'Agende posts em todas as redes', description:'Gerencie e agende conteúdo para todas as redes sociais.', category_name:'Marketing', category_icon:'📣', pricing_type:'freemium', upvotes:256, views:1456, avg_rating:4.0, review_count:32, is_featured:false },
-    { name:'DevKit Pro', slug:'devkitpro', tagline:'Utilitários para devs', description:'Formatadores, validators, converters e muito mais.', category_name:'Dev', category_icon:'💻', pricing_type:'free', upvotes:789, views:3201, avg_rating:4.7, review_count:103, is_featured:true },
-    { name:'FocusTimer', slug:'focustimer', tagline:'Pomodoro para equipes remotas', description:'App de produtividade com timer e bloqueio de distrações.', category_name:'Produtividade', category_icon:'🚀', pricing_type:'freemium', upvotes:134, views:678, avg_rating:3.9, review_count:21, is_featured:false },
-  ];
-}
+// Dados carregados do Supabase em tempo real
 </script>
 </body>
 </html>
