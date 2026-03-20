@@ -3,9 +3,17 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const PRICE_IDS = {
-  'creator':       'price_1TCl0CCqEzRk7OT3KEUcrgJj',
-  'creator-pro':   'price_1TCl28CqEzRk7OT3hTbyoASj',
-  'featured-slot': 'price_1TCl2wCqEzRk7OT3F6PpuxKb',
+  'creator':            'price_1TCl0CCqEzRk7OT3KEUcrgJj',
+  'creator-pro':        'price_1TCl28CqEzRk7OT3hTbyoASj',
+  'featured-slot':      'price_1TCl2wCqEzRk7OT3F6PpuxKb',
+  'contratofreela-pro': 'price_1TCuWXCqEzRk7OT3BsKbTPjI',
+  'readme-dev-pro':     'price_1TCuWvCqEzRk7OT3wWa3YLnq',
+};
+
+const IS_SUBSCRIPTION = {
+  'creator': true, 'creator-pro': true,
+  'contratofreela-pro': true, 'readme-dev-pro': true,
+  'featured-slot': false,
 };
 
 module.exports = async (req, res) => {
@@ -32,7 +40,7 @@ module.exports = async (req, res) => {
     const sessionParams = {
       payment_method_types: ['card'],
       line_items: [{ price: PRICE_IDS[plan_slug], quantity: 1 }],
-      mode: isFeatured ? 'payment' : 'subscription',
+      mode: IS_SUBSCRIPTION[plan_slug] !== false ? 'subscription' : 'payment',
       success_url: baseUrl + '/?checkout=success&plan=' + plan_slug,
       cancel_url:  baseUrl + '/pricing.html?canceled=1',
       locale: 'pt-BR',

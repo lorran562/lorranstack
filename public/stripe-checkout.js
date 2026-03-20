@@ -5,9 +5,11 @@ const LORRANSTACK_CONFIG = {
   PUBLIC_KEY:  'pk_test_51SGlekCqEzRk7OT36E6iybyjw0LHJkHIoU2az7K90Lm4c0rb0ebw80Fbke5A622sDIvBvLiXmM5VPqJUqxfhqMQU00EsAGVjFv', // pk_test_...
   API_BASE:    'https://lorranstack-six.vercel.app/api',
   PLANS: {
-    'creator':       { price_id: 'price_1TCl0CCqEzRk7OT3KEUcrgJj', mode: 'subscription' },
-    'creator-pro':   { price_id: 'price_1TCl28CqEzRk7OT3hTbyoASj', mode: 'subscription' },
-    'featured-slot': { price_id: 'price_1TCl2wCqEzRk7OT3F6PpuxKb', mode: 'payment'      },
+    'creator':            { price_id: 'price_1TCl0CCqEzRk7OT3KEUcrgJj', mode: 'subscription' },
+    'creator-pro':        { price_id: 'price_1TCl28CqEzRk7OT3hTbyoASj', mode: 'subscription' },
+    'featured-slot':      { price_id: 'price_1TCl2wCqEzRk7OT3F6PpuxKb', mode: 'payment'      },
+    'contratofreela-pro': { price_id: 'price_1TCuWXCqEzRk7OT3BsKbTPjI', mode: 'subscription' },
+    'readme-dev-pro':     { price_id: 'price_1TCuWvCqEzRk7OT3wWa3YLnq', mode: 'subscription' },
   },
 };
 

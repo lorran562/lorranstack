@@ -273,8 +273,8 @@ footer a:hover{color:var(--b2)}
   <span class="nav-badge">Para Devs</span>
   <div class="nav-r">
     <a href="/" class="nav-back">← LorranStack</a>
-    <button class="nav-pro" onclick="scrollTo({top:document.getElementById('pricing').offsetTop-60,behavior:'smooth'})">
-      💎 Ver Pro — R$27/mês
+    <button class="nav-pro" onclick="iniciarCheckout()">
+      💎 Assinar Pro — R$27/mês
     </button>
   </div>
 </nav>
@@ -333,7 +333,7 @@ footer a:hover{color:var(--b2)}
         <li>Suporte por email prioritário</li>
         <li>Novos templates toda semana</li>
       </ul>
-      <button class="btn-plan-pro" onclick="toast('Em breve! Deixe seu email em contato@lorranstack.com 🚀','info')">
+      <button class="btn-plan-pro" onclick="iniciarCheckout()">
         Assinar Pro — R$27/mês
       </button>
     </div>
@@ -1020,6 +1020,12 @@ function resetForm(){
   document.getElementById('md-rendered').style.display='none';
   document.getElementById('md-raw').textContent='';
   toast('Formulário limpo','info');
+}
+</script>
+<script src="/stripe-checkout.js"></script>
+<script>
+function iniciarCheckout() {
+  startCheckout('readme-dev-pro');
 }
 </script>
 </body>

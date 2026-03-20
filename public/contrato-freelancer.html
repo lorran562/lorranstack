@@ -203,10 +203,12 @@ footer a:hover{color:var(--text)}
     <div class="logo-dot"></div>
     ContratoFreela
   </div>
-  <span class="nav-badge">Grátis</span>
+  <span class="nav-badge">Freemium</span>
   <div class="nav-r">
     <a href="/" class="nav-btn">← LorranStack</a>
-    <button class="nav-btn-cta" onclick="scrollToApp()">Gerar contrato</button>
+    <button class="nav-btn-cta" style="background:var(--brand);color:#fff;border:none;font-weight:700;letter-spacing:.03em;box-shadow:0 0 14px rgba(0,102,255,.35)" onclick="assinarPro()">
+      💎 Pro — R$19,90/mês
+    </button>
   </div>
 </nav>
 
@@ -230,7 +232,22 @@ footer a:hover{color:var(--text)}
         Ver exemplo
       </button>
     </div>
-    <div class="hero-features">
+    <!-- Pricing banner compacto -->
+<div style="display:flex;justify-content:center;gap:1px;max-width:700px;margin:0 auto 2rem;background:rgba(0,100,255,.08);border:1px solid rgba(0,120,255,.15);border-radius:12px;overflow:hidden">
+  <div style="flex:1;padding:1rem 1.2rem;text-align:center">
+    <div style="font-size:.7rem;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem">Gratuito</div>
+    <div style="font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:.2rem">R$ 0</div>
+    <div style="font-size:.72rem;color:var(--muted2)">1 contrato/dia · Seções básicas</div>
+  </div>
+  <div style="flex:1;padding:1rem 1.2rem;text-align:center;background:rgba(0,80,255,.1);border-left:1px solid rgba(0,120,255,.15)">
+    <div style="font-size:.7rem;font-weight:700;color:#00aaff;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem">⚡ Pro</div>
+    <div style="font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:.2rem">R$ 19,90<span style="font-size:.75rem;color:var(--muted2)">/mês</span></div>
+    <div style="font-size:.72rem;color:var(--muted2);margin-bottom:.6rem">Ilimitado · PDF avançado · Cláusulas extras</div>
+    <button onclick="assinarPro()" style="padding:.35rem .9rem;border-radius:7px;background:linear-gradient(135deg,#0055ff,#0099ff);color:#fff;font-size:.75rem;font-weight:700;border:none;cursor:pointer;font-family:var(--sans)">Assinar agora</button>
+  </div>
+</div>
+
+<div class="hero-features">
       <div class="hero-feat"><span class="hero-feat-icon">✓</span> 100% gratuito</div>
       <div class="hero-feat"><span class="hero-feat-icon">✓</span> Sem cadastro</div>
       <div class="hero-feat"><span class="hero-feat-icon">✓</span> Exporta em PDF</div>
@@ -808,6 +825,12 @@ const nextMonth=new Date(today);
 nextMonth.setMonth(nextMonth.getMonth()+1);
 document.getElementById('data-inicio').value=today.toISOString().split('T')[0];
 document.getElementById('data-fim').value=nextMonth.toISOString().split('T')[0];
+</script>
+<script src="/stripe-checkout.js"></script>
+<script>
+function assinarPro() {
+  startCheckout('contratofreela-pro');
+}
 </script>
 </body>
 </html>
