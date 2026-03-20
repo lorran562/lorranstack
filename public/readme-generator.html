@@ -1025,7 +1025,14 @@ function resetForm(){
 <script src="/stripe-checkout.js"></script>
 <script>
 function iniciarCheckout() {
-  startCheckout('readme-dev-pro');
+  // Checkout dinâmico: cria produto/price automaticamente no Stripe test mode
+  startDynamicCheckout(
+    'README.dev Pro',
+    2700,          // R$27,00 em centavos
+    'month',
+    '/readme-generator?upgraded=1',
+    '/readme-generator'
+  );
 }
 </script>
 </body>

@@ -829,7 +829,13 @@ document.getElementById('data-fim').value=nextMonth.toISOString().split('T')[0];
 <script src="/stripe-checkout.js"></script>
 <script>
 function assinarPro() {
-  startCheckout('contratofreela-pro');
+  startDynamicCheckout(
+    'ContratoFreela Pro',
+    1990,          // R$19,90 em centavos
+    'month',
+    '/contrato-freelancer?upgraded=1',
+    '/contrato-freelancer'
+  );
 }
 </script>
 </body>
