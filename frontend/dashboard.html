@@ -177,7 +177,7 @@ window.DB = {
     return _sb('ls_saas', {
       method: 'POST',
       headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-      body: JSON.stringify(Object.assign({}, data, { slug: slug, status: 'pending' }))
+      body: JSON.stringify(Object.assign({}, data, { slug: slug, status: 'pending', tags: [], screenshots: [] }))
     });
   },
   async _joinMeta(rows) {
@@ -378,7 +378,9 @@ window.API = null;
     const user = getUser();
     if (user) document.getElementById('user-name-nav').textContent = user.name.split(' ')[0];
     try {
+      console.log('[Dashboard] Carregando produtos para userId:', user.id);
       const products = await DB.getCreatorSaas(user.id);
+      console.log('[Dashboard] Produtos encontrados:', products.length);
       const totals = products.reduce(function(a,p){ return { views: a.views+(p.views||0), clicks: a.clicks+(p.clicks||0), upvotes: a.upvotes+(p.upvotes||0) }; }, {views:0,clicks:0,upvotes:0});
       document.getElementById('stat-products').textContent = products.length;
       document.getElementById('stat-views').textContent    = totals.views.toLocaleString();
@@ -390,7 +392,7 @@ window.API = null;
         return;
       }
       const statusMap = { pending:'⏳ Pendente', approved:'✅ Aprovado', rejected:'❌ Rejeitado', featured:'⭐ Destaque' };
-      list.innerHTML = products.map(function(p){ return '<div class="p-5 flex items-center justify-between gap-4"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="font-600 text-white text-sm">'+p.name+'</span><span class="text-xs px-2 py-0.5 rounded-full status-'+(p.status||'pending')+'">'+(statusMap[p.status]||p.status)+'</span></div><div class="flex items-center gap-4 text-xs text-gray-600"><span>👁 '+(p.views||0)+'</span><span>▲ '+(p.upvotes||0)+'</span><span>⭐ '+Number(p.avg_rating||0).toFixed(1)+' ('+(p.review_count||0)+')</span></div></div><a href="saas.html?slug='+p.slug+'" class="text-xs text-gray-500 hover:text-white">Ver →</a></div>'; }).join('');
+      list.innerHTML = products.map(function(p){ return '<div class="p-5 flex items-center justify-between gap-4"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="font-600 text-white text-sm">'+p.name+'</span><span class="text-xs px-2 py-0.5 rounded-full status-'+(p.status||'pending')+'">'+(statusMap[p.status]||p.status)+'</span></div><div class="flex items-center gap-4 text-xs text-gray-600"><span>👁 '+(p.views||0)+'</span><span>▲ '+(p.upvotes||0)+'</span><span>⭐ '+Number(p.avg_rating||0).toFixed(1)+' ('+(p.review_count||0)+')</span></div></div><a href="produto.html?slug='+p.slug+'" class="text-xs text-gray-500 hover:text-white">Ver →</a></div>'; }).join('');
     } catch(e) {
       document.getElementById('dashboard-products-list').innerHTML = '<div class="p-5 text-sm text-red-400">Erro: ' + e.message + '</div>';
     }
@@ -398,16 +400,18 @@ window.API = null;
   
   async function loadCategories() {
     try {
-      const res = await Promise.resolve({ok:true,json:()=>Promise.resolve([])});
-      const cats = await res.json();
+      const cats = await DB.getCategories();
       const sel = document.getElementById('f-category');
-      cats.forEach(c => {
+      sel.innerHTML = '<option value="">Selecione a categoria...</option>';
+      cats.forEach(function(c) {
         const opt = document.createElement('option');
         opt.value = c.id;
-        opt.textContent = `${c.icon} ${c.name}`;
+        opt.textContent = (c.icon || '') + ' ' + c.name;
         sel.appendChild(opt);
       });
-    } catch {}
+    } catch(e) {
+      console.error('Erro ao carregar categorias:', e.message);
+    }
   }
 
   async function submitSaas() {
