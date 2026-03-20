@@ -550,15 +550,8 @@ footer{position:relative;z-index:10;border-top:1px solid var(--border);
       De IA e automação a marketing e produtividade — encontre, avalie e compartilhe as ferramentas que transformam negócios.
     </p>
 
-    <div class="hero-ctas">
-      <button class="btn-primary" onclick="openModal('m-register')">
-        Começar grátis
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-      </button>
-      <button class="btn-ghost" onclick="document.getElementById('feat-sec').scrollIntoView({behavior:'smooth'})">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Ver destaques
-      </button>
+    <div class="hero-ctas" id="hero-ctas">
+      <!-- Preenchido dinamicamente pelo JS baseado no estado de login -->
     </div>
 
     <div class="hero-cats">
@@ -818,7 +811,7 @@ function setNavUser(u){
   }else{na.style.display='flex';nu.style.display='none'}
 }
 
-function logout(){clrU();setNavUser(null);toast('Até logo! 👋','info');loadProds(true)}
+function logout(){clrU();setNavUser(null);renderHeroCTAs(null);toast('Até logo! 👋','info');loadProds(true)}
 
 function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden'}
 function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow=''}
@@ -843,7 +836,7 @@ async function doLogin(){
     const tok=btoa(JSON.stringify({id:safe.id,email:safe.email,role:safe.role,exp:Date.now()+604800000}));
     setU(safe,tok);
     showOk('ls','✓ Login realizado!');
-    setTimeout(()=>{closeModal('m-login');setNavUser(safe);toast('Bem-vindo, '+safe.name.split(' ')[0]+'!','success')},900);
+    setTimeout(()=>{closeModal('m-login');setNavUser(safe);renderHeroCTAs(safe);toast('Bem-vindo, '+safe.name.split(' ')[0]+'!','success')},900);
   }catch(e){showErr('le',e.message)}
 }
 
@@ -865,7 +858,7 @@ async function doRegister(){
     const tok=btoa(JSON.stringify({id:u.id,email:u.email,role:u.role,exp:Date.now()+604800000}));
     setU(u,tok);
     showOk('rs','✓ Conta criada com sucesso!');
-    setTimeout(()=>{closeModal('m-register');setNavUser(u);toast('Bem-vindo ao LorranStack, '+u.name.split(' ')[0]+'!','success');if(u.role==='creator')setTimeout(()=>location.href='/dashboard.html',1500)},900);
+    setTimeout(()=>{closeModal('m-register');setNavUser(u);renderHeroCTAs(u);toast('Bem-vindo ao LorranStack, '+u.name.split(' ')[0]+'!','success');if(u.role==='creator')setTimeout(()=>location.href='/dashboard.html',1500)},900);
   }catch(e){showErr('re',e.message)}
 }
 
@@ -1045,7 +1038,7 @@ document.addEventListener('keydown',e=>{
 });
 
 document.addEventListener('DOMContentLoaded',()=>{
-  const u=getU();if(u)setNavUser(u);
+  const u=getU();if(u)setNavUser(u);renderHeroCTAs(u);
   const pm=sessionStorage.getItem('openModal');
   if(pm){sessionStorage.removeItem('openModal');setTimeout(()=>openModal(pm),600)}
   loadStats();loadCats();loadFeat();loadProds(true);
@@ -1074,6 +1067,48 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');document.body.style.overflow=''});
 });
 
+
+
+/* ════ HERO CTAs DINÂMICOS ════ */
+function renderHeroCTAs(user) {
+  const el = document.getElementById('hero-ctas');
+  if (!el) return;
+
+  if (user) {
+    // LOGADO — mostrar ações úteis
+    const isCreator = user.role === 'creator' || user.role === 'admin';
+    el.innerHTML = isCreator
+      ? /* Creator: ir para dashboard ou publicar */
+        `<a href="/dashboard.html" class="btn-primary" style="text-decoration:none">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Meu Dashboard
+        </a>
+        <a href="/dashboard.html#publicar" class="btn-ghost" style="text-decoration:none" onclick="sessionStorage.setItem('dash-tab','new');return true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Publicar SaaS
+        </a>`
+      : /* Usuário comum: explorar ou virar creator */
+        `<a href="/explore.html" class="btn-primary" style="text-decoration:none">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Explorar ferramentas
+        </a>
+        <a href="/pricing.html" class="btn-ghost" style="text-decoration:none">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Publicar meu SaaS
+        </a>`;
+  } else {
+    // DESLOGADO — cadastro / ver destaques
+    el.innerHTML =
+      `<button class="btn-primary" onclick="openModal('m-register')">
+        Começar grátis
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+      <button class="btn-ghost" onclick="document.getElementById('feat-sec').scrollIntoView({behavior:'smooth'})">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Ver destaques
+      </button>`;
+  }
+}
 
 /* ════ KEYBOARD ════ */
 document.addEventListener('keydown',e=>{
