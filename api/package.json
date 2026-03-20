@@ -1,8 +1,9 @@
 {
   "name": "lorranstack-api",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "dependencies": {
     "stripe": "^14.18.0",
-    "@supabase/supabase-js": "^2.39.0"
+    "@supabase/supabase-js": "^2.39.0",
+    "mercadopago": "^2.0.15"
   }
 }

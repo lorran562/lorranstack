@@ -112,6 +112,22 @@
       "dest": "/public/readme-generator.html"
     },
     {
+      "src": "/api/create-payment",
+      "dest": "/api/create-payment.js"
+    },
+    {
+      "src": "/api/payment-status",
+      "dest": "/api/payment-status.js"
+    },
+    {
+      "src": "/api/mp-webhook",
+      "dest": "/api/mp-webhook.js"
+    },
+    {
+      "src": "/checkout.js",
+      "dest": "/public/checkout.js"
+    },
+    {
       "src": "/",
       "dest": "/public/index.html"
     }

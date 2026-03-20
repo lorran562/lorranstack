@@ -826,16 +826,15 @@ nextMonth.setMonth(nextMonth.getMonth()+1);
 document.getElementById('data-inicio').value=today.toISOString().split('T')[0];
 document.getElementById('data-fim').value=nextMonth.toISOString().split('T')[0];
 </script>
-<script src="/stripe-checkout.js"></script>
+<script src="/checkout.js"></script>
 <script>
 function assinarPro() {
-  startDynamicCheckout(
-    'ContratoFreela Pro',
-    1990,          // R$19,90 em centavos
-    'month',
-    '/contrato-freelancer?upgraded=1',
-    '/contrato-freelancer'
-  );
+  lsCheckout({
+    productName: 'ContratoFreela Pro',
+    amount: 19.90,
+    planSlug: 'contratofreela-pro',
+    onSuccess: () => { window.location.reload(); }
+  });
 }
 </script>
 </body>

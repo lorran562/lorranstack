@@ -715,14 +715,24 @@ const STRIPE_LINKS = {
   'featured-slot': null,
 };
 
+// Mapa de planos para o sistema Mercado Pago
+const PLAN_DETAILS = {
+  'creator':       { name: 'Creator — LorranStack', amount: 29.00 },
+  'creator-pro':   { name: 'Creator Pro — LorranStack', amount: 79.00 },
+  'featured-slot': { name: 'Featured Slot — LorranStack', amount: 99.00 },
+};
+
 function checkout(plan) {
-  const link = STRIPE_LINKS[plan];
-  if (link) {
-    window.location.href = link;
-    return;
-  }
-  // Fallback: abrir modal de "em breve"
-  showComingSoon(plan);
+  const details = PLAN_DETAILS[plan];
+  if (!details) { console.warn('Plano desconhecido:', plan); return; }
+  lsCheckout({
+    productName: details.name,
+    amount:      details.amount,
+    planSlug:    plan,
+    onSuccess: () => {
+      window.location.href = '/?checkout=success&plan=' + plan;
+    }
+  });
 }
 
 function showComingSoon(plan) {

@@ -1022,17 +1022,15 @@ function resetForm(){
   toast('Formulário limpo','info');
 }
 </script>
-<script src="/stripe-checkout.js"></script>
+<script src="/checkout.js"></script>
 <script>
 function iniciarCheckout() {
-  // Checkout dinâmico: cria produto/price automaticamente no Stripe test mode
-  startDynamicCheckout(
-    'README.dev Pro',
-    2700,          // R$27,00 em centavos
-    'month',
-    '/readme-generator?upgraded=1',
-    '/readme-generator'
-  );
+  lsCheckout({
+    productName: 'README.dev Pro',
+    amount: 27.00,
+    planSlug: 'readme-dev-pro',
+    onSuccess: () => { window.location.reload(); }
+  });
 }
 </script>
 </body>
