@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ContratoFreela — Gerador de Contratos para Freelancers</title>
+<meta name="description" content="Gere contratos profissionais para seus projetos freelancer em menos de 2 minutos. Gratuito, sem cadastro, exporta em PDF."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060810;--bg2:#0c1020;--bg3:#111827;
+  --border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.14);
+  --text:#e2e8f4;--muted:#5a6a82;--muted2:#8899b0;
+  --accent:#3b82f6;--green:#22c55e;
+  --serif:'Instrument Serif',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --mono:'DM Mono',monospace;
+  --r:12px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:center;
+  padding:0 2rem;gap:1rem;background:rgba(6,8,16,.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border)}
+.logo{font-family:var(--serif);font-size:1.2rem;color:#fff;display:flex;align-items:center;gap:.4rem}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#22c55e)}
+.nav-badge{font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:5px;
+  background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2);
+  letter-spacing:.05em}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:.75rem}
+.nav-btn{padding:.38rem .9rem;border-radius:8px;font-size:.81rem;font-weight:500;
+  border:1px solid var(--border);color:var(--muted2);transition:all .15s}
+.nav-btn:hover{border-color:var(--border-h);color:var(--text)}
+.nav-btn-cta{padding:.38rem .9rem;border-radius:8px;font-size:.81rem;font-weight:600;
+  background:var(--accent);color:#fff;transition:all .15s}
+.nav-btn-cta:hover{background:#2563eb}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:70px 2rem 50px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:700px;height:300px;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(59,130,246,.12) 0%,rgba(34,197,94,.06) 50%,transparent 70%);
+  filter:blur(40px)}
+.hero-content{position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .85rem;
+  border-radius:999px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);
+  font-size:.73rem;color:#4ade80;font-weight:500;letter-spacing:.05em;margin-bottom:1.5rem}
+.hero-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.8rem);color:#fff;
+  line-height:1.08;letter-spacing:-.02em;margin-bottom:1rem}
+.hero-title em{font-style:italic;color:#60a5fa}
+.hero-sub{font-size:1rem;color:var(--muted2);max-width:480px;margin:0 auto 2rem;line-height:1.65}
+.hero-ctas{display:flex;justify-content:center;gap:.65rem;flex-wrap:wrap;margin-bottom:2rem}
+.btn-cta{display:inline-flex;align-items:center;gap:.45rem;padding:.75rem 1.6rem;
+  border-radius:11px;background:linear-gradient(135deg,#3b82f6,#22c55e);color:#fff;
+  font-size:.93rem;font-weight:600;transition:all .2s;border:none;cursor:pointer;
+  box-shadow:0 6px 24px rgba(59,130,246,.3)}
+.btn-cta:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(59,130,246,.45)}
+.btn-ghost{display:inline-flex;align-items:center;gap:.45rem;padding:.75rem 1.4rem;
+  border-radius:11px;background:rgba(255,255,255,.06);border:1px solid var(--border-h);
+  color:var(--text);font-size:.93rem;font-weight:500;transition:all .2s;cursor:pointer}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.hero-features{display:flex;justify-content:center;gap:2rem;flex-wrap:wrap}
+.hero-feat{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted2)}
+.hero-feat-icon{color:var(--green)}
+
+/* ── APP ── */
+.app{max-width:1200px;margin:0 auto;padding:0 2rem 6rem;display:grid;
+  grid-template-columns:1fr 1fr;gap:2rem;align-items:start}
+
+/* ── FORM SIDE ── */
+.form-panel{background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+  padding:1.6rem;position:sticky;top:72px}
+.form-title{font-family:var(--serif);font-size:1.3rem;color:#fff;margin-bottom:1.2rem}
+.steps{display:flex;gap:.35rem;margin-bottom:1.5rem}
+.step{flex:1;height:3px;border-radius:2px;background:var(--bg3);transition:background .3s}
+.step.done{background:var(--green)}.step.active{background:var(--accent)}
+.step-label{font-size:.72rem;color:var(--muted2);margin-bottom:.9rem;font-weight:500}
+.section-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.1em;margin-bottom:.8rem;margin-top:1.2rem}
+.section-title:first-child{margin-top:0}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.field{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.75rem}
+.field.full{grid-column:1/-1}
+.field label{font-size:.78rem;font-weight:600;color:var(--muted2);letter-spacing:.02em}
+.field label span{color:#f87171;margin-left:.1rem}
+.input{padding:.65rem .9rem;border-radius:8px;background:var(--bg3);border:1px solid var(--border);
+  color:var(--text);font-size:.86rem;outline:none;transition:border-color .15s;font-family:var(--sans);width:100%}
+.input:focus{border-color:rgba(59,130,246,.5);box-shadow:0 0 0 3px rgba(59,130,246,.08)}
+.input::placeholder{color:var(--muted)}
+.textarea{resize:vertical;min-height:80px}
+.select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%235a6a82' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .9rem center}
+.btn-nav{display:flex;align-items:center;gap:.5rem;padding:.65rem 1.2rem;border-radius:9px;
+  font-size:.85rem;font-weight:600;transition:all .2s;cursor:pointer;font-family:var(--sans)}
+.btn-next{background:var(--accent);color:#fff;border:none}
+.btn-next:hover{background:#2563eb}
+.btn-prev{background:var(--bg3);border:1px solid var(--border);color:var(--muted2)}
+.btn-prev:hover{color:var(--text);border-color:var(--border-h)}
+.btn-gen{background:linear-gradient(135deg,#3b82f6,#22c55e);color:#fff;border:none;
+  padding:.75rem 1.4rem;font-size:.9rem;box-shadow:0 4px 16px rgba(59,130,246,.3)}
+.btn-gen:hover{opacity:.9;transform:translateY(-1px)}
+.form-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.2rem;
+  padding-top:1rem;border-top:1px solid var(--border)}
+
+/* ── PREVIEW SIDE ── */
+.preview-panel{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.preview-header{padding:1rem 1.4rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between}
+.preview-title{font-size:.82rem;font-weight:600;color:var(--muted2);
+  display:flex;align-items:center;gap:.5rem}
+.preview-actions{display:flex;gap:.5rem}
+.btn-action{padding:.4rem .85rem;border-radius:7px;font-size:.78rem;font-weight:600;
+  border:1px solid var(--border);color:var(--muted2);transition:all .15s;cursor:pointer;
+  display:flex;align-items:center;gap:.35rem;font-family:var(--sans)}
+.btn-action:hover{border-color:var(--border-h);color:var(--text)}
+.btn-pdf{background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border-color:transparent}
+.btn-pdf:hover{opacity:.9;border-color:transparent}
+
+/* ── CONTRATO (preview) ── */
+.contract-wrap{padding:1.5rem;background:var(--bg2)}
+.contract{background:#fff;border-radius:10px;padding:3rem;color:#1a1a2e;
+  font-family:'DM Sans',sans-serif;font-size:13.5px;line-height:1.7;min-height:400px;
+  box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.contract h1{font-family:'Instrument Serif',serif;font-size:1.5rem;text-align:center;
+  margin-bottom:.3rem;color:#1a1a2e;font-weight:400}
+.contract .contract-sub{text-align:center;font-size:.78rem;color:#666;margin-bottom:1.5rem}
+.contract hr{border:none;border-top:2px solid #eee;margin:1.2rem 0}
+.contract h2{font-size:.88rem;font-weight:700;color:#1a1a2e;text-transform:uppercase;
+  letter-spacing:.08em;margin:1.2rem 0 .5rem;padding-bottom:.35rem;border-bottom:1px solid #eee}
+.contract p{margin-bottom:.6rem;color:#333}
+.contract .parties-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin:.75rem 0}
+.contract .party-box{background:#f8f9ff;border-radius:8px;padding:1rem;border:1px solid #e8ebff}
+.contract .party-label{font-size:.72rem;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem}
+.contract .party-name{font-size:1rem;font-weight:700;color:#1a1a2e;margin-bottom:.2rem}
+.contract .party-detail{font-size:.77rem;color:#666;line-height:1.5}
+.contract .value-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;
+  padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;margin:.75rem 0}
+.contract .value-label{font-size:.78rem;color:#166534;font-weight:600}
+.contract .value-amount{font-size:1.5rem;font-weight:700;color:#166534;font-family:'Instrument Serif',serif}
+.contract .timeline-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;
+  padding:1rem 1.2rem;margin:.75rem 0}
+.contract .sign-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem}
+.contract .sign-box{text-align:center}
+.contract .sign-line{border-top:2px solid #333;padding-top:.4rem;margin-top:2rem}
+.contract .sign-name{font-weight:700;font-size:.85rem;color:#1a1a2e}
+.contract .sign-role{font-size:.73rem;color:#666;margin-top:.1rem}
+.contract .placeholder{color:#bbb;font-style:italic}
+.contract .tag{display:inline-block;background:#eef2ff;color:#4f46e5;
+  padding:.12rem .5rem;border-radius:4px;font-size:.72rem;font-weight:600;margin-right:.3rem}
+
+/* ── TOAST ── */
+.tc{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem}
+.toast{display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;
+  background:var(--bg3);border:1px solid var(--border-h);color:var(--text);font-size:.82rem;
+  box-shadow:0 8px 28px rgba(0,0,0,.5);animation:slideIn .3s ease;max-width:300px}
+@keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── SECTIONS BELOW ── */
+.features-section{max-width:1000px;margin:0 auto;padding:0 2rem 5rem}
+.features-title{font-family:var(--serif);font-size:2rem;color:#fff;text-align:center;margin-bottom:.5rem}
+.features-sub{text-align:center;font-size:.88rem;color:var(--muted2);margin-bottom:2.5rem}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.feature-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:1.3rem}
+.feature-icon{font-size:1.5rem;margin-bottom:.65rem}
+.feature-name{font-size:.9rem;font-weight:600;color:#fff;margin-bottom:.3rem}
+.feature-desc{font-size:.8rem;color:var(--muted2);line-height:1.55}
+
+footer{border-top:1px solid var(--border);padding:2rem;text-align:center;
+  font-size:.78rem;color:var(--muted)}
+footer a{color:var(--muted2);transition:color .15s}
+footer a:hover{color:var(--text)}
+
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .form-panel{position:static}
+  .grid-2{grid-template-columns:1fr}
+  .features-grid{grid-template-columns:1fr 1fr}
+  .hero-features{gap:1rem}
+}
+@media(max-width:640px){
+  .hero{padding:50px 1rem 40px}
+  .features-grid{grid-template-columns:1fr}
+  .contract{padding:1.5rem}
+  .contract .parties-grid{grid-template-columns:1fr}
+  .contract .sign-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="tc" id="tc"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    ContratoFreela
+  </div>
+  <span class="nav-badge">Grátis</span>
+  <div class="nav-r">
+    <a href="/" class="nav-btn">← LorranStack</a>
+    <button class="nav-btn-cta" onclick="scrollToApp()">Gerar contrato</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">✦ Para desenvolvedores, designers e freelancers</div>
+    <h1 class="hero-title">
+      Contratos profissionais<br>
+      em <em>menos de 2 minutos</em>
+    </h1>
+    <p class="hero-sub">
+      Preencha as informações do projeto, gere o contrato completo e exporte em PDF. Sem cadastro, sem complicação.
+    </p>
+    <div class="hero-ctas">
+      <button class="btn-cta" onclick="scrollToApp()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Gerar meu contrato
+      </button>
+      <button class="btn-ghost" onclick="document.getElementById('preview-sec').scrollIntoView({behavior:'smooth'})">
+        Ver exemplo
+      </button>
+    </div>
+    <div class="hero-features">
+      <div class="hero-feat"><span class="hero-feat-icon">✓</span> 100% gratuito</div>
+      <div class="hero-feat"><span class="hero-feat-icon">✓</span> Sem cadastro</div>
+      <div class="hero-feat"><span class="hero-feat-icon">✓</span> Exporta em PDF</div>
+      <div class="hero-feat"><span class="hero-feat-icon">✓</span> Cláusulas completas</div>
+      <div class="hero-feat"><span class="hero-feat-icon">✓</span> Adaptado ao Brasil</div>
+    </div>
+  </div>
+</section>
+
+<!-- APP -->
+<div class="app" id="app-sec">
+
+  <!-- FORM -->
+  <div class="form-panel">
+    <div class="form-title">Preencha os dados</div>
+    <div class="steps">
+      <div class="step active" id="step-bar-1"></div>
+      <div class="step" id="step-bar-2"></div>
+      <div class="step" id="step-bar-3"></div>
+    </div>
+
+    <!-- ETAPA 1: PARTES -->
+    <div id="form-step-1">
+      <div class="step-label">Etapa 1 de 3 — Partes do contrato</div>
+      <div class="section-title">Prestador de serviço (você)</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Nome completo <span>*</span></label>
+          <input class="input" id="prest-nome" type="text" placeholder="Seu nome ou empresa"/>
+        </div>
+        <div class="field">
+          <label>CPF / CNPJ <span>*</span></label>
+          <input class="input" id="prest-cpf" type="text" placeholder="000.000.000-00"/>
+        </div>
+        <div class="field">
+          <label>Email <span>*</span></label>
+          <input class="input" id="prest-email" type="email" placeholder="seu@email.com"/>
+        </div>
+        <div class="field">
+          <label>Telefone</label>
+          <input class="input" id="prest-tel" type="text" placeholder="(11) 99999-9999"/>
+        </div>
+        <div class="field full">
+          <label>Endereço / Cidade</label>
+          <input class="input" id="prest-end" type="text" placeholder="São Paulo, SP"/>
+        </div>
+      </div>
+
+      <div class="section-title">Contratante (cliente)</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Nome / Empresa <span>*</span></label>
+          <input class="input" id="cont-nome" type="text" placeholder="Nome do cliente"/>
+        </div>
+        <div class="field">
+          <label>CPF / CNPJ</label>
+          <input class="input" id="cont-cpf" type="text" placeholder="000.000.000-00"/>
+        </div>
+        <div class="field">
+          <label>Email <span>*</span></label>
+          <input class="input" id="cont-email" type="email" placeholder="cliente@email.com"/>
+        </div>
+        <div class="field">
+          <label>Telefone</label>
+          <input class="input" id="cont-tel" type="text" placeholder="(11) 99999-9999"/>
+        </div>
+      </div>
+
+      <div class="form-nav">
+        <span style="font-size:.78rem;color:var(--muted)">Etapa 1 / 3</span>
+        <button class="btn-nav btn-next" onclick="goStep(2)">
+          Próximo
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ETAPA 2: PROJETO -->
+    <div id="form-step-2" style="display:none">
+      <div class="step-label">Etapa 2 de 3 — Sobre o projeto</div>
+      <div class="section-title">Detalhes do serviço</div>
+      <div class="field">
+        <label>Tipo de serviço <span>*</span></label>
+        <select class="input select" id="tipo-servico">
+          <option value="">Selecione...</option>
+          <option value="Desenvolvimento de Website">Desenvolvimento de Website</option>
+          <option value="Desenvolvimento de Aplicativo Mobile">Desenvolvimento de App Mobile</option>
+          <option value="Desenvolvimento de Sistema Web">Desenvolvimento de Sistema Web</option>
+          <option value="Design de Interface (UI/UX)">Design de Interface (UI/UX)</option>
+          <option value="Design Gráfico">Design Gráfico</option>
+          <option value="Consultoria em Tecnologia">Consultoria em Tecnologia</option>
+          <option value="Desenvolvimento de API">Desenvolvimento de API</option>
+          <option value="Manutenção de Sistema">Manutenção de Sistema</option>
+          <option value="Criação de Conteúdo Digital">Criação de Conteúdo Digital</option>
+          <option value="Outro serviço">Outro serviço</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Nome / título do projeto <span>*</span></label>
+        <input class="input" id="projeto-nome" type="text" placeholder="Ex: Site institucional para XYZ"/>
+      </div>
+      <div class="field">
+        <label>Descrição do escopo <span>*</span></label>
+        <textarea class="input textarea" id="projeto-scope" placeholder="Descreva o que será entregue: funcionalidades, páginas, integrações, etc."></textarea>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Data de início <span>*</span></label>
+          <input class="input" id="data-inicio" type="date"/>
+        </div>
+        <div class="field">
+          <label>Data de entrega <span>*</span></label>
+          <input class="input" id="data-fim" type="date"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Quantas revisões estão incluídas</label>
+        <select class="input select" id="revisoes">
+          <option value="1 (uma)">1 rodada de revisão</option>
+          <option value="2 (duas)" selected>2 rodadas de revisão</option>
+          <option value="3 (três)">3 rodadas de revisão</option>
+          <option value="ilimitadas">Revisões ilimitadas</option>
+        </select>
+      </div>
+
+      <div class="form-nav">
+        <button class="btn-nav btn-prev" onclick="goStep(1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+          Voltar
+        </button>
+        <button class="btn-nav btn-next" onclick="goStep(3)">
+          Próximo
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ETAPA 3: PAGAMENTO -->
+    <div id="form-step-3" style="display:none">
+      <div class="step-label">Etapa 3 de 3 — Pagamento e condições</div>
+      <div class="section-title">Valor e pagamento</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Valor total (R$) <span>*</span></label>
+          <input class="input" id="valor-total" type="number" step="0.01" placeholder="0.00"/>
+        </div>
+        <div class="field">
+          <label>Forma de pagamento <span>*</span></label>
+          <select class="input select" id="forma-pag">
+            <option value="PIX">PIX</option>
+            <option value="Transferência bancária (TED/DOC)">TED/DOC</option>
+            <option value="Boleto bancário">Boleto</option>
+            <option value="Cartão de crédito">Cartão de crédito</option>
+            <option value="Dinheiro">Dinheiro</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Parcelamento</label>
+        <select class="input select" id="parcelamento">
+          <option value="pagamento único (100% antes do início)">100% antes do início</option>
+          <option value="50% de entrada e 50% na entrega" selected>50% entrada + 50% entrega</option>
+          <option value="30% de entrada, 40% no meio e 30% na entrega">30% entrada, 40% meio, 30% entrega</option>
+          <option value="pagamento mensal conforme cronograma">Pagamento mensal</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Multa por atraso no pagamento (%)</label>
+        <select class="input select" id="multa">
+          <option value="1%">1% ao mês</option>
+          <option value="2%" selected>2% ao mês</option>
+          <option value="5%">5% ao mês</option>
+          <option value="10%">10% (pagamento único)</option>
+        </select>
+      </div>
+
+      <div class="section-title">Condições adicionais</div>
+      <div class="field">
+        <label>Foro (cidade para disputas legais)</label>
+        <input class="input" id="foro" type="text" placeholder="São Paulo, SP"/>
+      </div>
+      <div class="field">
+        <label>Observações adicionais</label>
+        <textarea class="input textarea" id="obs" placeholder="Cláusulas específicas, condições especiais, etc. (opcional)"></textarea>
+      </div>
+
+      <div class="form-nav">
+        <button class="btn-nav btn-prev" onclick="goStep(2)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+          Voltar
+        </button>
+        <button class="btn-nav btn-gen" onclick="generateContract()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Gerar contrato
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview-panel" id="preview-sec">
+    <div class="preview-header">
+      <div class="preview-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Pré-visualização do contrato
+      </div>
+      <div class="preview-actions">
+        <button class="btn-action" onclick="copyText()" id="btn-copy">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copiar
+        </button>
+        <button class="btn-action btn-pdf" onclick="exportPDF()" id="btn-pdf">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar PDF
+        </button>
+      </div>
+    </div>
+    <div class="contract-wrap">
+      <div class="contract" id="contract-content">
+        <h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h1>
+        <div class="contract-sub">Preencha o formulário ao lado para gerar seu contrato</div>
+        <hr/>
+        <div style="text-align:center;padding:2rem;color:#bbb">
+          <div style="font-size:2.5rem;margin-bottom:.75rem">📄</div>
+          <div style="font-size:.9rem;font-weight:600;color:#888;margin-bottom:.3rem">Contrato aparecerá aqui</div>
+          <div style="font-size:.78rem;color:#bbb">Complete as 3 etapas e clique em "Gerar contrato"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features-section">
+  <div class="features-title">Tudo que você precisa</div>
+  <div class="features-sub">Cláusulas essenciais para proteger você e seu cliente</div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <div class="feature-name">Escopo detalhado</div>
+      <div class="feature-desc">Define claramente o que está incluído e o que é considerado trabalho adicional.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💰</div>
+      <div class="feature-name">Proteção de pagamento</div>
+      <div class="feature-desc">Multas por atraso, parcelamento e condições de pagamento bem definidas.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚖️</div>
+      <div class="feature-name">Propriedade intelectual</div>
+      <div class="feature-desc">Transferência de direitos após quitação total do projeto.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <div class="feature-name">Confidencialidade</div>
+      <div class="feature-desc">Cláusula NDA integrada para proteger informações sensíveis do cliente.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔄</div>
+      <div class="feature-name">Controle de revisões</div>
+      <div class="feature-desc">Limite claro de rodadas de revisão para evitar trabalho extra não pago.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📅</div>
+      <div class="feature-name">Prazo e rescisão</div>
+      <div class="feature-desc">Condições de cancelamento, prazo de entrega e consequências de descumprimento.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div style="margin-bottom:.5rem">
+    <a href="/">LorranStack</a> · <a href="/">Marketplace de SaaS</a>
+  </div>
+  © 2026 ContratoFreela · Este documento é de caráter informativo. Consulte um advogado para contratos de alto valor.
+</footer>
+
+<script>
+let currentStep = 1;
+const TOTAL_STEPS = 3;
+
+function scrollToApp(){
+  document.getElementById('app-sec').scrollIntoView({behavior:'smooth'});
+}
+
+function toast(msg, type='info'){
+  const c={success:'#4ade80',error:'#f87171',info:'#60a5fa'};
+  const i={success:'✓',error:'✗',info:'ℹ'};
+  const el=document.createElement('div');
+  el.className='toast';
+  el.innerHTML=`<span style="color:${c[type]};font-weight:700">${i[type]}</span><span>${msg}</span>`;
+  document.getElementById('tc').appendChild(el);
+  setTimeout(()=>el.remove(),4000);
+}
+
+function updateStepBars(step){
+  for(let i=1;i<=TOTAL_STEPS;i++){
+    const bar=document.getElementById('step-bar-'+i);
+    if(i<step) bar.className='step done';
+    else if(i===step) bar.className='step active';
+    else bar.className='step';
+  }
+}
+
+function goStep(step){
+  // Validar etapa atual antes de avançar
+  if(step > currentStep){
+    const err = validateStep(currentStep);
+    if(err){ toast(err,'error'); return; }
+  }
+  document.getElementById('form-step-'+currentStep).style.display='none';
+  document.getElementById('form-step-'+step).style.display='block';
+  currentStep=step;
+  updateStepBars(step);
+  // Auto-atualizar preview quando mudar de etapa
+  updatePreview();
+}
+
+function validateStep(step){
+  if(step===1){
+    if(!document.getElementById('prest-nome').value.trim()) return 'Informe seu nome completo';
+    if(!document.getElementById('prest-cpf').value.trim()) return 'Informe seu CPF ou CNPJ';
+    if(!document.getElementById('prest-email').value.trim()) return 'Informe seu email';
+    if(!document.getElementById('cont-nome').value.trim()) return 'Informe o nome do cliente';
+    if(!document.getElementById('cont-email').value.trim()) return 'Informe o email do cliente';
+  }
+  if(step===2){
+    if(!document.getElementById('tipo-servico').value) return 'Selecione o tipo de serviço';
+    if(!document.getElementById('projeto-nome').value.trim()) return 'Informe o nome do projeto';
+    if(!document.getElementById('projeto-scope').value.trim()) return 'Descreva o escopo do projeto';
+    if(!document.getElementById('data-inicio').value) return 'Informe a data de início';
+    if(!document.getElementById('data-fim').value) return 'Informe a data de entrega';
+  }
+  if(step===3){
+    if(!document.getElementById('valor-total').value) return 'Informe o valor total';
+  }
+  return null;
+}
+
+function g(id){ return document.getElementById(id)?.value?.trim()||''; }
+
+function fmtDate(d){
+  if(!d) return '—';
+  const [y,m,day]=d.split('-');
+  const months=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return `${parseInt(day)} de ${months[parseInt(m)-1]} de ${y}`;
+}
+
+function fmtMoney(v){
+  const n=parseFloat(v);
+  if(isNaN(n)) return 'R$ —';
+  return n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+
+function placeholder(text, fallback='[a preencher]'){
+  return text || `<span class="placeholder">${fallback}</span>`;
+}
+
+function generateContract(){
+  const err = validateStep(3);
+  if(err){ toast(err,'error'); return; }
+
+  updatePreview(true);
+  toast('Contrato gerado com sucesso!','success');
+
+  // Scroll para o preview
+  setTimeout(()=>{
+    document.getElementById('preview-sec').scrollIntoView({behavior:'smooth',block:'start'});
+  },300);
+}
+
+function updatePreview(full=false){
+  const pNome=g('prest-nome');
+  const pCpf=g('prest-cpf');
+  const pEmail=g('prest-email');
+  const pTel=g('prest-tel');
+  const pEnd=g('prest-end');
+
+  const cNome=g('cont-nome');
+  const cCpf=g('cont-cpf');
+  const cEmail=g('cont-email');
+  const cTel=g('cont-tel');
+
+  const tipo=g('tipo-servico');
+  const projNome=g('projeto-nome');
+  const scope=g('projeto-scope');
+  const dataInicio=g('data-inicio');
+  const dataFim=g('data-fim');
+  const revisoes=g('revisoes');
+
+  const valor=g('valor-total');
+  const formaPag=g('forma-pag');
+  const parcel=g('parcelamento');
+  const multa=g('multa');
+  const foro=g('foro');
+  const obs=g('obs');
+
+  const today = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+
+  // Se não tem dados mínimos, mostrar placeholder
+  if(!pNome && !cNome && !projNome){
+    document.getElementById('contract-content').innerHTML=`
+      <h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h1>
+      <div class="contract-sub">Preencha o formulário ao lado para gerar seu contrato</div>
+      <hr/>
+      <div style="text-align:center;padding:2rem;color:#bbb">
+        <div style="font-size:2.5rem;margin-bottom:.75rem">📄</div>
+        <div style="font-size:.9rem;font-weight:600;color:#888;margin-bottom:.3rem">Contrato aparecerá aqui</div>
+        <div style="font-size:.78rem;color:#bbb">Complete as 3 etapas e clique em "Gerar contrato"</div>
+      </div>`;
+    return;
+  }
+
+  const html = `
+    <h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h1>
+    <div class="contract-sub">${tipo||'Serviços de Tecnologia'} · ${projNome||'Projeto'}</div>
+    <hr/>
+
+    <h2>1. DAS PARTES</h2>
+    <div class="parties-grid">
+      <div class="party-box">
+        <div class="party-label">Prestador de Serviços</div>
+        <div class="party-name">${pNome||'<span class="placeholder">[Seu nome]</span>'}</div>
+        <div class="party-detail">
+          ${pCpf?`CPF/CNPJ: ${pCpf}<br/>`:''}
+          ${pEmail?`Email: ${pEmail}<br/>`:''}
+          ${pTel?`Tel: ${pTel}<br/>`:''}
+          ${pEnd?`${pEnd}`:''}
+        </div>
+      </div>
+      <div class="party-box">
+        <div class="party-label">Contratante</div>
+        <div class="party-name">${cNome||'<span class="placeholder">[Nome do cliente]</span>'}</div>
+        <div class="party-detail">
+          ${cCpf?`CPF/CNPJ: ${cCpf}<br/>`:''}
+          ${cEmail?`Email: ${cEmail}<br/>`:''}
+          ${cTel?`Tel: ${cTel}`:''}
+        </div>
+      </div>
+    </div>
+
+    <h2>2. DO OBJETO</h2>
+    <p>O presente contrato tem por objeto a prestação de serviços de <strong>${tipo||'[tipo de serviço]'}</strong>, referente ao projeto denominado <strong>"${projNome||'[nome do projeto]'}"</strong>.</p>
+    ${scope?`<p><strong>Escopo contratado:</strong> ${scope.replace(/\n/g,'<br/>')}</p>`:''}
+    <p>Quaisquer serviços não expressamente descritos acima serão considerados adicionais e deverão ser orçados separadamente.</p>
+    <p><span class="tag">Revisões incluídas</span> ${revisoes||'2 (duas)'} rodada(s) de revisão. Revisões adicionais serão cobradas separadamente.</p>
+
+    <h2>3. DO PRAZO</h2>
+    <div class="timeline-box">
+      <p style="margin:0"><strong>Início:</strong> ${fmtDate(dataInicio)||'a definir'} &nbsp;|&nbsp; <strong>Entrega:</strong> ${fmtDate(dataFim)||'a definir'}</p>
+    </div>
+    <p>O prazo poderá ser prorrogado mediante acordo mútuo por escrito, especialmente em casos de atraso no fornecimento de materiais pelo Contratante ou solicitações de alteração de escopo.</p>
+
+    <h2>4. DO VALOR E PAGAMENTO</h2>
+    <div class="value-box">
+      <div class="value-label">Valor total do projeto</div>
+      <div class="value-amount">${valor?fmtMoney(valor):'R$ —'}</div>
+    </div>
+    <p><strong>Forma de pagamento:</strong> ${formaPag||'PIX'}</p>
+    <p><strong>Parcelamento:</strong> ${parcel||'50% de entrada e 50% na entrega'}</p>
+    <p>Em caso de atraso no pagamento, incidirá multa de <strong>${multa||'2%'}</strong> sobre o valor em aberto, mais correção monetária pelo IPCA.</p>
+    <p>O Prestador reserva-se o direito de suspender os serviços em caso de inadimplência superior a 5 (cinco) dias úteis.</p>
+
+    <h2>5. DOS DIREITOS AUTORAIS</h2>
+    <p>Os direitos autorais e de propriedade intelectual sobre o trabalho desenvolvido serão transferidos integralmente ao Contratante somente após a quitação total do valor contratado.</p>
+    <p>O Prestador poderá mencionar o projeto em seu portfólio, salvo solicitação expressa de sigilo pelo Contratante.</p>
+
+    <h2>6. DA CONFIDENCIALIDADE (NDA)</h2>
+    <p>Ambas as partes comprometem-se a manter em sigilo absoluto todas as informações confidenciais, dados, documentos e estratégias trocadas durante a vigência deste contrato e por 2 (dois) anos após seu encerramento.</p>
+
+    <h2>7. DA RESCISÃO</h2>
+    <p>Qualquer das partes poderá rescindir este contrato mediante aviso prévio de 7 (sete) dias úteis por escrito (email com confirmação de leitura).</p>
+    <p>Em caso de rescisão pelo Contratante após o início dos trabalhos, os valores referentes ao trabalho já executado serão devidos proporcionalmente.</p>
+    <p>Em caso de rescisão pelo Prestador sem justa causa, os valores recebidos referentes a etapas não concluídas serão devolvidos.</p>
+
+    <h2>8. DISPOSIÇÕES GERAIS</h2>
+    ${obs?`<p><strong>Condições específicas:</strong> ${obs.replace(/\n/g,'<br/>')}</p>`:''}
+    <p>Este contrato é regido pelas leis da República Federativa do Brasil. As partes elegem o Foro da Comarca de <strong>${foro||'[cidade]'}</strong> para dirimir quaisquer controvérsias.</p>
+    <p>Este instrumento substitui quaisquer entendimentos anteriores e constitui o acordo integral entre as partes.</p>
+
+    <hr/>
+    <p style="text-align:center;font-size:.78rem;color:#888">Firmado eletronicamente em ${today}</p>
+
+    <div class="sign-grid">
+      <div class="sign-box">
+        <div class="sign-line">
+          <div class="sign-name">${pNome||'_________________________'}</div>
+          <div class="sign-role">Prestador de Serviços</div>
+          <div style="font-size:.72rem;color:#888;margin-top:.2rem">${pCpf||''}</div>
+        </div>
+      </div>
+      <div class="sign-box">
+        <div class="sign-line">
+          <div class="sign-name">${cNome||'_________________________'}</div>
+          <div class="sign-role">Contratante</div>
+          <div style="font-size:.72rem;color:#888;margin-top:.2rem">${cCpf||''}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('contract-content').innerHTML=html;
+}
+
+// Auto-preview ao digitar
+document.querySelectorAll('.input').forEach(inp=>{
+  inp.addEventListener('input',()=>updatePreview());
+  inp.addEventListener('change',()=>updatePreview());
+});
+
+function copyText(){
+  const el=document.getElementById('contract-content');
+  const text=el.innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('Contrato copiado para a área de transferência!','success');
+    const btn=document.getElementById('btn-copy');
+    btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copiado!';
+    setTimeout(()=>btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar',2000);
+  }).catch(()=>toast('Selecione o texto e use Ctrl+C','info'));
+}
+
+function exportPDF(){
+  const pNome=g('prest-nome')||'contrato';
+  const projNome=g('projeto-nome')||'projeto';
+  const title=`Contrato - ${pNome} - ${projNome}`;
+
+  // Criar janela de impressão
+  const contract=document.getElementById('contract-content').innerHTML;
+  const win=window.open('','_blank','width=900,height=700');
+  win.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"/>
+    <title>${title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:'DM Sans',sans-serif;font-size:13.5px;line-height:1.7;color:#1a1a2e;
+        padding:2.5cm;max-width:21cm;margin:0 auto}
+      h1{font-family:'Instrument Serif',serif;font-size:1.6rem;text-align:center;
+        margin-bottom:.3rem;font-weight:400}
+      .contract-sub{text-align:center;font-size:.78rem;color:#666;margin-bottom:1.5rem}
+      hr{border:none;border-top:2px solid #eee;margin:1rem 0}
+      h2{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+        margin:1.2rem 0 .5rem;padding-bottom:.3rem;border-bottom:1px solid #eee;color:#1a1a2e}
+      p{margin-bottom:.6rem;color:#333}
+      .parties-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.75rem 0}
+      .party-box{background:#f8f9ff;border-radius:6px;padding:.8rem;border:1px solid #e8ebff}
+      .party-label{font-size:.68rem;font-weight:700;color:#6366f1;text-transform:uppercase;
+        letter-spacing:.08em;margin-bottom:.3rem}
+      .party-name{font-size:.95rem;font-weight:700;color:#1a1a2e;margin-bottom:.15rem}
+      .party-detail{font-size:.73rem;color:#666;line-height:1.5}
+      .value-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;
+        padding:.8rem 1rem;display:flex;align-items:center;justify-content:space-between;margin:.75rem 0}
+      .value-label{font-size:.75rem;color:#166534;font-weight:600}
+      .value-amount{font-size:1.4rem;font-weight:700;color:#166534;font-family:'Instrument Serif',serif}
+      .timeline-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:.75rem;margin:.75rem 0}
+      .sign-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem}
+      .sign-box{text-align:center}
+      .sign-line{border-top:2px solid #333;padding-top:.35rem;margin-top:2rem}
+      .sign-name{font-weight:700;font-size:.82rem;color:#1a1a2e}
+      .sign-role{font-size:.7rem;color:#666;margin-top:.1rem}
+      .tag{display:inline-block;background:#eef2ff;color:#4f46e5;padding:.1rem .45rem;
+        border-radius:3px;font-size:.7rem;font-weight:600;margin-right:.25rem}
+      .placeholder{color:#bbb;font-style:italic}
+      @media print{body{padding:1.5cm}@page{margin:1.5cm}}
+    </style>
+  </head><body>${contract}</body></html>`);
+  win.document.close();
+  setTimeout(()=>{win.print();},800);
+  toast('PDF abrindo para impressão/download...','success');
+}
+
+// Inicializar datas padrão
+const today=new Date();
+const nextMonth=new Date(today);
+nextMonth.setMonth(nextMonth.getMonth()+1);
+document.getElementById('data-inicio').value=today.toISOString().split('T')[0];
+document.getElementById('data-fim').value=nextMonth.toISOString().split('T')[0];
+</script>
+</body>
+</html>

@@ -11,34 +11,111 @@
     }
   ],
   "routes": [
-    { "src": "/api/create-checkout", "dest": "/api/create-checkout.js" },
-    { "src": "/api/stripe-webhook", "dest": "/api/stripe-webhook.js" },
-    { "src": "/api/(.*)", "dest": "/api/$1.js" },
-    { "src": "/stripe-checkout.js", "dest": "/public/stripe-checkout.js" },
-    { "src": "/supabase.js", "dest": "/public/supabase.js" },
-    { "src": "/config.js", "dest": "/public/config.js" },
-    { "src": "/index.html", "dest": "/public/index.html" },
-    { "src": "/explore.html", "dest": "/public/explore.html" },
-    { "src": "/produto.html", "dest": "/public/produto.html" },
-    { "src": "/saas.html", "dest": "/public/saas.html" },
-    { "src": "/pricing.html", "dest": "/public/pricing.html" },
-    { "src": "/dashboard.html", "dest": "/public/dashboard.html" },
-    { "src": "/collections.html", "dest": "/public/collections.html" },
-    { "src": "/ranking.html", "dest": "/public/ranking.html" },
-    { "src": "/admin.html", "dest": "/public/admin.html" },
-    { "src": "/creator.html", "dest": "/public/creator.html" },
-    { "src": "/pricing", "dest": "/public/pricing.html" },
-    { "src": "/explore", "dest": "/public/explore.html" },
-    { "src": "/dashboard", "dest": "/public/dashboard.html" },
-    { "src": "/ranking", "dest": "/public/ranking.html" },
-    { "src": "/", "dest": "/public/index.html" }
+    {
+      "src": "/api/create-checkout",
+      "dest": "/api/create-checkout.js"
+    },
+    {
+      "src": "/api/stripe-webhook",
+      "dest": "/api/stripe-webhook.js"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1.js"
+    },
+    {
+      "src": "/stripe-checkout.js",
+      "dest": "/public/stripe-checkout.js"
+    },
+    {
+      "src": "/supabase.js",
+      "dest": "/public/supabase.js"
+    },
+    {
+      "src": "/config.js",
+      "dest": "/public/config.js"
+    },
+    {
+      "src": "/index.html",
+      "dest": "/public/index.html"
+    },
+    {
+      "src": "/explore.html",
+      "dest": "/public/explore.html"
+    },
+    {
+      "src": "/produto.html",
+      "dest": "/public/produto.html"
+    },
+    {
+      "src": "/saas.html",
+      "dest": "/public/saas.html"
+    },
+    {
+      "src": "/pricing.html",
+      "dest": "/public/pricing.html"
+    },
+    {
+      "src": "/dashboard.html",
+      "dest": "/public/dashboard.html"
+    },
+    {
+      "src": "/collections.html",
+      "dest": "/public/collections.html"
+    },
+    {
+      "src": "/ranking.html",
+      "dest": "/public/ranking.html"
+    },
+    {
+      "src": "/admin.html",
+      "dest": "/public/admin.html"
+    },
+    {
+      "src": "/creator.html",
+      "dest": "/public/creator.html"
+    },
+    {
+      "src": "/pricing",
+      "dest": "/public/pricing.html"
+    },
+    {
+      "src": "/explore",
+      "dest": "/public/explore.html"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/public/dashboard.html"
+    },
+    {
+      "src": "/ranking",
+      "dest": "/public/ranking.html"
+    },
+    {
+      "src": "/contrato-freelancer.html",
+      "dest": "/public/contrato-freelancer.html"
+    },
+    {
+      "src": "/contrato-freelancer",
+      "dest": "/public/contrato-freelancer.html"
+    },
+    {
+      "src": "/",
+      "dest": "/public/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
       ]
     }
   ]
