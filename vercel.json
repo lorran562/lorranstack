@@ -104,6 +104,14 @@
       "dest": "/public/logo-lorranstack.jpeg"
     },
     {
+      "src": "/readme-generator",
+      "dest": "/public/readme-generator.html"
+    },
+    {
+      "src": "/readme-generator.html",
+      "dest": "/public/readme-generator.html"
+    },
+    {
       "src": "/",
       "dest": "/public/index.html"
     }

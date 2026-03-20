@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>README.dev — Gerador de README Profissional para GitHub</title>
+<meta name="description" content="Gere READMEs profissionais para seus repositórios GitHub em segundos. Com badges, instalação, uso, contribuição e muito mais."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04060f;--bg2:#080d1a;--bg3:#0d1525;--bg4:#121c2e;
+  --border:rgba(0,120,255,.1);--border-h:rgba(0,160,255,.25);
+  --text:#ddeeff;--muted:#3a5070;--muted2:#6080a8;
+  --b1:#0055ff;--b2:#0099ff;--b3:#00ccff;
+  --brand:linear-gradient(135deg,#0055ff,#0099ff,#00ccff);
+  --green:#00ffaa;--yellow:#ffcc00;--red:#ff5555;--purple:#9966ff;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --display:'Rajdhani',system-ui,sans-serif;
+  --mono:'DM Mono','Fira Code',monospace;
+  --r:10px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:center;
+  padding:0 1.5rem;gap:.75rem;background:rgba(4,6,15,.95);
+  backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:.5rem;font-family:var(--display);font-size:1.2rem;font-weight:700}
+.logo-icon{width:28px;height:28px;border-radius:6px;background:var(--brand);
+  display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#fff;font-weight:700}
+.logo-w{color:#fff}.logo-b{background:var(--brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-badge{font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:5px;
+  background:rgba(0,255,170,.1);color:var(--green);border:1px solid rgba(0,255,170,.2);
+  letter-spacing:.05em}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:.6rem}
+.nav-back{font-size:.8rem;color:var(--muted2);padding:.35rem .75rem;border-radius:7px;
+  border:1px solid var(--border);transition:all .15s}
+.nav-back:hover{color:var(--text);border-color:var(--border-h)}
+.nav-pro{font-size:.8rem;font-weight:700;padding:.38rem .9rem;border-radius:8px;
+  background:var(--brand);color:#fff;letter-spacing:.03em;
+  font-family:var(--display);transition:all .2s;
+  box-shadow:0 0 14px rgba(0,100,255,.35)}
+.nav-pro:hover{box-shadow:0 0 24px rgba(0,100,255,.6);transform:translateY(-1px)}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:56px 2rem 44px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:600px;height:280px;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(0,80,255,.14) 0%,rgba(0,180,255,.06) 50%,transparent 70%);
+  filter:blur(40px)}
+.hero-tag{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .85rem;
+  border-radius:999px;background:rgba(0,80,200,.1);border:1px solid rgba(0,150,255,.2);
+  font-size:.72rem;color:rgba(0,200,255,.85);font-weight:500;letter-spacing:.06em;
+  margin-bottom:1.2rem;text-transform:uppercase}
+.hero-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--green);
+  animation:blink 2s ease-in-out infinite;box-shadow:0 0 6px var(--green)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hero-h1{font-family:var(--display);font-size:clamp(2rem,5vw,3.5rem);font-weight:700;
+  color:#fff;line-height:1.05;letter-spacing:.03em;margin-bottom:.6rem}
+.hero-h1 span{background:var(--brand);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:.97rem;color:var(--muted2);max-width:480px;margin:0 auto 1.6rem;line-height:1.65;font-weight:300}
+.hero-pills{display:flex;justify-content:center;gap:.4rem;flex-wrap:wrap;margin-bottom:1.8rem}
+.pill{display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .7rem;border-radius:999px;
+  background:var(--bg2);border:1px solid var(--border);font-size:.74rem;color:var(--muted2)}
+.pill-green{color:var(--green);border-color:rgba(0,255,170,.2);background:rgba(0,255,170,.04)}
+
+/* ── PRICING BANNER ── */
+.pricing-bar{
+  max-width:860px;margin:0 auto 2rem;
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  background:var(--border);border-radius:var(--r);
+  border:1px solid var(--border);overflow:hidden;
+}
+.plan-card{background:var(--bg2);padding:1.2rem 1.5rem;text-align:center}
+.plan-card.pro{background:linear-gradient(135deg,rgba(0,60,180,.12),rgba(0,120,255,.06))}
+.plan-name{font-family:var(--display);font-size:.8rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;margin-bottom:.5rem}
+.plan-name.free{color:var(--muted2)}.plan-name.pro-c{color:var(--b2)}
+.plan-price{font-family:var(--display);font-size:1.8rem;font-weight:700;color:#fff;line-height:1;margin-bottom:.2rem}
+.plan-price span{font-size:.85rem;color:var(--muted2);font-weight:400}
+.plan-desc{font-size:.76rem;color:var(--muted2);margin-bottom:.9rem;line-height:1.5}
+.plan-feats{list-style:none;text-align:left;margin-bottom:1rem}
+.plan-feats li{font-size:.78rem;color:var(--muted2);padding:.22rem 0;display:flex;align-items:flex-start;gap:.45rem}
+.plan-feats li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;margin-top:.05rem}
+.plan-feats li.no::before{content:'—';color:var(--muted);font-weight:400}
+.btn-plan-free{width:100%;padding:.6rem;border-radius:8px;border:1px solid var(--border);
+  color:var(--muted2);font-size:.82rem;font-weight:600;font-family:var(--display);
+  letter-spacing:.04em;transition:all .15s;cursor:pointer}
+.btn-plan-free:hover{border-color:var(--border-h);color:var(--text)}
+.btn-plan-pro{width:100%;padding:.6rem;border-radius:8px;background:var(--brand);
+  color:#fff;font-size:.82rem;font-weight:700;font-family:var(--display);
+  letter-spacing:.04em;border:none;cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 16px rgba(0,80,255,.3)}
+.btn-plan-pro:hover{box-shadow:0 6px 24px rgba(0,80,255,.5);transform:translateY(-1px)}
+
+/* ── APP ── */
+.app{max-width:1280px;margin:0 auto;padding:0 1.5rem 5rem;
+  display:grid;grid-template-columns:420px 1fr;gap:1.5rem;align-items:start}
+
+/* ── FORM ── */
+.form-panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  position:sticky;top:72px;overflow:hidden}
+.form-header{padding:1.1rem 1.3rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between}
+.form-header-title{font-family:var(--display);font-size:1rem;font-weight:600;
+  color:#fff;letter-spacing:.04em}
+.step-dots{display:flex;gap:.4rem}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);transition:all .3s}
+.sdot.done{background:var(--green);border-color:var(--green)}
+.sdot.active{background:var(--b2);border-color:var(--b2)}
+
+.form-body{padding:1.1rem 1.3rem}
+.tab-row{display:flex;gap:.3rem;margin-bottom:1.2rem;background:var(--bg3);
+  padding:.3rem;border-radius:8px}
+.ftab{flex:1;text-align:center;padding:.38rem;border-radius:6px;font-size:.78rem;
+  color:var(--muted2);cursor:pointer;transition:all .15s;font-weight:500}
+.ftab.active{background:var(--bg2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+
+.sec-title{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.1em;margin-bottom:.65rem;margin-top:1rem}
+.sec-title:first-child{margin-top:0}
+.field{margin-bottom:.7rem}
+.field label{display:block;font-size:.76rem;font-weight:600;color:var(--muted2);
+  margin-bottom:.35rem;letter-spacing:.02em}
+.field label span{color:#ff7070;margin-left:.1rem}
+.inp{width:100%;padding:.6rem .85rem;border-radius:8px;background:var(--bg3);
+  border:1px solid var(--border);color:var(--text);font-size:.84rem;
+  outline:none;transition:border-color .15s;font-family:var(--sans)}
+.inp:focus{border-color:rgba(0,160,255,.5);box-shadow:0 0 0 3px rgba(0,100,255,.07)}
+.inp::placeholder{color:var(--muted)}
+.inp-mono{font-family:var(--mono);font-size:.8rem}
+.textarea{resize:vertical;min-height:72px}
+.select{appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%233a5070' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .85rem center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
+.check-row{display:flex;align-items:center;gap:.5rem;padding:.4rem 0;cursor:pointer}
+.check-row input{width:15px;height:15px;accent-color:var(--b2);cursor:pointer}
+.check-row span{font-size:.8rem;color:var(--muted2)}
+.check-row:hover span{color:var(--text)}
+.checks-grid{display:grid;grid-template-columns:1fr 1fr;gap:.1rem}
+
+.form-footer{padding:.9rem 1.3rem;border-top:1px solid var(--border);
+  display:flex;gap:.6rem;align-items:center}
+.btn-gen{flex:1;padding:.65rem;border-radius:8px;background:var(--brand);color:#fff;
+  font-size:.86rem;font-weight:700;border:none;cursor:pointer;font-family:var(--display);
+  letter-spacing:.05em;transition:all .2s;box-shadow:0 4px 16px rgba(0,80,255,.3)}
+.btn-gen:hover{box-shadow:0 6px 24px rgba(0,80,255,.5);transform:translateY(-1px)}
+.btn-reset{padding:.65rem .9rem;border-radius:8px;background:var(--bg3);
+  border:1px solid var(--border);color:var(--muted2);font-size:.82rem;
+  cursor:pointer;transition:all .15s;font-family:var(--sans)}
+.btn-reset:hover{color:var(--text);border-color:var(--border-h)}
+
+/* ── PREVIEW ── */
+.preview-panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.prev-header{padding:1rem 1.2rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.prev-title{font-size:.8rem;font-weight:600;color:var(--muted2);
+  display:flex;align-items:center;gap:.4rem}
+.prev-dot{width:8px;height:8px;border-radius:50%;background:var(--green);
+  animation:blink 2s ease-in-out infinite;box-shadow:0 0 6px var(--green)}
+.prev-tabs{display:flex;gap:.3rem}
+.ptab{padding:.35rem .75rem;border-radius:7px;font-size:.76rem;color:var(--muted2);
+  cursor:pointer;transition:all .15s;border:1px solid transparent}
+.ptab.active{background:var(--bg3);color:var(--text);border-color:var(--border)}
+.prev-actions{display:flex;gap:.4rem;margin-left:auto}
+.btn-act{display:flex;align-items:center;gap:.3rem;padding:.38rem .8rem;border-radius:7px;
+  font-size:.76rem;font-weight:600;border:1px solid var(--border);color:var(--muted2);
+  transition:all .15s;cursor:pointer;font-family:var(--sans)}
+.btn-act:hover{border-color:var(--border-h);color:var(--text)}
+.btn-act.primary{background:var(--brand);color:#fff;border-color:transparent}
+.btn-act.primary:hover{opacity:.9;border-color:transparent}
+
+/* Preview área */
+.prev-body{padding:1.2rem}
+/* Markdown rendered */
+.md-view{background:#fff;border-radius:8px;padding:1.8rem 2rem;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  font-size:14px;line-height:1.6;color:#24292f;min-height:300px}
+.md-view h1{font-size:1.5rem;border-bottom:1px solid #d0d7de;padding-bottom:.4rem;margin-bottom:1rem;color:#1f2328}
+.md-view h2{font-size:1.1rem;border-bottom:1px solid #d0d7de;padding-bottom:.3rem;
+  margin:1.3rem 0 .6rem;color:#1f2328}
+.md-view h3{font-size:.95rem;margin:.9rem 0 .4rem;color:#1f2328}
+.md-view p{margin-bottom:.75rem}
+.md-view code{background:#f6f8fa;border:1px solid #d0d7de;border-radius:4px;
+  padding:.1rem .35rem;font-family:'SFMono-Regular',monospace;font-size:85%;color:#953800}
+.md-view pre{background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;
+  padding:1rem;overflow-x:auto;margin:.75rem 0}
+.md-view pre code{background:none;border:none;padding:0;color:#24292f;font-size:87%}
+.md-view ul,.md-view ol{padding-left:1.4rem;margin:.5rem 0}
+.md-view li{margin:.2rem 0}
+.md-view a{color:#0969da}
+.md-view blockquote{border-left:4px solid #d0d7de;padding:.2rem .8rem;
+  color:#57606a;margin:.75rem 0;background:#f6f8fa;border-radius:0 4px 4px 0}
+.md-view img{max-width:100%;border-radius:4px}
+.md-view table{border-collapse:collapse;width:100%;margin:.75rem 0}
+.md-view th,.md-view td{border:1px solid #d0d7de;padding:.35rem .7rem;text-align:left}
+.md-view th{background:#f6f8fa;font-weight:600}
+.md-view hr{border:none;border-top:2px solid #d0d7de;margin:1rem 0}
+.md-view .badge-row{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.75rem}
+
+/* Raw markdown */
+.raw-view{background:var(--bg3);border-radius:8px;padding:1.2rem;
+  font-family:var(--mono);font-size:.78rem;color:#8db4d8;line-height:1.7;
+  white-space:pre-wrap;word-break:break-word;min-height:300px;
+  max-height:600px;overflow-y:auto}
+.raw-view::-webkit-scrollbar{width:5px}
+.raw-view::-webkit-scrollbar-track{background:var(--bg2)}
+.raw-view::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:3px}
+
+/* Empty preview */
+.prev-empty{text-align:center;padding:4rem 2rem;color:var(--muted)}
+.prev-empty-icon{font-size:2.5rem;margin-bottom:.75rem;filter:grayscale(.5)}
+.prev-empty-title{font-family:var(--display);font-size:1.1rem;color:var(--muted2);margin-bottom:.35rem;font-weight:600}
+.prev-empty-text{font-size:.8rem;line-height:1.55}
+
+/* Toast */
+.tc{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.45rem}
+.toast{display:flex;align-items:center;gap:.65rem;padding:.72rem .95rem;border-radius:10px;
+  background:var(--bg3);border:1px solid var(--border-h);color:var(--text);
+  font-size:.81rem;font-weight:500;box-shadow:0 8px 28px rgba(0,0,0,.6);
+  animation:sIn .3s ease;max-width:300px}
+@keyframes sIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+/* Features section */
+.feats{max-width:860px;margin:0 auto;padding:0 1.5rem 5rem}
+.feats-title{font-family:var(--display);font-size:1.8rem;font-weight:700;color:#fff;
+  text-align:center;letter-spacing:.04em;margin-bottom:.4rem}
+.feats-sub{text-align:center;font-size:.85rem;color:var(--muted2);margin-bottom:2rem}
+.feats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+.feat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:1.1rem;transition:border-color .2s}
+.feat-card:hover{border-color:var(--border-h)}
+.feat-icon{font-size:1.4rem;margin-bottom:.5rem}
+.feat-name{font-size:.86rem;font-weight:600;color:#fff;margin-bottom:.25rem}
+.feat-desc{font-size:.77rem;color:var(--muted2);line-height:1.5}
+
+footer{border-top:1px solid var(--border);padding:1.8rem 1.5rem;
+  text-align:center;font-size:.76rem;color:var(--muted)}
+footer a{color:var(--muted2);transition:color .15s}
+footer a:hover{color:var(--b2)}
+
+@media(max-width:1000px){.app{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .feats-grid{grid-template-columns:1fr 1fr}
+  .pricing-bar{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .hero{padding:40px 1rem 36px}
+  .feats-grid{grid-template-columns:1fr}
+  .app,.feats{padding-left:1rem;padding-right:1rem}
+  .md-view{padding:1.2rem}
+  .grid2{grid-template-columns:1fr}
+  .checks-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="tc" id="tc"></div>
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">RD</div>
+    <span class="logo-w">README</span><span class="logo-b">.dev</span>
+  </div>
+  <span class="nav-badge">Para Devs</span>
+  <div class="nav-r">
+    <a href="/" class="nav-back">← LorranStack</a>
+    <button class="nav-pro" onclick="scrollTo({top:document.getElementById('pricing').offsetTop-60,behavior:'smooth'})">
+      💎 Ver Pro — R$27/mês
+    </button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag">
+    <span class="hero-tag-dot"></span>
+    Ferramenta para desenvolvedores
+  </div>
+  <h1 class="hero-h1">
+    READMEs <span>profissionais</span><br>em segundos
+  </h1>
+  <p class="hero-sub">
+    Pare de passar horas escrevendo documentação. Preencha as informações do projeto e gere um README completo, pronto para o GitHub.
+  </p>
+  <div class="hero-pills">
+    <span class="pill pill-green">✓ Badges automáticos</span>
+    <span class="pill pill-green">✓ Markdown perfeito</span>
+    <span class="pill pill-green">✓ Preview em tempo real</span>
+    <span class="pill">Sem cadastro no plano gratuito</span>
+  </div>
+</section>
+
+<!-- PRICING -->
+<div id="pricing" style="max-width:860px;margin:0 auto;padding:0 1.5rem 2.5rem">
+  <div class="pricing-bar">
+    <div class="plan-card">
+      <div class="plan-name free">Gratuito</div>
+      <div class="plan-price">R$ 0<span>/sempre</span></div>
+      <div class="plan-desc">Para projetos pessoais e testes</div>
+      <ul class="plan-feats">
+        <li>1 README por sessão</li>
+        <li>Seções básicas (intro, instalação, uso)</li>
+        <li>Badges de linguagem</li>
+        <li>Export Markdown</li>
+        <li class="no">Templates avançados</li>
+        <li class="no">Seções ilimitadas</li>
+        <li class="no">Histórico de projetos</li>
+        <li class="no">Badges customizados</li>
+      </ul>
+      <button class="btn-plan-free" onclick="document.getElementById('app-sec').scrollIntoView({behavior:'smooth'})">
+        Usar grátis
+      </button>
+    </div>
+    <div class="plan-card pro">
+      <div class="plan-name pro-c">⚡ Pro — Mais popular</div>
+      <div class="plan-price">R$ 27<span>/mês</span></div>
+      <div class="plan-desc">Para devs que levam projetos a sério</div>
+      <ul class="plan-feats">
+        <li>READMEs ilimitados</li>
+        <li>Todas as seções disponíveis</li>
+        <li>15+ templates premium</li>
+        <li>Badges customizados (Shields.io)</li>
+        <li>Histórico de até 50 projetos</li>
+        <li>Export PDF + Markdown</li>
+        <li>Suporte por email prioritário</li>
+        <li>Novos templates toda semana</li>
+      </ul>
+      <button class="btn-plan-pro" onclick="toast('Em breve! Deixe seu email em contato@lorranstack.com 🚀','info')">
+        Assinar Pro — R$27/mês
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app-sec">
+
+  <!-- FORM -->
+  <div class="form-panel">
+    <div class="form-header">
+      <div class="form-header-title">Configurar README</div>
+      <div class="step-dots">
+        <div class="sdot active" id="sd1"></div>
+        <div class="sdot" id="sd2"></div>
+        <div class="sdot" id="sd3"></div>
+      </div>
+    </div>
+    <div class="form-body">
+      <div class="tab-row">
+        <div class="ftab active" onclick="goTab(1,this)">Projeto</div>
+        <div class="ftab" onclick="goTab(2,this)">Seções</div>
+        <div class="ftab" onclick="goTab(3,this)">Extras</div>
+      </div>
+
+      <!-- TAB 1: Projeto -->
+      <div id="ftab-1">
+        <div class="sec-title">Informações básicas</div>
+        <div class="field">
+          <label>Nome do projeto <span>*</span></label>
+          <input class="inp" id="proj-name" type="text" placeholder="ex: meu-projeto-incrivel" oninput="autoPreview()"/>
+        </div>
+        <div class="field">
+          <label>Tagline / Descrição curta <span>*</span></label>
+          <input class="inp" id="proj-tag" type="text" placeholder="Uma frase que resume o projeto" oninput="autoPreview()"/>
+        </div>
+        <div class="field">
+          <label>Descrição completa</label>
+          <textarea class="inp textarea" id="proj-desc" placeholder="Explique o que o projeto faz, qual problema resolve, para quem é..." oninput="autoPreview()"></textarea>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Linguagem principal</label>
+            <select class="inp select" id="proj-lang" onchange="autoPreview()">
+              <option value="">Selecione...</option>
+              <option value="TypeScript">TypeScript</option>
+              <option value="JavaScript">JavaScript</option>
+              <option value="Python">Python</option>
+              <option value="Go">Go</option>
+              <option value="Rust">Rust</option>
+              <option value="Java">Java</option>
+              <option value="C#">C#</option>
+              <option value="C++">C++</option>
+              <option value="PHP">PHP</option>
+              <option value="Ruby">Ruby</option>
+              <option value="Swift">Swift</option>
+              <option value="Kotlin">Kotlin</option>
+              <option value="Dart">Dart</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Framework / Stack</label>
+            <input class="inp" id="proj-stack" type="text" placeholder="ex: Next.js, FastAPI" oninput="autoPreview()"/>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Licença</label>
+            <select class="inp select" id="proj-license" onchange="autoPreview()">
+              <option value="MIT">MIT</option>
+              <option value="Apache-2.0">Apache 2.0</option>
+              <option value="GPL-3.0">GPL 3.0</option>
+              <option value="BSD-3-Clause">BSD 3-Clause</option>
+              <option value="">Sem licença</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Status do projeto</label>
+            <select class="inp select" id="proj-status" onchange="autoPreview()">
+              <option value="em desenvolvimento">🚧 Em desenvolvimento</option>
+              <option value="ativo">✅ Ativo</option>
+              <option value="estável">🟢 Estável</option>
+              <option value="em manutenção">🔧 Em manutenção</option>
+              <option value="descontinuado">🔴 Descontinuado</option>
+            </select>
+          </div>
+        </div>
+        <div class="sec-title">Repositório</div>
+        <div class="field">
+          <label>URL do GitHub</label>
+          <input class="inp inp-mono" id="proj-repo" type="text" placeholder="https://github.com/usuario/repo" oninput="autoPreview()"/>
+        </div>
+        <div class="field">
+          <label>URL do demo / site ao vivo</label>
+          <input class="inp inp-mono" id="proj-demo" type="text" placeholder="https://meusite.com" oninput="autoPreview()"/>
+        </div>
+      </div>
+
+      <!-- TAB 2: Seções -->
+      <div id="ftab-2" style="display:none">
+        <div class="sec-title">Selecione as seções</div>
+        <div class="checks-grid">
+          <label class="check-row"><input type="checkbox" id="s-badges" checked onchange="autoPreview()"/><span>🏷️ Badges</span></label>
+          <label class="check-row"><input type="checkbox" id="s-summary" checked onchange="autoPreview()"/><span>📋 Sumário</span></label>
+          <label class="check-row"><input type="checkbox" id="s-features" checked onchange="autoPreview()"/><span>✨ Funcionalidades</span></label>
+          <label class="check-row"><input type="checkbox" id="s-tech" checked onchange="autoPreview()"/><span>🛠️ Tecnologias</span></label>
+          <label class="check-row"><input type="checkbox" id="s-install" checked onchange="autoPreview()"/><span>📦 Instalação</span></label>
+          <label class="check-row"><input type="checkbox" id="s-usage" checked onchange="autoPreview()"/><span>▶️ Como usar</span></label>
+          <label class="check-row"><input type="checkbox" id="s-env" onchange="autoPreview()"/><span>⚙️ Variáveis de ambiente</span></label>
+          <label class="check-row"><input type="checkbox" id="s-api" onchange="autoPreview()"/><span>📡 Endpoints da API</span></label>
+          <label class="check-row"><input type="checkbox" id="s-tests" onchange="autoPreview()"/><span>🧪 Testes</span></label>
+          <label class="check-row"><input type="checkbox" id="s-deploy" onchange="autoPreview()"/><span>🚀 Deploy</span></label>
+          <label class="check-row"><input type="checkbox" id="s-contrib" checked onchange="autoPreview()"/><span>🤝 Contribuição</span></label>
+          <label class="check-row"><input type="checkbox" id="s-license" checked onchange="autoPreview()"/><span>📝 Licença</span></label>
+          <label class="check-row"><input type="checkbox" id="s-author" checked onchange="autoPreview()"/><span>👤 Autor</span></label>
+          <label class="check-row"><input type="checkbox" id="s-roadmap" onchange="autoPreview()"/><span>🗺️ Roadmap</span></label>
+        </div>
+
+        <div class="sec-title" style="margin-top:1.2rem">Funcionalidades (uma por linha)</div>
+        <div class="field">
+          <textarea class="inp textarea" id="features-list" placeholder="Autenticação JWT&#10;Dashboard em tempo real&#10;API REST documentada&#10;Suporte a múltiplos idiomas" oninput="autoPreview()" style="min-height:90px"></textarea>
+        </div>
+
+        <div class="sec-title">Tecnologias usadas</div>
+        <div class="field">
+          <input class="inp" id="tech-list" type="text" placeholder="React, Node.js, PostgreSQL, Redis" oninput="autoPreview()"/>
+        </div>
+      </div>
+
+      <!-- TAB 3: Extras -->
+      <div id="ftab-3" style="display:none">
+        <div class="sec-title">Autor</div>
+        <div class="grid2">
+          <div class="field">
+            <label>Seu nome</label>
+            <input class="inp" id="author-name" type="text" placeholder="Lorran" oninput="autoPreview()"/>
+          </div>
+          <div class="field">
+            <label>GitHub username</label>
+            <input class="inp inp-mono" id="author-gh" type="text" placeholder="lorran562" oninput="autoPreview()"/>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>LinkedIn</label>
+            <input class="inp inp-mono" id="author-li" type="text" placeholder="linkedin.com/in/lorran" oninput="autoPreview()"/>
+          </div>
+          <div class="field">
+            <label>Email de contato</label>
+            <input class="inp" id="author-email" type="email" placeholder="seu@email.com" oninput="autoPreview()"/>
+          </div>
+        </div>
+
+        <div class="sec-title">Comandos de instalação</div>
+        <div class="field">
+          <label>Package manager</label>
+          <select class="inp select" id="pkg-mgr" onchange="autoPreview()">
+            <option value="npm">npm</option>
+            <option value="yarn">yarn</option>
+            <option value="pnpm">pnpm</option>
+            <option value="pip">pip (Python)</option>
+            <option value="cargo">cargo (Rust)</option>
+            <option value="go">go (Go)</option>
+            <option value="maven">maven (Java)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Comando de instalação</label>
+          <input class="inp inp-mono" id="install-cmd" type="text" placeholder="npm install" oninput="autoPreview()"/>
+        </div>
+        <div class="field">
+          <label>Comando para rodar</label>
+          <input class="inp inp-mono" id="run-cmd" type="text" placeholder="npm run dev" oninput="autoPreview()"/>
+        </div>
+        <div class="field">
+          <label>Comando de testes</label>
+          <input class="inp inp-mono" id="test-cmd" type="text" placeholder="npm test" oninput="autoPreview()"/>
+        </div>
+
+        <div class="sec-title">Deploy</div>
+        <div class="field">
+          <label>Plataforma de deploy</label>
+          <select class="inp select" id="deploy-plat" onchange="autoPreview()">
+            <option value="">Nenhuma especificada</option>
+            <option value="Vercel">Vercel</option>
+            <option value="Netlify">Netlify</option>
+            <option value="Railway">Railway</option>
+            <option value="Heroku">Heroku</option>
+            <option value="AWS">AWS</option>
+            <option value="GCP">Google Cloud</option>
+            <option value="Azure">Azure</option>
+            <option value="Docker">Docker</option>
+            <option value="VPS">VPS (Manual)</option>
+          </select>
+        </div>
+
+        <div class="sec-title">Template visual</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem">
+          <div class="template-opt active" data-tmpl="minimal" onclick="setTemplate(this,'minimal')" 
+            style="padding:.55rem;border-radius:7px;border:1px solid rgba(0,160,255,.3);background:rgba(0,80,255,.08);cursor:pointer;text-align:center">
+            <div style="font-size:.72rem;font-weight:600;color:#00aaff">Minimal</div>
+            <div style="font-size:.65rem;color:var(--muted2)">Limpo</div>
+          </div>
+          <div class="template-opt" data-tmpl="detailed" onclick="setTemplate(this,'detailed')"
+            style="padding:.55rem;border-radius:7px;border:1px solid var(--border);cursor:pointer;text-align:center">
+            <div style="font-size:.72rem;font-weight:600;color:var(--muted2)">Detalhado</div>
+            <div style="font-size:.65rem;color:var(--muted)">Completo</div>
+          </div>
+          <div class="template-opt" data-tmpl="hero" onclick="setTemplate(this,'hero')"
+            style="padding:.55rem;border-radius:7px;border:1px solid var(--border);cursor:pointer;text-align:center">
+            <div style="font-size:.72rem;font-weight:600;color:var(--muted2)">Hero</div>
+            <div style="font-size:.65rem;color:var(--muted)">Com logo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <button class="btn-gen" onclick="generateReadme()">
+        ⚡ Gerar README
+      </button>
+      <button class="btn-reset" onclick="resetForm()" title="Limpar formulário">↺</button>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview-panel">
+    <div class="prev-header">
+      <div class="prev-title">
+        <div class="prev-dot"></div>
+        README.md — Preview
+      </div>
+      <div class="prev-tabs">
+        <div class="ptab active" onclick="switchView('rendered',this)">Renderizado</div>
+        <div class="ptab" onclick="switchView('raw',this)">Markdown</div>
+      </div>
+      <div class="prev-actions">
+        <button class="btn-act" onclick="copyMarkdown()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copiar
+        </button>
+        <button class="btn-act primary" onclick="downloadMd()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar .md
+        </button>
+      </div>
+    </div>
+    <div class="prev-body">
+      <div id="view-rendered">
+        <div class="prev-empty" id="prev-empty">
+          <div class="prev-empty-icon">📄</div>
+          <div class="prev-empty-title">Seu README aparecerá aqui</div>
+          <div class="prev-empty-text">Preencha as informações do projeto ao lado<br/>e clique em <strong>⚡ Gerar README</strong></div>
+        </div>
+        <div class="md-view" id="md-rendered" style="display:none"></div>
+      </div>
+      <div id="view-raw" style="display:none">
+        <div class="raw-view" id="md-raw"><!-- raw markdown aqui --></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="feats">
+  <div class="feats-title">O que o README.dev gera</div>
+  <div class="feats-sub">Tudo que um README profissional precisa ter</div>
+  <div class="feats-grid">
+    <div class="feat-card">
+      <div class="feat-icon">🏷️</div>
+      <div class="feat-name">Badges automáticos</div>
+      <div class="feat-desc">Shields.io para linguagem, licença, status, versão e muito mais — gerados automaticamente.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">👁️</div>
+      <div class="feat-name">Preview em tempo real</div>
+      <div class="feat-desc">Veja exatamente como vai ficar no GitHub enquanto preenche o formulário.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📦</div>
+      <div class="feat-name">Seções completas</div>
+      <div class="feat-desc">Instalação, uso, API, testes, deploy, contribuição — escolha o que precisa.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">⬇️</div>
+      <div class="feat-name">Export direto .md</div>
+      <div class="feat-desc">Baixa o arquivo README.md pronto para jogar na raiz do repositório.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🎨</div>
+      <div class="feat-name">Templates premium</div>
+      <div class="feat-desc">Minimal, detalhado, hero com logo — estilos diferentes para cada tipo de projeto.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔧</div>
+      <div class="feat-name">Multi linguagem</div>
+      <div class="feat-desc">Suporte para TypeScript, Python, Go, Rust, Java, PHP, Ruby e muito mais.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div style="margin-bottom:.4rem">
+    <a href="/">LorranStack</a> · <a href="/">Marketplace de SaaS</a>
+  </div>
+  © 2026 README.dev — Uma ferramenta do <a href="/">LorranStack</a>
+</footer>
+
+<script>
+let currentMd = '';
+let currentTemplate = 'minimal';
+let autoPreviewTimer = null;
+let currentView = 'rendered';
+
+function toast(msg, type='info'){
+  const c={success:'#00ffaa',error:'#ff5555',info:'#0099ff'};
+  const i={success:'✓',error:'✗',info:'ℹ'};
+  const el=document.createElement('div');
+  el.className='toast';
+  el.innerHTML=`<span style="color:${c[type]};font-weight:700">${i[type]}</span><span>${msg}</span>`;
+  document.getElementById('tc').appendChild(el);
+  setTimeout(()=>el.remove(),4000);
+}
+
+function g(id){ return (document.getElementById(id)?.value||'').trim(); }
+function chk(id){ return document.getElementById(id)?.checked; }
+
+function goTab(n, btn){
+  [1,2,3].forEach(i=>{
+    document.getElementById('ftab-'+i).style.display=i===n?'block':'none';
+    document.getElementById('sd'+i).className='sdot'+(i<n?' done':i===n?' active':'');
+  });
+  document.querySelectorAll('.ftab').forEach((t,i)=>{
+    t.classList.toggle('active',i===n-1);
+  });
+}
+
+function setTemplate(el, tmpl){
+  document.querySelectorAll('.template-opt').forEach(t=>{
+    t.style.background='';t.style.borderColor='var(--border)';
+    t.querySelector('div').style.color='var(--muted2)';
+  });
+  el.style.background='rgba(0,80,255,.08)';
+  el.style.borderColor='rgba(0,160,255,.3)';
+  el.querySelector('div').style.color='#00aaff';
+  currentTemplate=tmpl;
+  if(currentMd) generateReadme();
+}
+
+function switchView(v, btn){
+  currentView=v;
+  document.getElementById('view-rendered').style.display=v==='rendered'?'block':'none';
+  document.getElementById('view-raw').style.display=v==='raw'?'block':'none';
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function autoPreview(){
+  clearTimeout(autoPreviewTimer);
+  autoPreviewTimer=setTimeout(()=>{ if(g('proj-name')) generateReadme(false); },600);
+}
+
+function langBadge(lang){
+  const colors={
+    TypeScript:'blue',JavaScript:'yellow',Python:'blue',Go:'cyan',
+    Rust:'orange',Java:'red','C#':'purple','C++':'pink',PHP:'purple',
+    Ruby:'red',Swift:'orange',Kotlin:'purple',Dart:'blue'
+  };
+  const c=colors[lang]||'gray';
+  return lang?`![${lang}](https://img.shields.io/badge/${encodeURIComponent(lang)}-${c}?style=flat-square&logo=${encodeURIComponent(lang.toLowerCase())}&logoColor=white)`:'';
+}
+
+function licenseBadge(lic){
+  return lic?`![License](https://img.shields.io/badge/license-${encodeURIComponent(lic)}-green?style=flat-square)`:'';
+}
+
+function statusBadge(status){
+  const map={'em desenvolvimento':'orange','ativo':'brightgreen','estável':'brightgreen','em manutenção':'yellow','descontinuado':'red'};
+  const c=map[status]||'blue';
+  const label=status.replace(/ /g,'%20');
+  return `![Status](https://img.shields.io/badge/status-${label}-${c}?style=flat-square)`;
+}
+
+function generateReadme(showToast=true){
+  const name=g('proj-name');
+  if(!name){ if(showToast)toast('Informe o nome do projeto','error');return; }
+
+  const tag=g('proj-tag');
+  const desc=g('proj-desc');
+  const lang=g('proj-lang');
+  const stack=g('proj-stack');
+  const license=g('proj-license');
+  const status=g('proj-status');
+  const repo=g('proj-repo');
+  const demo=g('proj-demo');
+  const authorName=g('author-name');
+  const authorGh=g('author-gh');
+  const authorLi=g('author-li');
+  const authorEmail=g('author-email');
+  const installCmd=g('install-cmd')||'npm install';
+  const runCmd=g('run-cmd')||'npm run dev';
+  const testCmd=g('test-cmd')||'npm test';
+  const deployPlat=g('deploy-plat');
+  const pkgMgr=g('pkg-mgr')||'npm';
+  const featuresRaw=g('features-list');
+  const techList=g('tech-list');
+
+  // Seções ativas
+  const S={
+    badges:chk('s-badges'),summary:chk('s-summary'),features:chk('s-features'),
+    tech:chk('s-tech'),install:chk('s-install'),usage:chk('s-usage'),
+    env:chk('s-env'),api:chk('s-api'),tests:chk('s-tests'),
+    deploy:chk('s-deploy'),contrib:chk('s-contrib'),license:chk('s-license'),
+    author:chk('s-author'),roadmap:chk('s-roadmap'),
+  };
+
+  let md = '';
+
+  // ── HERO / MINIMAL ──
+  if(currentTemplate==='hero'){
+    md+=`<div align="center">\n\n`;
+    md+=`# 🚀 ${name}\n\n`;
+    if(tag) md+=`### ${tag}\n\n`;
+    md+=`</div>\n\n`;
+  } else {
+    md+=`# ${name}\n\n`;
+    if(tag) md+=`> ${tag}\n\n`;
+  }
+
+  // Badges
+  if(S.badges){
+    const badges=[langBadge(lang),licenseBadge(license),statusBadge(status)].filter(Boolean);
+    if(repo){
+      const repoPath=repo.replace('https://github.com/','');
+      badges.unshift(`![GitHub stars](https://img.shields.io/github/stars/${repoPath}?style=flat-square)`);
+    }
+    if(badges.length) md+=badges.join(' ')+'\n\n';
+  }
+
+  // Links demo/repo
+  if(demo||repo){
+    const links=[];
+    if(demo) links.push(`[🌐 Demo ao vivo](${demo})`);
+    if(repo) links.push(`[📦 Repositório](${repo})`);
+    md+=links.join(' · ')+'\n\n';
+    md+=`---\n\n`;
+  }
+
+  // Descrição
+  if(desc) md+=`## 📖 Sobre o projeto\n\n${desc}\n\n`;
+
+  // Sumário
+  if(S.summary){
+    md+=`## 📋 Sumário\n\n`;
+    const items=[];
+    if(S.features&&featuresRaw) items.push('- [✨ Funcionalidades](#-funcionalidades)');
+    if(S.tech&&techList) items.push('- [🛠️ Tecnologias](#️-tecnologias-usadas)');
+    if(S.install) items.push('- [📦 Instalação](#-instalação)');
+    if(S.usage) items.push('- [▶️ Como usar](#️-como-usar)');
+    if(S.env) items.push('- [⚙️ Variáveis de ambiente](#️-variáveis-de-ambiente)');
+    if(S.api) items.push('- [📡 Endpoints da API](#-endpoints-da-api)');
+    if(S.tests) items.push('- [🧪 Testes](#-testes)');
+    if(S.deploy&&deployPlat) items.push('- [🚀 Deploy](#-deploy)');
+    if(S.contrib) items.push('- [🤝 Contribuição](#-contribuição)');
+    if(S.roadmap) items.push('- [🗺️ Roadmap](#️-roadmap)');
+    if(S.license&&license) items.push('- [📝 Licença](#-licença)');
+    if(S.author&&authorName) items.push('- [👤 Autor](#-autor)');
+    if(items.length) md+=items.join('\n')+'\n\n';
+  }
+
+  // Funcionalidades
+  if(S.features&&featuresRaw){
+    md+=`## ✨ Funcionalidades\n\n`;
+    const feats=featuresRaw.split('\n').filter(f=>f.trim());
+    md+=feats.map(f=>`- ✅ ${f.trim()}`).join('\n')+'\n\n';
+  }
+
+  // Tecnologias
+  if(S.tech&&(techList||lang||stack)){
+    md+=`## 🛠️ Tecnologias usadas\n\n`;
+    const techs=techList?techList.split(',').map(t=>t.trim()).filter(Boolean):[];
+    if(lang&&!techs.includes(lang)) techs.unshift(lang);
+    if(stack&&!techs.find(t=>t.toLowerCase()===stack.toLowerCase())) techs.push(stack);
+    md+=techs.map(t=>`- **${t}**`).join('\n')+'\n\n';
+  }
+
+  // Pré-requisitos
+  if(S.install){
+    md+=`## 📦 Instalação\n\n`;
+    md+=`### Pré-requisitos\n\n`;
+    if(lang==='Python') md+=`- Python 3.9+\n- pip\n\n`;
+    else if(lang==='Go') md+=`- Go 1.21+\n\n`;
+    else if(lang==='Rust') md+=`- Rust 1.70+\n- Cargo\n\n`;
+    else if(lang==='Java') md+=`- Java 17+\n- Maven ou Gradle\n\n`;
+    else md+=`- Node.js 18+\n- ${pkgMgr}\n\n`;
+
+    md+=`### Clonando o repositório\n\n`;
+    const repoUrl=repo||`https://github.com/usuario/${name.toLowerCase().replace(/\s+/g,'-')}`;
+    md+=`\`\`\`bash\ngit clone ${repoUrl}\ncd ${name.toLowerCase().replace(/\s+/g,'-')}\n\`\`\`\n\n`;
+
+    md+=`### Instalando dependências\n\n`;
+    md+=`\`\`\`bash\n${installCmd}\n\`\`\`\n\n`;
+  }
+
+  // Como usar
+  if(S.usage){
+    md+=`## ▶️ Como usar\n\n`;
+    md+=`\`\`\`bash\n${runCmd}\n\`\`\`\n\n`;
+    if(demo) md+=`Acesse: [${demo}](${demo})\n\n`;
+  }
+
+  // Env vars
+  if(S.env){
+    md+=`## ⚙️ Variáveis de ambiente\n\n`;
+    md+=`Renomeie o arquivo \`.env.example\` para \`.env\` e preencha as variáveis:\n\n`;
+    md+=`\`\`\`env\n# Banco de dados\nDATABASE_URL=postgresql://user:password@localhost:5432/db\n\n# Autenticação\nJWT_SECRET=sua_chave_secreta_aqui\n\n# API externa (se aplicável)\nAPI_KEY=sua_api_key\n\`\`\`\n\n`;
+  }
+
+  // API
+  if(S.api){
+    md+=`## 📡 Endpoints da API\n\n`;
+    md+=`| Método | Rota | Descrição | Auth |\n|--------|------|-----------|------|\n`;
+    md+=`| \`GET\` | \`/api/health\` | Status da API | ❌ |\n`;
+    md+=`| \`POST\` | \`/api/auth/login\` | Login do usuário | ❌ |\n`;
+    md+=`| \`GET\` | \`/api/users/me\` | Dados do usuário | ✅ |\n`;
+    md+=`| \`GET\` | \`/api/items\` | Listar itens | ✅ |\n\n`;
+    md+=`> 📖 Documentação completa: \`/api/docs\`\n\n`;
+  }
+
+  // Testes
+  if(S.tests){
+    md+=`## 🧪 Testes\n\n`;
+    md+=`\`\`\`bash\n# Rodar todos os testes\n${testCmd}\n\n# Testes com cobertura\n${testCmd} --coverage\n\`\`\`\n\n`;
+  }
+
+  // Deploy
+  if(S.deploy&&deployPlat){
+    md+=`## 🚀 Deploy\n\n`;
+    const deployGuides={
+      Vercel:`1. Instale a [Vercel CLI](https://vercel.com/cli)\n2. Execute \`vercel\` na raiz do projeto\n3. Siga as instruções interativas`,
+      Netlify:`1. Conecte o repositório no [Netlify Dashboard](https://netlify.com)\n2. Configure build command: \`npm run build\`\n3. Configure publish directory: \`dist\` ou \`build\``,
+      Railway:`1. Crie um projeto no [Railway](https://railway.app)\n2. Conecte o repositório GitHub\n3. Configure as variáveis de ambiente`,
+      Docker:`1. Build da imagem: \`docker build -t ${name.toLowerCase()} .\`\n2. Executar: \`docker run -p 3000:3000 ${name.toLowerCase()}\``,
+    };
+    md+=deployGuides[deployPlat]||`Deploy na plataforma ${deployPlat}. Consulte a documentação oficial.\n`;
+    md+='\n\n';
+  }
+
+  // Contribuição
+  if(S.contrib){
+    md+=`## 🤝 Contribuição\n\n`;
+    md+=`Contribuições são bem-vindas! Siga os passos:\n\n`;
+    md+=`1. Faça um fork do projeto\n`;
+    md+=`2. Crie uma branch para sua feature (\`git checkout -b feature/minha-feature\`)\n`;
+    md+=`3. Commit suas mudanças (\`git commit -m 'feat: adiciona minha feature'\`)\n`;
+    md+=`4. Push para a branch (\`git push origin feature/minha-feature\`)\n`;
+    md+=`5. Abra um Pull Request\n\n`;
+  }
+
+  // Roadmap
+  if(S.roadmap){
+    md+=`## 🗺️ Roadmap\n\n`;
+    md+=`- [x] MVP funcional\n- [ ] Autenticação completa\n- [ ] Dashboard de analytics\n- [ ] API pública\n- [ ] App mobile\n- [ ] Internacionalização (i18n)\n\n`;
+  }
+
+  // Licença
+  if(S.license&&license){
+    md+=`## 📝 Licença\n\n`;
+    md+=`Este projeto está sob a licença **${license}**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.\n\n`;
+  }
+
+  // Autor
+  if(S.author&&(authorName||authorGh)){
+    md+=`## 👤 Autor\n\n`;
+    if(authorGh) md+=`**${authorName||authorGh}**\n\n`;
+    else md+=`**${authorName}**\n\n`;
+    const links=[];
+    if(authorGh) links.push(`- GitHub: [@${authorGh}](https://github.com/${authorGh})`);
+    if(authorLi) links.push(`- LinkedIn: [${authorLi.replace('linkedin.com/in/','').replace('https://','').split('/')[2]||'perfil'}](https://${authorLi.startsWith('http')?'':'/'}${authorLi})`);
+    if(authorEmail) links.push(`- Email: [${authorEmail}](mailto:${authorEmail})`);
+    if(links.length) md+=links.join('\n')+'\n\n';
+  }
+
+  // Rodapé
+  md+=`---\n\n`;
+  md+=`<div align="center">\n`;
+  md+=`  <p>Feito com ❤️ por <strong>${authorName||name}</strong></p>\n`;
+  if(repo){
+    const repoPath=repo.replace('https://github.com/','');
+    md+=`  <p>⭐ Se este projeto te ajudou, dê uma estrela!</p>\n`;
+    md+=`  <p><a href="${repo}">GitHub</a>`;
+    if(demo) md+=` · <a href="${demo}">Demo</a>`;
+    md+=`</p>\n`;
+  }
+  md+=`</div>\n`;
+
+  currentMd=md;
+  renderPreview(md);
+  if(showToast) toast('README gerado! Clique em "Baixar .md" para salvar','success');
+}
+
+function renderPreview(md){
+  document.getElementById('prev-empty').style.display='none';
+  document.getElementById('md-rendered').style.display='block';
+
+  // Converter markdown para HTML (parser simples)
+  let html=md
+    // Badges (imagens)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1" style="height:20px;margin-right:4px;vertical-align:middle"/>')
+    // Links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>')
+    // HTML blocks (div align)
+    .replace(/<div[^>]*>([\s\S]*?)<\/div>/g,'<div style="text-align:center">$1</div>')
+    // H1
+    .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+    // H2
+    .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+    // H3
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    // Código em bloco
+    .replace(/```(\w+)?\n([\s\S]*?)```/g,'<pre><code>$2</code></pre>')
+    // Código inline
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    // Bold
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    // Italic
+    .replace(/_([^_]+)_/g,'<em>$1</em>')
+    // Blockquote
+    .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
+    // HR
+    .replace(/^---$/gm,'<hr/>')
+    // Tabela (thead)
+    .replace(/^\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)+)/gm,(m)=>{
+      const lines=m.split('\n').filter(l=>l.trim()&&!l.match(/^\|[-| :]+\|$/));
+      const head=lines[0].split('|').filter(c=>c.trim());
+      const rows=lines.slice(1).map(l=>l.split('|').filter(c=>c.trim()));
+      return `<table><thead><tr>${head.map(c=>`<th>${c.trim()}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c.trim()}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    })
+    // Listas (checkbox)
+    .replace(/^- \[x\] (.+)$/gm,'<li style="list-style:none">☑️ $1</li>')
+    .replace(/^- \[ \] (.+)$/gm,'<li style="list-style:none">⬜ $1</li>')
+    // Listas numeradas
+    .replace(/^\d+\. (.+)$/gm,'<li>$1</li>')
+    // Listas com bullet
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    // Parágrafos — linhas que não são tags HTML
+    .replace(/^(?!<[a-z/]|  |\s*$)(.+)$/gm,'<p>$1</p>')
+    // Quebras de linha duplas
+    .replace(/\n{2,}/g,'\n');
+
+  document.getElementById('md-rendered').innerHTML=html;
+  document.getElementById('md-raw').textContent=md;
+}
+
+function copyMarkdown(){
+  if(!currentMd){toast('Gere um README primeiro','error');return;}
+  navigator.clipboard.writeText(currentMd).then(()=>{
+    toast('Markdown copiado!','success');
+  }).catch(()=>toast('Use Ctrl+A no campo raw','info'));
+}
+
+function downloadMd(){
+  if(!currentMd){toast('Gere um README primeiro','error');return;}
+  const name=(g('proj-name')||'projeto').toLowerCase().replace(/\s+/g,'-');
+  const blob=new Blob([currentMd],{type:'text/markdown'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='README.md';
+  a.click();URL.revokeObjectURL(url);
+  toast('README.md baixado!','success');
+}
+
+function resetForm(){
+  document.querySelectorAll('.inp').forEach(i=>{
+    if(i.tagName==='SELECT')i.selectedIndex=0;
+    else i.value='';
+  });
+  document.querySelectorAll('input[type=checkbox]').forEach(c=>{
+    c.checked=['s-badges','s-summary','s-features','s-tech','s-install','s-usage','s-contrib','s-license','s-author'].includes(c.id);
+  });
+  currentMd='';
+  document.getElementById('prev-empty').style.display='block';
+  document.getElementById('md-rendered').style.display='none';
+  document.getElementById('md-raw').textContent='';
+  toast('Formulário limpo','info');
+}
+</script>
+</body>
+</html>
