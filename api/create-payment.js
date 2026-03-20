@@ -5,8 +5,12 @@
 const { MercadoPagoConfig, Payment, Preference } = require('mercadopago');
 const { createClient } = require('@supabase/supabase-js');
 
+// Token de produção LorranStack
+const MP_TOKEN = process.env.MP_ACCESS_TOKEN || 
+  'APP_USR-3351698149426901-032016-814e052946e9075bccc3bd20988e8694-1272402464';
+
 const mp = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN,
+  accessToken: MP_TOKEN,
   options: { timeout: 10000 },
 });
 
