@@ -1,384 +1,621 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin — LorranStack</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-  <style>
-    body { font-family:'Space Grotesk',sans-serif; background:#0a0a0f; color:#e8e8f0; }
-    .card { background:#111118; border:1px solid rgba(255,255,255,0.06); border-radius:16px; }
-    .tab { cursor:pointer; padding:8px 20px; border-radius:10px; font-size:14px; font-weight:500; transition:all 0.2s; color:#6b7280; }
-    .tab.active { background:rgba(74,222,128,0.1); color:#4ade80; }
-    .badge { font-size:11px; padding:3px 8px; border-radius:20px; font-weight:500; }
-    .badge-pending  { background:rgba(251,191,36,0.15); color:#fbbf24; }
-    .badge-approved { background:rgba(74,222,128,0.15); color:#4ade80; }
-    .badge-rejected { background:rgba(239,68,68,0.15); color:#ef4444; }
-    .badge-featured { background:rgba(129,140,248,0.15); color:#818cf8; }
-    .action-btn { font-size:12px; padding:4px 12px; border-radius:8px; cursor:pointer; border:1px solid; transition:all 0.2s; font-family:inherit; font-weight:500; }
-  </style>
-
-<script>
-// LorranStack v2.2 — Supabase Client completo (auth + data)
-const _SB_URL = 'https://jkgrmlfqgprcwfooovkx.supabase.co';
-const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA';
-
-// ── REST helper ──────────────────────────────────────────
-async function _sb(path, opts) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 10000);
-  try {
-    const res = await fetch(_SB_URL + '/rest/v1/' + path, Object.assign({
-      headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json' },
-      signal: ctrl.signal
-    }, opts || {}));
-    clearTimeout(t);
-    if (!res.ok) { const txt = await res.text(); throw new Error('SB ' + res.status + ': ' + txt); }
-    const txt = await res.text();
-    return txt ? JSON.parse(txt) : [];
-  } catch(e) { clearTimeout(t); throw e; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — LorranStack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060810;--bg2:#0c1020;--bg3:#111827;
+  --border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.14);
+  --text:#e2e8f4;--muted:#5a6a82;--muted2:#8899b0;
+  --accent:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--purple:#8b5cf6;
+  --serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;
+  --r:12px;
 }
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none}
 
-// ── Auth helpers ─────────────────────────────────────────
-// Hash simples para senha (SHA-256 via SubtleCrypto — sem bcrypt no browser)
-async function _hashPwd(pwd) {
-  const enc = new TextEncoder().encode(pwd + '_lorranstack_salt');
-  const buf = await crypto.subtle.digest('SHA-256', enc);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;align-items:center;
+  padding:0 1.5rem;gap:1rem;background:rgba(6,8,16,.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border)}
+.logo{font-family:var(--serif);font-size:1.15rem;color:#fff;display:flex;align-items:center;gap:.4rem}
+.logo-dot{width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6)}
+.admin-badge{font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:5px;
+  background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25);
+  letter-spacing:.06em;text-transform:uppercase}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:.75rem}
+.nav-back{font-size:.81rem;color:var(--muted2);padding:.35rem .75rem;border-radius:7px;
+  border:1px solid var(--border);transition:all .15s}
+.nav-back:hover{color:var(--text);border-color:var(--border-h)}
+.nav-logout{font-size:.81rem;color:var(--muted);padding:.35rem .75rem;border-radius:7px;
+  border:1px solid var(--border);transition:all .15s;cursor:pointer}
+.nav-logout:hover{color:#f87171;border-color:rgba(239,68,68,.3)}
 
-window.AUTH = {
-  // Cadastro
-  async register(name, email, password, role) {
-    // Verifica se email já existe
-    const exists = await _sb('ls_users?select=id&email=eq.' + encodeURIComponent(email));
-    if (exists.length) throw new Error('Email já cadastrado');
-    const hash = await _hashPwd(password);
-    const user = await _sb('ls_users?select=id,name,email,role', {
-      method: 'POST',
-      headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify({ name, email, password: hash, role: role || 'user' })
-    });
-    const u = Array.isArray(user) ? user[0] : user;
-    const token = btoa(JSON.stringify({ id: u.id, email: u.email, role: u.role, exp: Date.now() + 604800000 }));
-    return { token, user: u };
-  },
+.layout{display:flex;min-height:100vh;padding-top:56px}
 
-  // Login
-  async login(email, password) {
-    const rows = await _sb('ls_users?select=id,name,email,role,avatar_url,password&email=eq.' + encodeURIComponent(email));
-    if (!rows.length) throw new Error('Email ou senha incorretos');
-    const u = rows[0];
-    const hash = await _hashPwd(password);
-    if (u.password !== hash) throw new Error('Email ou senha incorretos');
-    const { password: _, ...safeUser } = u;
-    const token = btoa(JSON.stringify({ id: safeUser.id, email: safeUser.email, role: safeUser.role, exp: Date.now() + 604800000 }));
-    return { token, user: safeUser };
-  },
+.sidebar{width:200px;flex-shrink:0;border-right:1px solid var(--border);
+  padding:1.2rem .75rem;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+.sb-lbl{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.1em;padding:.25rem .6rem;margin-bottom:.25rem}
+.sb-item{display:flex;align-items:center;gap:.55rem;padding:.5rem .7rem;border-radius:8px;
+  font-size:.81rem;color:var(--muted2);transition:all .15s;cursor:pointer;width:100%;text-align:left}
+.sb-item:hover{background:var(--bg3);color:var(--text)}
+.sb-item.active{background:rgba(59,130,246,.1);color:#93bbfb;border:1px solid rgba(59,130,246,.12)}
+.sb-badge{margin-left:auto;font-size:.68rem;font-weight:700;padding:.12rem .45rem;
+  border-radius:999px;background:rgba(239,68,68,.15);color:#f87171}
 
-  // Recupera usuário do localStorage
-  getUser() {
-    try { return JSON.parse(localStorage.getItem('ls_user') || 'null'); } catch { return null; }
-  },
-  getToken() { return localStorage.getItem('ls_token'); },
-  isLoggedIn() { return !!this.getUser(); },
-  logout() { localStorage.removeItem('ls_token'); localStorage.removeItem('ls_user'); }
-};
+.main{flex:1;padding:1.8rem 2rem;max-width:1100px}
+.pg-title{font-family:var(--serif);font-size:1.8rem;color:#fff;font-weight:400;margin-bottom:.25rem}
+.pg-sub{font-size:.83rem;color:var(--muted2);margin-bottom:1.8rem}
 
-// ── Data helpers ─────────────────────────────────────────
-window.DB = {
-  async getCategories() {
-    return _sb('ls_categories?select=id,name,slug,icon&order=sort_order.asc');
-  },
-  async getFeatured() {
-    const rows = await _sb('ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,avg_rating,review_count,is_featured,category_id,creator_id&is_featured=eq.true&status=in.(approved,featured)&order=upvotes.desc&limit=6');
-    return window.DB._joinMeta(rows);
-  },
-  async getSaas({ sort, order, page, limit, category, search } = {}) {
-    sort = sort || 'upvotes'; order = order || 'desc'; page = page || 1; limit = limit || 12;
-    let q = 'ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,views,avg_rating,review_count,is_featured,category_id,creator_id&status=in.(approved,featured)';
-    if (search) q += '&or=(name.ilike.*' + encodeURIComponent(search) + '*,tagline.ilike.*' + encodeURIComponent(search) + '*)';
-    q += '&order=' + sort + '.' + order + '&limit=' + limit + '&offset=' + ((page-1)*limit);
-    const rows = await _sb(q);
-    const joined = await window.DB._joinMeta(rows);
-    if (category) {
-      const cats = await window.DB.getCategories();
-      const cat = cats.find(function(c){ return c.slug === category; });
-      if (cat) return joined.filter(function(r){ return r.category_id === cat.id; });
-    }
-    return joined;
-  },
-  async getSaasBySlug(slug) {
-    const rows = await _sb('ls_saas?select=*&slug=eq.' + slug + '&status=in.(approved,featured)&limit=1');
-    if (!rows.length) return null;
-    const s = rows[0];
-    const [cats, users, revs] = await Promise.all([
-      _sb('ls_categories?select=name,slug,icon&id=eq.' + s.category_id),
-      _sb('ls_users?select=name,bio,website&id=eq.' + s.creator_id),
-      _sb('ls_reviews?select=id,rating,comment,created_at,user_id&saas_id=eq.' + s.id + '&order=created_at.desc&limit=20')
-    ]);
-    s.category_name = cats[0] ? cats[0].name : '';
-    s.category_icon = cats[0] ? cats[0].icon : '';
-    s.creator_name  = users[0] ? users[0].name : 'Anônimo';
-    s.creator_bio   = users[0] ? users[0].bio  : '';
-    s.creator_website = users[0] ? users[0].website : '';
-    if (revs.length) {
-      const uids = [...new Set(revs.map(function(r){ return r.user_id; }).filter(Boolean))];
-      const ulist = uids.length ? await _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : [];
-      const umap = {};
-      ulist.forEach(function(u){ umap[u.id] = u.name; });
-      revs.forEach(function(r){ r.user_name = umap[r.user_id] || 'Usuário'; });
-    }
-    s.reviews = revs;
-    return s;
-  },
-  async getStats() {
-    const [r1, r2] = await Promise.all([
-      fetch(_SB_URL+'/rest/v1/ls_saas?select=id&status=in.(approved,featured)', { headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'} }),
-      fetch(_SB_URL+'/rest/v1/ls_users?select=id', { headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'} })
-    ]);
-    return {
-      saas:  parseInt((r1.headers.get('content-range')||'0/15').split('/')[1]),
-      users: parseInt((r2.headers.get('content-range')||'0/8').split('/')[1])
-    };
-  },
-  async addReview(saasId, rating, comment, userId) {
-    return _sb('ls_reviews', {
-      method: 'POST',
-      headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-      body: JSON.stringify({ saas_id: saasId, rating: rating, comment: comment, user_id: userId })
-    });
-  },
-  async getCollections() {
-    return _sb('ls_collections?select=id,title,slug,description,cover_emoji,is_official,saas_ids&is_official=eq.true&order=view_count.desc');
-  },
-  async getCreatorSaas(userId) {
-    const rows = await _sb('ls_saas?select=id,name,slug,status,views,clicks,upvotes,avg_rating,review_count,created_at,category_id&creator_id=eq.' + userId + '&order=created_at.desc');
-    return window.DB._joinMeta(rows);
-  },
-  async submitSaas(data) {
-    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') + '-' + Date.now();
-    return _sb('ls_saas', {
-      method: 'POST',
-      headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-      body: JSON.stringify(Object.assign({}, data, { slug: slug, status: 'pending', tags: data.tags || [], screenshots: data.screenshots || [] }))
-    });
-  },
-  async _joinMeta(rows) {
-    if (!rows.length) return rows;
-    const cids = [...new Set(rows.map(function(r){return r.category_id;}).filter(Boolean))];
-    const uids = [...new Set(rows.map(function(r){return r.creator_id;}).filter(Boolean))];
-    const [cats, users] = await Promise.all([
-      cids.length ? _sb('ls_categories?select=id,name,slug,icon&id=in.(' + cids.join(',') + ')') : Promise.resolve([]),
-      uids.length ? _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : Promise.resolve([])
-    ]);
-    const cmap = {}, umap = {};
-    cats.forEach(function(c){cmap[c.id]=c;}); users.forEach(function(u){umap[u.id]=u;});
-    return rows.map(function(r){
-      return Object.assign({},r,{
-        category_name: cmap[r.category_id] ? cmap[r.category_id].name : '',
-        category_icon: cmap[r.category_id] ? cmap[r.category_id].icon : '',
-        category_slug: cmap[r.category_id] ? cmap[r.category_id].slug : '',
-        creator_name:  umap[r.creator_id]  ? umap[r.creator_id].name  : 'Anônimo',
-      });
-    });
-  }
-};
-window.API = null;
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:.6rem;margin-bottom:2rem}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:1rem 1.2rem}
+.stat-lbl{font-size:.72rem;color:var(--muted);margin-bottom:.4rem}
+.stat-val{font-family:var(--serif);font-size:1.7rem;color:#fff;line-height:1}
+.stat-sub{font-size:.71rem;margin-top:.3rem}
 
-</script>
+.tab-row{display:flex;gap:.35rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:.75rem}
+.tab{padding:.45rem 1rem;border-radius:8px;font-size:.82rem;color:var(--muted2);
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.4rem}
+.tab:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.tab.active{background:rgba(59,130,246,.1);color:#93bbfb}
+.tab-count{font-size:.68rem;font-weight:700;padding:.1rem .4rem;border-radius:999px;
+  background:rgba(239,68,68,.2);color:#f87171}
+
+.table{width:100%;border-collapse:collapse}
+.table th{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.07em;padding:.65rem .9rem;border-bottom:1px solid var(--border);text-align:left}
+.table td{padding:.75rem .9rem;border-bottom:1px solid var(--border);font-size:.83rem;color:var(--muted2);vertical-align:middle}
+.table tr:last-child td{border-bottom:none}
+.table tr:hover td{background:rgba(255,255,255,.02)}
+.td-name{font-weight:600;color:var(--text)}
+.td-email{font-size:.75rem}
+
+.status{padding:.2rem .6rem;border-radius:999px;font-size:.69rem;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.s-pending{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+.s-approved{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+.s-featured{background:rgba(139,92,246,.12);color:#a78bfa;border:1px solid rgba(139,92,246,.2)}
+.s-rejected{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+
+.acts{display:flex;gap:.35rem;flex-wrap:wrap}
+.act{padding:.28rem .65rem;border-radius:6px;font-size:.73rem;font-weight:600;
+  border:1px solid;transition:all .15s;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+.act-approve{color:#4ade80;border-color:rgba(34,197,94,.3)}
+.act-approve:hover{background:rgba(34,197,94,.1)}
+.act-feature{color:#a78bfa;border-color:rgba(139,92,246,.3)}
+.act-feature:hover{background:rgba(139,92,246,.1)}
+.act-reject{color:#f87171;border-color:rgba(239,68,68,.3)}
+.act-reject:hover{background:rgba(239,68,68,.08)}
+.act-del{color:var(--muted);border-color:var(--border)}
+.act-del:hover{color:#f87171;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05)}
+.act-view{color:var(--muted2);border-color:var(--border)}
+.act-view:hover{color:var(--text);border-color:var(--border-h)}
+
+.empty{text-align:center;padding:3rem;color:var(--muted)}
+.empty-icon{font-size:2rem;margin-bottom:.6rem}
+.empty-text{font-size:.85rem}
+
+.tc{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem}
+.toast{display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;
+  background:var(--bg3);border:1px solid var(--border-h);color:var(--text);font-size:.82rem;
+  box-shadow:0 8px 28px rgba(0,0,0,.5);animation:slideIn .3s ease;max-width:300px}
+@keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);
+  backdrop-filter:blur(8px);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border-h);border-radius:16px;padding:1.8rem;
+  width:100%;max-width:480px;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.6);animation:mIn .25s ease}
+@keyframes mIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-x{position:absolute;top:1rem;right:1rem;width:26px;height:26px;border-radius:50%;
+  background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;
+  justify-content:center;color:var(--muted2);font-size:.85rem;cursor:pointer}
+.modal-x:hover{background:var(--border-h)}
+.modal-title{font-family:var(--serif);font-size:1.3rem;color:#fff;margin-bottom:1rem}
+.modal-body{font-size:.85rem;color:var(--muted2);line-height:1.65;margin-bottom:1.2rem}
+.modal-field{margin-bottom:.9rem}
+.modal-field label{display:block;font-size:.78rem;font-weight:600;color:var(--muted2);margin-bottom:.4rem}
+.modal-field input,.modal-field select{width:100%;padding:.65rem .9rem;border-radius:8px;
+  background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:.85rem;
+  outline:none;font-family:var(--sans)}
+.modal-field input:focus,.modal-field select:focus{border-color:rgba(59,130,246,.5)}
+.modal-btns{display:flex;gap:.6rem;justify-content:flex-end}
+.btn-confirm{padding:.6rem 1.2rem;border-radius:8px;background:var(--red);color:#fff;
+  font-size:.83rem;font-weight:600;border:none;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-confirm:hover{background:#dc2626}
+.btn-confirm.green{background:var(--green)}
+.btn-confirm.green:hover{background:#16a34a}
+.btn-cancel-m{padding:.6rem 1rem;border-radius:8px;background:var(--bg3);border:1px solid var(--border);
+  color:var(--muted2);font-size:.83rem;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-cancel-m:hover{color:var(--text)}
+
+.prod-cell{display:flex;align-items:center;gap:.7rem}
+.prod-logo{width:32px;height:32px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;
+  font-family:var(--serif);color:#fff;overflow:hidden}
+.prod-logo img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+
+@media(max-width:900px){.sidebar{display:none}.stats-row{grid-template-columns:repeat(2,1fr)}}
+</style>
 </head>
 <body>
 
-<nav style="background:rgba(10,10,15,0.9); border-bottom:1px solid rgba(255,255,255,0.05);" class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl">
-  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <a href="/" class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#4ade80,#22c55e);">
-          <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 9L7.5 4.5L9 6L6 9L9 12L7.5 13.5L3 9Z" fill="white"/></svg>
-        </div>
-        <span style="font-family:Syne; font-weight:700; color:white;">Lorran<span style="color:#4ade80">Stack</span></span>
-      </a>
-      <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(239,68,68,0.15);color:#ef4444;">Admin</span>
-    </div>
-    <button onclick="logout()" class="text-sm text-gray-600 hover:text-white transition-colors">Sair</button>
+<div class="tc" id="tc"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    LorranStack
+  </div>
+  <span class="admin-badge">Admin</span>
+  <div class="nav-r">
+    <a href="/" class="nav-back">← Site</a>
+    <button class="nav-logout" onclick="doLogout()">Sair</button>
   </div>
 </nav>
 
-<div class="max-w-7xl mx-auto px-6 pt-24 pb-16">
-  <div class="mb-8">
-    <h1 style="font-family:Syne; font-weight:800;" class="text-3xl text-white mb-1">Painel Admin</h1>
-    <p class="text-gray-500 text-sm">Gerenciamento completo da plataforma LorranStack</p>
-  </div>
+<div class="layout">
 
-  <!-- Tabs -->
-  <div class="flex items-center gap-2 mb-8">
-    <div class="tab active" onclick="showTab('stats')">Estatísticas</div>
-    <div class="tab" onclick="showTab('pending')">Pendentes <span id="pending-count" class="ml-1 text-xs px-1.5 py-0.5 rounded-full badge-pending hidden"></span></div>
-    <div class="tab" onclick="showTab('all-saas')">Todos os SaaS</div>
-    <div class="tab" onclick="showTab('users')">Usuários</div>
-  </div>
-
-  <!-- STATS -->
-  <div id="tab-stats">
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <div class="card p-5"><p class="text-xs text-gray-500 mb-1">Usuários</p><p class="text-3xl font-display font-700 text-white" id="a-users">—</p></div>
-      <div class="card p-5"><p class="text-xs text-gray-500 mb-1">SaaS ativos</p><p class="text-3xl font-display font-700 text-white" id="a-saas">—</p></div>
-      <div class="card p-5"><p class="text-xs text-gray-500 mb-1">Avaliações</p><p class="text-3xl font-display font-700 text-white" id="a-reviews">—</p></div>
-      <div class="card p-5"><p class="text-xs text-gray-500 mb-1">Pendentes</p><p class="text-3xl font-display font-700 text-white" id="a-pending">—</p></div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div style="margin-bottom:1rem">
+      <div class="sb-lbl">Painel</div>
+      <button class="sb-item active" id="sb-dash" onclick="showSection('dash')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Visão geral
+      </button>
+      <button class="sb-item" id="sb-pending" onclick="showSection('pending')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Pendentes
+        <span class="sb-badge" id="sb-pending-count" style="display:none">0</span>
+      </button>
+      <button class="sb-item" id="sb-saas" onclick="showSection('saas')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        Todos os SaaS
+      </button>
+      <button class="sb-item" id="sb-users" onclick="showSection('users')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Usuários
+      </button>
     </div>
-    <div class="card p-6">
-      <h2 class="font-600 text-white mb-4">Top SaaS por visualizações</h2>
-      <div id="top-saas-list"></div>
-    </div>
-  </div>
+  </aside>
 
-  <!-- PENDENTES -->
-  <div id="tab-pending" class="hidden">
-    <div class="card overflow-hidden">
-      <div class="p-5 border-b border-white/5">
-        <h2 class="font-600 text-white">SaaS aguardando aprovação</h2>
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- VISÃO GERAL -->
+    <div id="sec-dash">
+      <div class="pg-title">Painel de Admin</div>
+      <div class="pg-sub">Gerencie toda a plataforma LorranStack</div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-lbl">Total de SaaS</div>
+          <div class="stat-val" id="st-total">—</div>
+          <div class="stat-sub" style="color:var(--green)" id="st-approved-count">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">⏳ Pendentes</div>
+          <div class="stat-val" id="st-pending" style="color:#fbbf24">—</div>
+          <div class="stat-sub" style="color:var(--muted)">Aguardando aprovação</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">⭐ Em destaque</div>
+          <div class="stat-val" id="st-featured" style="color:#a78bfa">—</div>
+          <div class="stat-sub" style="color:var(--muted)">Na home page</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">👥 Usuários</div>
+          <div class="stat-val" id="st-users">—</div>
+          <div class="stat-sub" style="color:var(--muted)" id="st-creators-count">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">💬 Reviews</div>
+          <div class="stat-val" id="st-reviews">—</div>
+          <div class="stat-sub" style="color:var(--muted)">Total da plataforma</div>
+        </div>
       </div>
-      <div id="pending-list"></div>
-    </div>
-  </div>
 
-  <!-- ALL SAAS -->
-  <div id="tab-all-saas" class="hidden">
-    <div class="card overflow-hidden">
-      <div class="p-5 border-b border-white/5 flex items-center justify-between">
-        <h2 class="font-600 text-white">Todos os SaaS</h2>
-        <select id="status-filter" onchange="loadAllSaas()"
-          class="text-sm px-3 py-1.5 rounded-lg border border-white/10 text-gray-300 outline-none"
-          style="background:rgba(255,255,255,0.04);">
-          <option value="approved">Aprovados</option>
-          <option value="featured">Destaque</option>
-          <option value="pending">Pendentes</option>
-          <option value="rejected">Rejeitados</option>
-          <option value="all">Todos</option>
-        </select>
+      <!-- Pendentes em destaque -->
+      <div style="margin-bottom:.75rem;display:flex;align-items:center;gap:.75rem">
+        <div style="font-family:var(--serif);font-size:1.25rem;color:#fff">⏳ Aguardando aprovação</div>
+        <span id="pending-badge" style="display:none;font-size:.72rem;font-weight:700;padding:.15rem .55rem;border-radius:999px;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.2)">0</span>
       </div>
-      <div id="all-saas-list"></div>
+      <div id="pending-mini">
+        <div style="text-align:center;padding:2rem;color:var(--muted);font-size:.83rem">Carregando...</div>
+      </div>
     </div>
-  </div>
 
-  <!-- USERS -->
-  <div id="tab-users" class="hidden">
-    <div class="card overflow-hidden">
-      <div class="p-5 border-b border-white/5">
-        <h2 class="font-600 text-white">Usuários cadastrados</h2>
+    <!-- PENDENTES -->
+    <div id="sec-pending" style="display:none">
+      <div class="pg-title">Pendentes</div>
+      <div class="pg-sub">Produtos aguardando sua revisão</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th>Creator</th>
+            <th>Enviado</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="pending-tbody">
+          <tr><td colspan="4" class="empty"><div class="empty-icon">⏳</div><div class="empty-text">Carregando...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TODOS OS SAAS -->
+    <div id="sec-saas" style="display:none">
+      <div class="pg-title">Todos os SaaS</div>
+      <div class="pg-sub">Gerencie todos os produtos da plataforma</div>
+      <div style="display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap">
+        <button onclick="filterSaas('all',this)" class="act act-view" style="border-color:rgba(59,130,246,.3);color:#93bbfb" id="filter-all">Todos</button>
+        <button onclick="filterSaas('pending',this)" class="act" style="color:#fbbf24;border-color:rgba(245,158,11,.3)" id="filter-pending">Pendentes</button>
+        <button onclick="filterSaas('approved',this)" class="act" style="color:#4ade80;border-color:rgba(34,197,94,.3)" id="filter-approved">Aprovados</button>
+        <button onclick="filterSaas('featured',this)" class="act" style="color:#a78bfa;border-color:rgba(139,92,246,.3)" id="filter-featured">Destaque</button>
+        <button onclick="filterSaas('rejected',this)" class="act" style="color:#f87171;border-color:rgba(239,68,68,.3)" id="filter-rejected">Rejeitados</button>
       </div>
-      <div id="users-list"></div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th>Creator</th>
+            <th>Status</th>
+            <th>Views</th>
+            <th>Upvotes</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="saas-tbody">
+          <tr><td colspan="6" class="empty"><div style="padding:2rem;text-align:center;color:var(--muted);font-size:.83rem">Carregando...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div id="sec-users" style="display:none">
+      <div class="pg-title">Usuários</div>
+      <div class="pg-sub">Todos os membros cadastrados na plataforma</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Tipo</th>
+            <th>Cadastro</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="5" class="empty"><div style="padding:2rem;text-align:center;color:var(--muted);font-size:.83rem">Carregando...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL CONFIRMAÇÃO -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modal-title">Confirmar ação</div>
+    <div class="modal-body" id="modal-body"></div>
+    <div id="modal-extra"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel-m" onclick="closeModal()">Cancelar</button>
+      <button class="btn-confirm" id="modal-confirm-btn" onclick="execModal()">Confirmar</button>
     </div>
   </div>
 </div>
 
 <script>
-  const API = window.API || 'http://localhost:3000/api';
-  function getToken() { return localStorage.getItem('ls_token'); }
-  function logout() { localStorage.clear(); location.href = 'index.html'; }
+const SB='https://jkgrmlfqgprcwfooovkx.supabase.co';
+const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA';
 
-  function showTab(name) {
-    const tabs = ['stats','pending','all-saas','users'];
-    tabs.forEach((t, i) => {
-      document.getElementById(`tab-${t}`).classList.add('hidden');
-      document.querySelectorAll('.tab')[i].classList.remove('active');
+// IDs admin autorizados
+const ADMIN_EMAILS = ['admin@lorranstack.com','josefernandes6340@gmail.com'];
+
+async function q(path,opts={}){
+  const c=new AbortController(),t=setTimeout(()=>c.abort(),10000);
+  try{
+    const {headers:xH,...xO}=opts;
+    const r=await fetch(SB+'/rest/v1/'+path,{
+      headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json',...(xH||{})},
+      signal:c.signal,...xO
     });
-    document.getElementById(`tab-${name}`).classList.remove('hidden');
-    document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
-    if (name === 'pending') loadPending();
-    if (name === 'all-saas') loadAllSaas();
-    if (name === 'users') loadUsers();
-  }
+    clearTimeout(t);
+    if(!r.ok){const tx=await r.text();throw new Error('SB '+r.status+': '+tx)}
+    const tx=await r.text();return tx?JSON.parse(tx):[];
+  }catch(e){clearTimeout(t);throw e}
+}
 
-  function authHeaders() { return {'Content-Type':'application/json'}; }` };
-  }
+const getU=()=>{try{return JSON.parse(localStorage.getItem('ls_user')||'null')}catch{return null}};
 
-  async function loadStats() {
-    try {
-      const [saasRows, userRows, revRows, pendRows] = await Promise.all([
-        _sb('ls_saas?select=id&status=in.(approved,featured)'),
-        _sb('ls_users?select=id'),
-        _sb('ls_reviews?select=id'),
-        _sb('ls_saas?select=id&status=eq.pending')
-      ]);
-      const pCount = pendRows.length;
-      document.getElementById('a-users').textContent   = userRows.length;
-      document.getElementById('a-saas').textContent    = saasRows.length;
-      document.getElementById('a-reviews').textContent = revRows.length;
-      document.getElementById('a-pending').textContent = pCount;
-      if (pCount > 0) { const b=document.getElementById('pending-count'); b.textContent=pCount; b.classList.remove('hidden'); }
-      const topRaw = await _sb('ls_saas?select=name,views,clicks,upvotes,avg_rating&status=in.(approved,featured)&order=views.desc&limit=5');
-      document.getElementById('top-saas-list').innerHTML = topRaw.map(function(s){
-        return '<div class="flex items-center justify-between py-3 border-b border-white/5 last:border-0"><span class="text-sm text-white">'+s.name+'</span><div class="flex items-center gap-4 text-xs text-gray-500"><span>👁 '+s.views+'</span><span>▲ '+s.upvotes+'</span><span>⭐ '+Number(s.avg_rating||0).toFixed(1)+'</span></div></div>';
-      }).join('');
-    } catch(e) { document.getElementById('a-users').textContent='Erro'; console.error(e); }
-  }
-  
+function doLogout(){localStorage.removeItem('ls_user');localStorage.removeItem('ls_token');location.href='/'}
 
-  async function loadPending() {
-    try {
-      const rows = await _sb('ls_saas?select=id,name,tagline,website_url,status,category_id,creator_id&status=eq.pending&order=created_at.asc');
-      const joined = await DB._joinMeta(rows);
-      const el = document.getElementById('pending-list');
-      if (!joined.length) { el.innerHTML='<div class="p-6 text-center text-gray-600 text-sm">Nenhum SaaS pendente 🎉</div>'; return; }
-      el.innerHTML = joined.map(function(s){ return '<div class="p-5 border-b border-white/5"><div class="flex items-start justify-between gap-4"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><span class="font-600 text-white">'+s.name+'</span><span class="badge badge-pending">Pendente</span></div><p class="text-xs text-gray-500 mb-1">'+(s.tagline||'')+'</p><p class="text-xs text-gray-600">Criador: '+(s.creator_name||'—')+'</p><a href="'+(s.website_url||'#')+'" target="_blank" class="text-xs text-brand-400">'+(s.website_url||'')+'</a></div><div class="flex flex-col gap-2"><button onclick="updateStatus(''+s.id+'','approved')" class="action-btn" style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#4ade80;">✅ Aprovar</button><button onclick="updateStatus(''+s.id+'','featured')" class="action-btn" style="background:rgba(129,140,248,.1);border-color:rgba(129,140,248,.3);color:#818cf8;">⭐ Destaque</button><button onclick="updateStatus(''+s.id+'','rejected')" class="action-btn" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#ef4444;">❌ Rejeitar</button></div></div></div>'; }).join('');
-    } catch(e) { console.error(e); }
-  }
-  
+function toast(msg,type='info'){
+  const c={success:'#4ade80',error:'#f87171',info:'#60a5fa'};
+  const i={success:'✓',error:'✗',info:'ℹ'};
+  const el=document.createElement('div');
+  el.className='toast';
+  el.innerHTML=`<span style="color:${c[type]};font-weight:700">${i[type]}</span><span>${msg}</span>`;
+  document.getElementById('tc').appendChild(el);
+  setTimeout(()=>el.remove(),4000);
+}
 
-  async function updateStatus(id, status) {
-    await fetch(_SB_URL+'/rest/v1/ls_saas?id=eq.'+id, {
+function showSection(name){
+  ['dash','pending','saas','users'].forEach(s=>{
+    document.getElementById('sec-'+s).style.display=s===name?'block':'none';
+    const sb=document.getElementById('sb-'+s);
+    if(sb)sb.className='sb-item'+(s===name?' active':'');
+  });
+  if(name==='pending')loadPending();
+  if(name==='saas')loadAllSaas('all');
+  if(name==='users')loadUsers();
+}
+
+function statusBadge(s){
+  const m={pending:'s-pending',approved:'s-approved',featured:'s-featured',rejected:'s-rejected'};
+  const l={pending:'Pendente',approved:'Aprovado',featured:'Destaque',rejected:'Rejeitado'};
+  return`<span class="status ${m[s]||'s-pending'}">${l[s]||s}</span>`;
+}
+
+function logoCell(p){
+  const clrs=['#3b82f6','#8b5cf6','#22c55e','#f59e0b','#ef4444','#06b6d4'];
+  const c=clrs[p.name.charCodeAt(0)%clrs.length];
+  const img=p.logo_url?`<img src="${p.logo_url}" alt="${p.name}"/>`:`<span style="color:${c}">${p.name.charAt(0)}</span>`;
+  return`<div class="prod-cell"><div class="prod-logo">${img}</div><div><div class="td-name">${p.name}</div><div style="font-size:.73rem;color:var(--muted)">${p.tagline||''}</div></div></div>`;
+}
+
+function fmtDate(d){return new Date(d).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'})}
+
+// ── MODAL ─────────────────────────────────────────────────
+let modalAction=null;
+function openModal(title,body,btnLabel,btnClass,action,extraHtml=''){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').textContent=body;
+  document.getElementById('modal-extra').innerHTML=extraHtml;
+  const btn=document.getElementById('modal-confirm-btn');
+  btn.textContent=btnLabel;btn.className='btn-confirm'+(btnClass?' '+btnClass:'');
+  modalAction=action;
+  document.getElementById('modal-confirm').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('modal-confirm').classList.remove('open');
+  document.body.style.overflow='';
+  modalAction=null;
+}
+async function execModal(){if(modalAction)await modalAction();closeModal()}
+
+// ── AÇÕES DE PRODUTO ──────────────────────────────────────
+async function updateSaasStatus(id,name,status){
+  const labels={approved:'Aprovado',featured:'Em Destaque',rejected:'Rejeitado'};
+  const isFeat=status==='featured';
+  try{
+    await q('ls_saas?id=eq.'+id,{
       method:'PATCH',
-      headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json'},
-      body: JSON.stringify({ status: status, is_featured: status==='featured' })
+      headers:{'Prefer':'return=minimal'},
+      body:JSON.stringify({status,is_featured:isFeat,updated_at:new Date().toISOString()})
     });
-    loadPending(); loadStats();
-  }
+    toast(`"${name}" → ${labels[status]||status}`,'success');
+    await loadDashboard();
+    // Recarregar tabela ativa
+    const pending=document.getElementById('sec-pending');
+    const saas=document.getElementById('sec-saas');
+    if(pending&&pending.style.display!=='none')loadPending();
+    if(saas&&saas.style.display!=='none')loadAllSaas(currentFilter);
+  }catch(e){toast('Erro: '+e.message,'error')}
+}
 
-  async function deleteSaas(id) {
-    if (!confirm('Remover este SaaS?')) return;
-    await fetch(_SB_URL+'/rest/v1/ls_saas?id=eq.'+id, {
-      method:'DELETE',
-      headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY}
-    });
-    loadAllSaas();
-  }
+async function deleteSaas(id,name){
+  openModal(
+    'Excluir produto',
+    `Tem certeza que deseja excluir "${name}"? Esta ação não pode ser desfeita.`,
+    'Excluir permanentemente','',
+    async()=>{
+      try{
+        await fetch(SB+'/rest/v1/ls_saas?id=eq.'+id,{method:'DELETE',headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
+        toast(`"${name}" excluído`,'success');
+        await loadDashboard();
+        loadAllSaas(currentFilter);
+      }catch(e){toast('Erro: '+e.message,'error')}
+    }
+  );
+}
 
-  async function loadAllSaas() {
-    const status = document.getElementById('status-filter').value;
-    let q = 'ls_saas?select=id,name,slug,status,upvotes,views,category_id,creator_id&order=created_at.desc&limit=50';
-    if (status !== 'all') q += '&status=eq.' + status;
-    const rows = await _sb(q);
-    const joined = await DB._joinMeta(rows);
-    const el = document.getElementById('all-saas-list');
-    if (!joined.length) { el.innerHTML='<div class="p-5 text-center text-gray-600 text-sm">Nenhum resultado</div>'; return; }
-    el.innerHTML = joined.map(function(s){ return '<div class="p-4 border-b border-white/5 flex items-center justify-between gap-4"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="font-500 text-white text-sm">'+s.name+'</span><span class="badge badge-'+(s.status||'pending')+'">'+s.status+'</span></div><p class="text-xs text-gray-600">'+(s.creator_name||'—')+' · '+(s.category_name||'—')+'</p></div><div class="flex items-center gap-2"><button onclick="updateStatus(''+s.id+'','featured')" class="action-btn" style="background:transparent;border-color:rgba(129,140,248,.3);color:#818cf8;">⭐</button><button onclick="deleteSaas(''+s.id+'')" class="action-btn" style="background:transparent;border-color:rgba(239,68,68,.3);color:#ef4444;">🗑</button></div></div>'; }).join('');
-  }
+async function deleteUser(id,name){
+  openModal(
+    'Remover usuário',
+    `Remover "${name}" da plataforma? Isso também excluirá todos os produtos e dados do usuário.`,
+    'Remover usuário','',
+    async()=>{
+      try{
+        await fetch(SB+'/rest/v1/ls_saas?creator_id=eq.'+id,{method:'DELETE',headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
+        await fetch(SB+'/rest/v1/ls_users?id=eq.'+id,{method:'DELETE',headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
+        toast(`"${name}" removido`,'success');
+        loadUsers();loadDashboard();
+      }catch(e){toast('Erro: '+e.message,'error')}
+    }
+  );
+}
 
-  async function loadUsers() {
-    const users = await _sb('ls_users?select=id,name,email,role,is_verified,created_at&order=created_at.desc&limit=100');
-    const el = document.getElementById('users-list');
-    el.innerHTML = users.map(function(u){ return '<div class="p-4 border-b border-white/5 flex items-center justify-between gap-4"><div><div class="flex items-center gap-2 mb-0.5"><span class="font-500 text-white text-sm">'+u.name+'</span><span class="badge '+(u.role==='admin'?'badge-rejected':u.role==='creator'?'badge-featured':'badge-approved')+'">'+u.role+'</span></div><p class="text-xs text-gray-600">'+u.email+' · '+ new Date(u.created_at).toLocaleDateString('pt-BR')+'</p></div><select onchange="updateUserRole(''+u.id+'',this.value)" class="text-xs px-2 py-1 rounded-lg border border-white/10 text-gray-400 outline-none" style="background:rgba(255,255,255,.04);"><option '+(u.role==='user'?'selected':'')+' value="user">user</option><option '+(u.role==='creator'?'selected':'')+' value="creator">creator</option><option '+(u.role==='admin'?'selected':'')+' value="admin">admin</option></select></div>'; }).join('');
-  }
+// ── CARREGAMENTO DE DADOS ─────────────────────────────────
+async function loadDashboard(){
+  try{
+    const [saasRes,usersRes,reviewsRes]=await Promise.all([
+      fetch(SB+'/rest/v1/ls_saas?select=status',{headers:{'apikey':SK,'Authorization':'Bearer '+SK}}),
+      fetch(SB+'/rest/v1/ls_users?select=id,role',{headers:{'apikey':SK,'Authorization':'Bearer '+SK}}),
+      fetch(SB+'/rest/v1/ls_reviews?select=id&limit=1',{headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Prefer':'count=exact','Range':'0-0'}})
+    ]);
+    const saasData=await saasRes.json();
+    const usersData=await usersRes.json();
+    const reviewsCount=parseInt((reviewsRes.headers.get('content-range')||'0/0').split('/')[1])||0;
+    
+    const total=saasData.length;
+    const pending=saasData.filter(s=>s.status==='pending').length;
+    const featured=saasData.filter(s=>s.status==='featured').length;
+    const approved=saasData.filter(s=>s.status==='approved').length;
+    const creators=usersData.filter(u=>u.role==='creator').length;
+    
+    document.getElementById('st-total').textContent=total;
+    document.getElementById('st-approved-count').textContent=approved+' aprovados';
+    document.getElementById('st-pending').textContent=pending;
+    document.getElementById('st-featured').textContent=featured;
+    document.getElementById('st-users').textContent=usersData.length;
+    document.getElementById('st-creators-count').textContent=creators+' creators';
+    document.getElementById('st-reviews').textContent=reviewsCount;
+    
+    // Badge sidebar
+    const sbc=document.getElementById('sb-pending-count');
+    const pb=document.getElementById('pending-badge');
+    if(pending>0){
+      sbc.textContent=pending;sbc.style.display='inline';
+      pb.textContent=pending;pb.style.display='inline';
+    }else{
+      sbc.style.display='none';pb.style.display='none';
+    }
+    
+    // Mini lista pendentes no dashboard
+    loadPendingMini(saasData.filter(s=>s.status==='pending').length);
+  }catch(e){console.warn('loadDashboard:',e.message)}
+}
 
-  async function updateUserRole(id, role) {
-    await fetch(_SB_URL+'/rest/v1/ls_users?id=eq.'+id, {
-      method:'PATCH',
-      headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json'},
-      body: JSON.stringify({ role: role })
-    });
+async function loadPendingMini(count){
+  const el=document.getElementById('pending-mini');
+  if(count===0){
+    el.innerHTML='<div style="padding:1.5rem 1rem;border:1px dashed var(--border);border-radius:var(--r);text-align:center;color:var(--muted);font-size:.83rem">✓ Nenhum produto pendente — tudo em dia!</div>';
+    return;
   }
+  try{
+    const rows=await q('ls_saas?select=id,name,slug,tagline,logo_url,status,created_at,creator_id&status=eq.pending&order=created_at.asc&limit=5');
+    const uids=[...new Set(rows.map(r=>r.creator_id).filter(Boolean))];
+    const users=uids.length?await q('ls_users?select=id,name,email&id=in.('+uids.join(',')+')'):[];
+    const um=Object.fromEntries(users.map(u=>[u.id,u]));
+    el.innerHTML=rows.map(p=>`
+      <div style="display:flex;align-items:center;gap:.85rem;padding:.9rem 1rem;background:var(--bg2);border:1px solid rgba(245,158,11,.2);border-radius:var(--r);margin-bottom:.5rem">
+        <div>${logoCell(p)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.75rem;color:var(--muted2)">por ${um[p.creator_id]?.name||'—'} · ${fmtDate(p.created_at)}</div>
+        </div>
+        <div class="acts">
+          <button class="act act-approve" onclick="updateSaasStatus('${p.id}','${p.name}','approved')">✓ Aprovar</button>
+          <button class="act act-feature" onclick="updateSaasStatus('${p.id}','${p.name}','featured')">⭐ Destaque</button>
+          <button class="act act-reject" onclick="updateSaasStatus('${p.id}','${p.name}','rejected')">✗ Rejeitar</button>
+        </div>
+      </div>`).join('');
+  }catch(e){el.innerHTML=`<div style="color:var(--muted);font-size:.83rem;padding:1rem">Erro: ${e.message}</div>`}
+}
 
-  // Init
-  const user = JSON.parse(localStorage.getItem('ls_user') || '{}');
-  if (user.role !== 'admin') {
-    alert('Acesso restrito a administradores.');
-    location.href = 'index.html';
-  } else {
-    loadStats();
+async function loadPending(){
+  const tb=document.getElementById('pending-tbody');
+  try{
+    const rows=await q('ls_saas?select=id,name,slug,tagline,logo_url,created_at,creator_id,pricing_type&status=eq.pending&order=created_at.asc');
+    if(!rows.length){
+      tb.innerHTML='<tr><td colspan="4"><div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Nenhum produto pendente!</div></div></td></tr>';
+      return;
+    }
+    const uids=[...new Set(rows.map(r=>r.creator_id).filter(Boolean))];
+    const users=uids.length?await q('ls_users?select=id,name,email&id=in.('+uids.join(',')+')'):[];
+    const um=Object.fromEntries(users.map(u=>[u.id,u]));
+    tb.innerHTML=rows.map(p=>`<tr>
+      <td>${logoCell(p)}</td>
+      <td><div class="td-name">${um[p.creator_id]?.name||'—'}</div><div class="td-email" style="color:var(--muted)">${um[p.creator_id]?.email||''}</div></td>
+      <td>${fmtDate(p.created_at)}</td>
+      <td><div class="acts">
+        <button class="act act-approve" onclick="updateSaasStatus('${p.id}','${p.name}','approved')">✓ Aprovar</button>
+        <button class="act act-feature" onclick="updateSaasStatus('${p.id}','${p.name}','featured')">⭐ Destaque</button>
+        <button class="act act-reject" onclick="updateSaasStatus('${p.id}','${p.name}','rejected')">✗ Rejeitar</button>
+        <a href="/produto.html?slug=${p.slug}" target="_blank" class="act act-view">Ver</a>
+        <button class="act act-del" onclick="deleteSaas('${p.id}','${p.name}')">🗑</button>
+      </div></td>
+    </tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="4" style="color:var(--muted);padding:1.5rem;text-align:center">Erro: ${e.message}</td></tr>`}
+}
+
+let currentFilter='all';
+async function filterSaas(filter,btn){
+  currentFilter=filter;
+  document.querySelectorAll('[id^="filter-"]').forEach(b=>b.style.fontWeight='');
+  if(btn)btn.style.fontWeight='700';
+  await loadAllSaas(filter);
+}
+
+async function loadAllSaas(filter='all'){
+  const tb=document.getElementById('saas-tbody');
+  tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);font-size:.83rem">Carregando...</td></tr>';
+  try{
+    let url='ls_saas?select=id,name,slug,tagline,logo_url,status,views,upvotes,created_at,creator_id&order=created_at.desc';
+    if(filter!=='all')url+='&status=eq.'+filter;
+    const rows=await q(url);
+    if(!rows.length){
+      tb.innerHTML='<tr><td colspan="6"><div style="text-align:center;padding:2rem;color:var(--muted);font-size:.83rem">Nenhum produto encontrado.</div></td></tr>';
+      return;
+    }
+    const uids=[...new Set(rows.map(r=>r.creator_id).filter(Boolean))];
+    const users=uids.length?await q('ls_users?select=id,name&id=in.('+uids.join(',')+')'):[];
+    const um=Object.fromEntries(users.map(u=>[u.id,u]));
+    tb.innerHTML=rows.map(p=>`<tr>
+      <td>${logoCell(p)}</td>
+      <td style="font-size:.8rem;color:var(--muted2)">${um[p.creator_id]?.name||'—'}</td>
+      <td>${statusBadge(p.status)}</td>
+      <td style="color:var(--muted2)">${(p.views||0).toLocaleString('pt-BR')}</td>
+      <td style="color:var(--muted2)">${p.upvotes||0}</td>
+      <td><div class="acts">
+        ${p.status!=='approved'?`<button class="act act-approve" onclick="updateSaasStatus('${p.id}','${p.name}','approved')">✓</button>`:''}
+        ${p.status!=='featured'?`<button class="act act-feature" onclick="updateSaasStatus('${p.id}','${p.name}','featured')">⭐</button>`:''}
+        ${p.status!=='rejected'?`<button class="act act-reject" onclick="updateSaasStatus('${p.id}','${p.name}','rejected')">✗</button>`:''}
+        <a href="/produto.html?slug=${p.slug}" target="_blank" class="act act-view">Ver</a>
+        <button class="act act-del" onclick="deleteSaas('${p.id}','${p.name}')">🗑</button>
+      </div></td>
+    </tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);font-size:.83rem">Erro: ${e.message}</td></tr>`}
+}
+
+async function loadUsers(){
+  const tb=document.getElementById('users-tbody');
+  try{
+    const users=await q('ls_users?select=id,name,email,role,is_verified,created_at&order=created_at.desc');
+    if(!users.length){
+      tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);font-size:.83rem">Nenhum usuário.</td></tr>';
+      return;
+    }
+    const roleColor={admin:'color:#60a5fa',creator:'color:#4ade80',user:'color:var(--muted2)'};
+    const roleLabel={admin:'Admin',creator:'Creator',user:'Usuário'};
+    tb.innerHTML=users.map(u=>`<tr>
+      <td class="td-name">${u.name}${u.is_verified?' <span style="color:#4ade80;font-size:.7rem">✓</span>':''}</td>
+      <td class="td-email" style="color:var(--muted2)">${u.email}</td>
+      <td><span style="font-size:.77rem;font-weight:600;${roleColor[u.role]||''}">${roleLabel[u.role]||u.role}</span></td>
+      <td style="color:var(--muted);font-size:.78rem">${fmtDate(u.created_at)}</td>
+      <td><div class="acts">
+        ${u.email!=='admin@lorranstack.com'&&u.email!=='josefernandes6340@gmail.com'?
+          `<button class="act act-del" onclick="deleteUser('${u.id}','${u.name}')">Remover</button>`:'<span style="font-size:.73rem;color:var(--muted)">Admin</span>'}
+      </div></td>
+    </tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);font-size:.83rem">Erro: ${e.message}</td></tr>`}
+}
+
+document.getElementById('modal-confirm').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const u=getU();
+  if(!u||!ADMIN_EMAILS.includes(u.email)){
+    toast('Acesso restrito a administradores','error');
+    setTimeout(()=>location.href='/',1500);
+    return;
   }
+  loadDashboard();
+});
 </script>
 </body>
 </html>
