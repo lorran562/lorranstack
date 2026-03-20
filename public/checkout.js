@@ -302,7 +302,9 @@ window.lsConfirmPayment = async function() {
       _showPixScreen(data);
     } else {
       // Cartão: redirecionar para Checkout Pro do MP
-      const url = data.sandbox_url || data.checkout_url;
+      // Redirecionar para checkout do Mercado Pago (cartão)
+      const url = data.checkout_url || data.sandbox_url;
+      if (!url) throw new Error('URL de checkout nao retornada. Tente o PIX.');
       window.location.href = url;
     }
 

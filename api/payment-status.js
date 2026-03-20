@@ -4,8 +4,7 @@
 const { MercadoPagoConfig, Payment } = require('mercadopago');
 const { createClient } = require('@supabase/supabase-js');
 
-const MP_TOKEN = process.env.MP_ACCESS_TOKEN || 
-  'APP_USR-3351698149426901-032016-814e052946e9075bccc3bd20988e8694-1272402464';
+const MP_TOKEN = process.env.MP_ACCESS_TOKEN || 'APP_USR-3351698149426901-032016-814e052946e9075bccc3bd20988e8694-1272402464';
 const mp = new MercadoPagoConfig({ accessToken: MP_TOKEN });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
