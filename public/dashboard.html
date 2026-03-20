@@ -1,457 +1,622 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard — LorranStack</title>
-  <meta name="description" content="Gerencie seus produtos SaaS no LorranStack. Publique, edite e acompanhe analytics."/>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { display: ['Syne','sans-serif'], body: ['Space Grotesk','sans-serif'] },
-          colors: { brand: { 400:'#4ade80', 500:'#22c55e' } }
-        }
-      }
-    }
-  </script>
-  <style>
-    body { font-family:'Space Grotesk',sans-serif; background:#0a0a0f; color:#e8e8f0; }
-    .card { background:#111118; border:1px solid rgba(255,255,255,0.06); border-radius:16px; }
-    .input-field {
-      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
-      border-radius:12px; padding:12px 16px; color:#e8e8f0; width:100%; outline:none;
-      transition:border-color 0.2s; font-family:inherit; font-size:14px;
-    }
-    .input-field:focus { border-color:#4ade80; }
-    .btn-primary {
-      background:linear-gradient(135deg,#4ade80,#22c55e); color:#0a0a0f;
-      font-weight:600; padding:12px 24px; border-radius:12px; border:none;
-      cursor:pointer; font-size:14px; font-family:inherit; transition:opacity 0.2s;
-    }
-    .btn-primary:hover { opacity:0.9; }
-    .status-pending  { background:rgba(251,191,36,0.15); color:#fbbf24; }
-    .status-approved { background:rgba(74,222,128,0.15); color:#4ade80; }
-    .status-rejected { background:rgba(239,68,68,0.15); color:#ef4444; }
-    .status-featured { background:rgba(129,140,248,0.15); color:#818cf8; }
-    .tab { cursor:pointer; padding:8px 20px; border-radius:10px; font-size:14px; font-weight:500; transition:all 0.2s; color:#6b7280; }
-    .tab.active { background:rgba(74,222,128,0.1); color:#4ade80; }
-    select.input-field { appearance:none; }
-  </style>
-
-<script>
-// LorranStack v2.2 — Supabase Client completo (auth + data)
-const _SB_URL = 'https://jkgrmlfqgprcwfooovkx.supabase.co';
-const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA';
-
-// ── REST helper ──────────────────────────────────────────
-async function _sb(path, opts) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 10000);
-  try {
-    const res = await fetch(_SB_URL + '/rest/v1/' + path, Object.assign({
-      headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json' },
-      signal: ctrl.signal
-    }, opts || {}));
-    clearTimeout(t);
-    if (!res.ok) { const txt = await res.text(); throw new Error('SB ' + res.status + ': ' + txt); }
-    const txt = await res.text();
-    return txt ? JSON.parse(txt) : [];
-  } catch(e) { clearTimeout(t); throw e; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard — LorranStack</title>
+<meta name="description" content="Gerencie seus produtos SaaS no LorranStack. Publique, edite e acompanhe analytics."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060810;--bg2:#0c1020;--bg3:#111827;
+  --border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.14);
+  --text:#e2e8f4;--muted:#5a6a82;--muted2:#8899b0;
+  --accent:#3b82f6;--green:#22c55e;
+  --serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;
+  --r:12px;
 }
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none}
 
-// ── Auth helpers ─────────────────────────────────────────
-// Hash simples para senha (SHA-256 via SubtleCrypto — sem bcrypt no browser)
-async function _hashPwd(pwd) {
-  const enc = new TextEncoder().encode(pwd + '_lorranstack_salt');
-  const buf = await crypto.subtle.digest('SHA-256', enc);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;align-items:center;
+  padding:0 2rem;gap:1rem;background:rgba(6,8,16,.9);
+  backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:.5rem;font-family:var(--serif);font-size:1.2rem;color:#fff}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6)}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:.75rem}
+.nav-link{font-size:.82rem;color:var(--muted2);transition:color .15s;padding:.3rem .6rem;border-radius:7px}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.nav-user{font-size:.82rem;color:var(--muted2)}
+.nav-logout{font-size:.82rem;color:var(--muted);padding:.35rem .75rem;border-radius:7px;
+  border:1px solid var(--border);transition:all .15s;cursor:pointer}
+.nav-logout:hover{color:var(--text);border-color:var(--border-h)}
+
+/* LAYOUT */
+.layout{display:flex;min-height:100vh;padding-top:58px}
+
+/* SIDEBAR */
+.sidebar{width:220px;flex-shrink:0;border-right:1px solid var(--border);
+  padding:1.5rem 1rem;position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto}
+.sidebar-section{margin-bottom:1.5rem}
+.sidebar-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.1em;padding:.3rem .6rem;margin-bottom:.3rem}
+.sidebar-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem;border-radius:9px;
+  font-size:.83rem;color:var(--muted2);transition:all .15s;cursor:pointer;width:100%;text-align:left}
+.sidebar-item:hover{background:var(--bg3);color:var(--text)}
+.sidebar-item.active{background:rgba(59,130,246,.1);color:#93bbfb;border:1px solid rgba(59,130,246,.15)}
+.sidebar-item svg{flex-shrink:0;opacity:.7}
+.sidebar-item.active svg{opacity:1}
+
+/* MAIN */
+.main{flex:1;padding:2rem;max-width:1000px}
+.page-title{font-family:var(--serif);font-size:2rem;color:#fff;margin-bottom:.3rem;font-weight:400}
+.page-sub{font-size:.85rem;color:var(--muted2);margin-bottom:2rem}
+
+/* CARDS STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:2.5rem}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.2rem 1.4rem}
+.stat-label{font-size:.75rem;color:var(--muted);margin-bottom:.5rem;letter-spacing:.03em}
+.stat-value{font-family:var(--serif);font-size:2rem;color:#fff;line-height:1;font-weight:400}
+.stat-change{font-size:.73rem;color:var(--green);margin-top:.35rem}
+
+/* PRODUCTS LIST */
+.products-list{display:flex;flex-direction:column;gap:.5rem}
+.product-row{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:1rem 1.2rem;display:flex;align-items:center;gap:1rem;transition:border-color .15s}
+.product-row:hover{border-color:var(--border-h)}
+.prod-logo{width:36px;height:36px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:.95rem;flex-shrink:0;overflow:hidden}
+.prod-logo img{width:100%;height:100%;object-fit:cover;border-radius:7px}
+.prod-name{font-size:.88rem;font-weight:600;color:#fff;margin-bottom:.1rem}
+.prod-tagline{font-size:.76rem;color:var(--muted2)}
+.prod-stats{display:flex;gap:1rem;flex-shrink:0}
+.prod-stat{text-align:center}
+.prod-stat-num{font-size:.88rem;font-weight:600;color:var(--text)}
+.prod-stat-lbl{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.status-badge{padding:.22rem .65rem;border-radius:999px;font-size:.71rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;flex-shrink:0}
+.s-pending{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.2)}
+.s-approved{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+.s-featured{background:rgba(139,92,246,.12);color:#a78bfa;border:1px solid rgba(139,92,246,.2)}
+.s-rejected{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+.prod-actions{display:flex;gap:.4rem;flex-shrink:0}
+.action-btn{padding:.3rem .65rem;border-radius:7px;font-size:.76rem;border:1px solid var(--border);
+  color:var(--muted2);transition:all .15s;cursor:pointer;font-family:var(--sans)}
+.action-btn:hover{border-color:var(--border-h);color:var(--text)}
+.action-btn.del:hover{border-color:rgba(239,68,68,.4);color:#f87171;background:rgba(239,68,68,.06)}
+
+/* FORM */
+.form-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.8rem;max-width:700px}
+.form-title{font-family:var(--serif);font-size:1.4rem;color:#fff;margin-bottom:.3rem;font-weight:400}
+.form-sub{font-size:.83rem;color:var(--muted2);margin-bottom:1.6rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-group{display:flex;flex-direction:column;gap:.45rem}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:.79rem;font-weight:600;color:var(--muted2);letter-spacing:.02em}
+.form-input{padding:.7rem .9rem;border-radius:9px;background:var(--bg3);border:1px solid var(--border);
+  color:var(--text);font-size:.86rem;outline:none;transition:border-color .15s;font-family:var(--sans);width:100%}
+.form-input:focus{border-color:rgba(59,130,246,.5);box-shadow:0 0 0 3px rgba(59,130,246,.08)}
+.form-input::placeholder{color:var(--muted)}
+.form-textarea{resize:vertical;min-height:90px}
+.form-select{appearance:none;cursor:pointer}
+.form-alert{padding:.7rem .9rem;border-radius:8px;font-size:.81rem;margin-bottom:1rem;display:none}
+.form-alert.err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#fca5a5}
+.form-alert.ok{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);color:#86efac}
+.form-alert.show{display:block}
+.btn-submit{padding:.75rem 1.4rem;border-radius:9px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+  color:#fff;font-size:.86rem;font-weight:600;border:none;cursor:pointer;font-family:var(--sans);
+  transition:all .2s;box-shadow:0 4px 16px rgba(59,130,246,.25)}
+.btn-submit:hover{opacity:.9;transform:translateY(-1px)}
+.btn-cancel{padding:.75rem 1.2rem;border-radius:9px;background:var(--bg3);border:1px solid var(--border);
+  color:var(--muted2);font-size:.86rem;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-cancel:hover{color:var(--text);border-color:var(--border-h)}
+
+/* EMPTY */
+.empty{text-align:center;padding:3.5rem 2rem;border:1px dashed var(--border);border-radius:var(--r)}
+.empty-icon{font-size:2rem;margin-bottom:.75rem}
+.empty-title{font-family:var(--serif);font-size:1.2rem;color:#fff;margin-bottom:.4rem}
+.empty-text{font-size:.82rem;color:var(--muted);margin-bottom:1.2rem}
+
+/* TOAST */
+.tc{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem}
+.toast{display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;
+  background:var(--bg3);border:1px solid var(--border-h);color:var(--text);font-size:.82rem;
+  box-shadow:0 8px 28px rgba(0,0,0,.5);animation:slideIn .3s ease;max-width:300px;font-family:var(--sans)}
+@keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+/* SECTION */
+.section-hdr{display:flex;align-items:center;gap:1rem;margin-bottom:1.2rem}
+.section-title{font-family:var(--serif);font-size:1.3rem;color:#fff;font-weight:400}
+.section-count{font-size:.75rem;color:var(--muted);background:var(--bg3);border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px}
+.section-action{margin-left:auto;display:flex;align-items:center;gap:.4rem;padding:.38rem .85rem;
+  border-radius:8px;background:var(--accent);color:#fff;font-size:.8rem;font-weight:600;cursor:pointer;
+  transition:all .15s;border:none;font-family:var(--sans)}
+.section-action:hover{background:#2563eb}
+
+/* PLANO BANNER */
+.plan-banner{background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(139,92,246,.08));
+  border:1px solid rgba(59,130,246,.2);border-radius:var(--r);padding:1.2rem 1.5rem;
+  display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem}
+.plan-banner-icon{font-size:1.8rem;flex-shrink:0}
+.plan-banner-title{font-size:.9rem;font-weight:600;color:#fff;margin-bottom:.2rem}
+.plan-banner-text{font-size:.8rem;color:var(--muted2)}
+.plan-banner-btn{margin-left:auto;flex-shrink:0;padding:.45rem 1rem;border-radius:8px;
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:.8rem;font-weight:600;
+  border:none;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+  .prod-stats{display:none}
+  .main{padding:1.5rem 1rem}
 }
-
-window.AUTH = {
-  // Cadastro
-  async register(name, email, password, role) {
-    // Verifica se email já existe
-    const exists = await _sb('ls_users?select=id&email=eq.' + encodeURIComponent(email));
-    if (exists.length) throw new Error('Email já cadastrado');
-    const hash = await _hashPwd(password);
-    const user = await _sb('ls_users?select=id,name,email,role', {
-      method: 'POST',
-      headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify({ name, email, password: hash, role: role || 'user' })
-    });
-    const u = Array.isArray(user) ? user[0] : user;
-    const token = btoa(JSON.stringify({ id: u.id, email: u.email, role: u.role, exp: Date.now() + 604800000 }));
-    return { token, user: u };
-  },
-
-  // Login
-  async login(email, password) {
-    const rows = await _sb('ls_users?select=id,name,email,role,avatar_url,password&email=eq.' + encodeURIComponent(email));
-    if (!rows.length) throw new Error('Email ou senha incorretos');
-    const u = rows[0];
-    const hash = await _hashPwd(password);
-    if (u.password !== hash) throw new Error('Email ou senha incorretos');
-    const { password: _, ...safeUser } = u;
-    const token = btoa(JSON.stringify({ id: safeUser.id, email: safeUser.email, role: safeUser.role, exp: Date.now() + 604800000 }));
-    return { token, user: safeUser };
-  },
-
-  // Recupera usuário do localStorage
-  getUser() {
-    try { return JSON.parse(localStorage.getItem('ls_user') || 'null'); } catch { return null; }
-  },
-  getToken() { return localStorage.getItem('ls_token'); },
-  isLoggedIn() { return !!this.getUser(); },
-  logout() { localStorage.removeItem('ls_token'); localStorage.removeItem('ls_user'); }
-};
-
-// ── Data helpers ─────────────────────────────────────────
-window.DB = {
-  async getCategories() {
-    return _sb('ls_categories?select=id,name,slug,icon&order=sort_order.asc');
-  },
-  async getFeatured() {
-    const rows = await _sb('ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,avg_rating,review_count,is_featured,category_id,creator_id&is_featured=eq.true&status=in.(approved,featured)&order=upvotes.desc&limit=6');
-    return window.DB._joinMeta(rows);
-  },
-  async getSaas({ sort, order, page, limit, category, search } = {}) {
-    sort = sort || 'upvotes'; order = order || 'desc'; page = page || 1; limit = limit || 12;
-    let q = 'ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,views,avg_rating,review_count,is_featured,category_id,creator_id&status=in.(approved,featured)';
-    if (search) q += '&or=(name.ilike.*' + encodeURIComponent(search) + '*,tagline.ilike.*' + encodeURIComponent(search) + '*)';
-    q += '&order=' + sort + '.' + order + '&limit=' + limit + '&offset=' + ((page-1)*limit);
-    const rows = await _sb(q);
-    const joined = await window.DB._joinMeta(rows);
-    if (category) {
-      const cats = await window.DB.getCategories();
-      const cat = cats.find(function(c){ return c.slug === category; });
-      if (cat) return joined.filter(function(r){ return r.category_id === cat.id; });
-    }
-    return joined;
-  },
-  async getSaasBySlug(slug) {
-    const rows = await _sb('ls_saas?select=*&slug=eq.' + slug + '&status=in.(approved,featured)&limit=1');
-    if (!rows.length) return null;
-    const s = rows[0];
-    const [cats, users, revs] = await Promise.all([
-      _sb('ls_categories?select=name,slug,icon&id=eq.' + s.category_id),
-      _sb('ls_users?select=name,bio,website&id=eq.' + s.creator_id),
-      _sb('ls_reviews?select=id,rating,comment,created_at,user_id&saas_id=eq.' + s.id + '&order=created_at.desc&limit=20')
-    ]);
-    s.category_name = cats[0] ? cats[0].name : '';
-    s.category_icon = cats[0] ? cats[0].icon : '';
-    s.creator_name  = users[0] ? users[0].name : 'Anônimo';
-    s.creator_bio   = users[0] ? users[0].bio  : '';
-    s.creator_website = users[0] ? users[0].website : '';
-    if (revs.length) {
-      const uids = [...new Set(revs.map(function(r){ return r.user_id; }).filter(Boolean))];
-      const ulist = uids.length ? await _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : [];
-      const umap = {};
-      ulist.forEach(function(u){ umap[u.id] = u.name; });
-      revs.forEach(function(r){ r.user_name = umap[r.user_id] || 'Usuário'; });
-    }
-    s.reviews = revs;
-    return s;
-  },
-  async getStats() {
-    const [r1, r2] = await Promise.all([
-      fetch(_SB_URL+'/rest/v1/ls_saas?select=id&status=in.(approved,featured)', { headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'} }),
-      fetch(_SB_URL+'/rest/v1/ls_users?select=id', { headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'} })
-    ]);
-    return {
-      saas:  parseInt((r1.headers.get('content-range')||'0/15').split('/')[1]),
-      users: parseInt((r2.headers.get('content-range')||'0/8').split('/')[1])
-    };
-  },
-  async addReview(saasId, rating, comment, userId) {
-    return _sb('ls_reviews', {
-      method: 'POST',
-      headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-      body: JSON.stringify({ saas_id: saasId, rating: rating, comment: comment, user_id: userId })
-    });
-  },
-  async getCollections() {
-    return _sb('ls_collections?select=id,title,slug,description,cover_emoji,is_official,saas_ids&is_official=eq.true&order=view_count.desc');
-  },
-  async getCreatorSaas(userId) {
-    const rows = await _sb('ls_saas?select=id,name,slug,status,views,clicks,upvotes,avg_rating,review_count,created_at,category_id&creator_id=eq.' + userId + '&order=created_at.desc');
-    return window.DB._joinMeta(rows);
-  },
-  async submitSaas(data) {
-    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') + '-' + Date.now();
-    return _sb('ls_saas', {
-      method: 'POST',
-      headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-      body: JSON.stringify(Object.assign({}, data, { slug: slug, status: 'pending', tags: [], screenshots: [] }))
-    });
-  },
-  async _joinMeta(rows) {
-    if (!rows.length) return rows;
-    const cids = [...new Set(rows.map(function(r){return r.category_id;}).filter(Boolean))];
-    const uids = [...new Set(rows.map(function(r){return r.creator_id;}).filter(Boolean))];
-    const [cats, users] = await Promise.all([
-      cids.length ? _sb('ls_categories?select=id,name,slug,icon&id=in.(' + cids.join(',') + ')') : Promise.resolve([]),
-      uids.length ? _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : Promise.resolve([])
-    ]);
-    const cmap = {}, umap = {};
-    cats.forEach(function(c){cmap[c.id]=c;}); users.forEach(function(u){umap[u.id]=u;});
-    return rows.map(function(r){
-      return Object.assign({},r,{
-        category_name: cmap[r.category_id] ? cmap[r.category_id].name : '',
-        category_icon: cmap[r.category_id] ? cmap[r.category_id].icon : '',
-        category_slug: cmap[r.category_id] ? cmap[r.category_id].slug : '',
-        creator_name:  umap[r.creator_id]  ? umap[r.creator_id].name  : 'Anônimo',
-      });
-    });
-  }
-};
-window.API = null;
-
-</script>
+</style>
 </head>
 <body>
 
-<!-- Navbar -->
-<nav style="background:rgba(10,10,15,0.9); border-bottom:1px solid rgba(255,255,255,0.05);" class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl">
-  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-    <a href="/" class="flex items-center gap-2">
-      <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#4ade80,#22c55e);">
-        <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 9L7.5 4.5L9 6L6 9L9 12L7.5 13.5L3 9Z" fill="white"/><path d="M15 9L10.5 4.5L9 6L12 9L9 12L10.5 13.5L15 9Z" fill="white" opacity="0.6"/></svg>
-      </div>
-      <span style="font-family:Syne; font-weight:700; color:white;">Lorran<span style="color:#4ade80">Stack</span></span>
-    </a>
-    <div class="flex items-center gap-4">
-      <a href="pricing.html" class="text-sm text-green-400 hover:text-green-300 transition-colors border border-green-400/30 px-3 py-1 rounded-full hover:border-green-400/60">💎 Planos</a>
-      <a href="/" class="text-sm text-gray-400 hover:text-white transition-colors">Explorar</a>
-      <span class="text-sm text-gray-400" id="user-name-nav">Dashboard</span>
-      <button onclick="logout()" class="text-sm text-gray-600 hover:text-white transition-colors">Sair</button>
-    </div>
+<div class="tc" id="tc"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-dot"></div>
+    LorranStack
+  </a>
+  <div class="nav-r">
+    <a href="/" class="nav-link">← Explorar</a>
+    <a href="/pricing.html" class="nav-link">💎 Planos</a>
+    <span class="nav-user" id="nav-uname">Dashboard</span>
+    <button class="nav-logout" onclick="doLogout()">Sair</button>
   </div>
 </nav>
 
-<div class="max-w-7xl mx-auto px-6 pt-24 pb-16">
+<div class="layout">
 
-  <!-- Header -->
-  <div class="mb-8">
-    <h1 style="font-family:Syne; font-weight:800;" class="text-3xl text-white mb-1">Meu Dashboard</h1>
-    <p class="text-gray-500 text-sm">Gerencie seus produtos SaaS publicados</p>
-  </div>
-
-  <!-- Tabs -->
-  <div class="flex items-center gap-2 mb-8 border-b border-white/5 pb-4">
-    <div class="tab active" onclick="showTab('overview')">Visão geral</div>
-    <div class="tab" onclick="showTab('products')">Meus produtos</div>
-    <div class="tab" onclick="showTab('new-product')">+ Publicar SaaS</div>
-  </div>
-
-  <!-- TAB: OVERVIEW -->
-  <div id="tab-overview">
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <div class="card p-5">
-        <p class="text-xs text-gray-500 mb-1">Total de produtos</p>
-        <p class="text-3xl font-display font-700 text-white" id="stat-products">—</p>
-      </div>
-      <div class="card p-5">
-        <p class="text-xs text-gray-500 mb-1">Visualizações</p>
-        <p class="text-3xl font-display font-700 text-white" id="stat-views">—</p>
-      </div>
-      <div class="card p-5">
-        <p class="text-xs text-gray-500 mb-1">Cliques</p>
-        <p class="text-3xl font-display font-700 text-white" id="stat-clicks">—</p>
-      </div>
-      <div class="card p-5">
-        <p class="text-xs text-gray-500 mb-1">Upvotes</p>
-        <p class="text-3xl font-display font-700 text-white" id="stat-upvotes">—</p>
-      </div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Menu</div>
+      <button class="sidebar-item active" id="sb-overview" onclick="showTab('overview')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Visão geral
+      </button>
+      <button class="sidebar-item" id="sb-products" onclick="showTab('products')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        Meus produtos
+      </button>
+      <button class="sidebar-item" id="sb-new" onclick="showTab('new')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Publicar SaaS
+      </button>
     </div>
-
-    <!-- Lista rápida de produtos -->
-    <div class="card overflow-hidden">
-      <div class="p-5 border-b border-white/5">
-        <h2 class="font-600 text-white">Seus produtos</h2>
-      </div>
-      <div id="dashboard-products-list" class="divide-y divide-white/5">
-        <div class="p-5 text-sm text-gray-600">Carregando...</div>
-      </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Conta</div>
+      <a href="/pricing.html" class="sidebar-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Planos
+      </a>
     </div>
-  </div>
+  </aside>
 
-  <!-- TAB: PRODUCTS -->
-  <div id="tab-products" class="hidden">
-    <div id="products-full-list"></div>
-  </div>
+  <!-- MAIN -->
+  <main class="main">
 
-  <!-- TAB: NOVO PRODUTO -->
-  <div id="tab-new-product" class="hidden">
-    <div class="max-w-2xl">
-      <div class="card p-8">
-        <h2 style="font-family:Syne; font-weight:700;" class="text-xl text-white mb-6">Cadastrar novo SaaS</h2>
+    <!-- TAB OVERVIEW -->
+    <div id="tab-overview">
+      <div class="page-title" id="pg-title">Bom dia 👋</div>
+      <div class="page-sub">Aqui está um resumo dos seus produtos</div>
 
-        <div id="form-error" class="hidden mb-4 p-4 rounded-xl text-sm text-red-400 border border-red-500/20" style="background:rgba(239,68,68,0.08);"></div>
-        <div id="form-success" class="hidden mb-4 p-4 rounded-xl text-sm text-green-400 border border-green-500/20" style="background:rgba(74,222,128,0.08);"></div>
+      <!-- Plano banner -->
+      <div class="plan-banner" id="plan-banner" style="display:none">
+        <div class="plan-banner-icon">💎</div>
+        <div>
+          <div class="plan-banner-title">Upgrade para Creator Pro</div>
+          <div class="plan-banner-text">Publique produtos ilimitados, destaque na home e analytics avançado.</div>
+        </div>
+        <button class="plan-banner-btn" onclick="location.href='/pricing.html'">Ver planos →</button>
+      </div>
 
-        <div class="space-y-5">
-          <div>
-            <label class="block text-sm font-500 text-gray-300 mb-1.5">Nome do SaaS *</label>
-            <input id="f-name" type="text" placeholder="Ex: FlowAI" class="input-field"/>
-          </div>
-          <div>
-            <label class="block text-sm font-500 text-gray-300 mb-1.5">Tagline *</label>
-            <input id="f-tagline" type="text" placeholder="Frase curta que descreve o produto" class="input-field"/>
-          </div>
-          <div>
-            <label class="block text-sm font-500 text-gray-300 mb-1.5">Descrição completa *</label>
-            <textarea id="f-description" rows="4" placeholder="Descreva o que seu SaaS faz, para quem é e quais problemas resolve..." class="input-field" style="resize:vertical;"></textarea>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-500 text-gray-300 mb-1.5">Categoria *</label>
-              <select id="f-category" class="input-field">
-                <option value="">Selecione...</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-500 text-gray-300 mb-1.5">Tipo de preço</label>
-              <select id="f-pricing" class="input-field">
-                <option value="free">Grátis</option>
-                <option value="freemium">Freemium</option>
-                <option value="paid">Pago</option>
-                <option value="subscription">Assinatura</option>
-              </select>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-500 text-gray-300 mb-1.5">Preço (ex: 29.90)</label>
-              <input id="f-price" type="number" step="0.01" placeholder="Opcional" class="input-field"/>
-            </div>
-            <div>
-              <label class="block text-sm font-500 text-gray-300 mb-1.5">Label do preço</label>
-              <input id="f-price-label" type="text" placeholder="Ex: /mês" class="input-field"/>
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-500 text-gray-300 mb-1.5">URL do produto *</label>
-            <input id="f-url" type="url" placeholder="https://seusite.com" class="input-field"/>
-          </div>
-          <div>
-            <label class="block text-sm font-500 text-gray-300 mb-1.5">URL do Logo</label>
-            <input id="f-logo" type="url" placeholder="https://seusite.com/logo.png" class="input-field"/>
-          </div>
-          <div>
-            <label class="block text-sm font-500 text-gray-300 mb-1.5">URL do vídeo (YouTube/Vimeo)</label>
-            <input id="f-video" type="url" placeholder="Opcional" class="input-field"/>
-          </div>
-          <button onclick="submitSaas()" class="btn-primary w-full">
-            Enviar para aprovação →
-          </button>
-          <p class="text-xs text-gray-600 text-center">Seu SaaS será revisado pela equipe LorranStack antes de ser publicado.</p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Produtos publicados</div>
+          <div class="stat-value" id="st-products">—</div>
+          <div class="stat-change" id="st-products-sub" style="color:var(--muted2)">Carregando...</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Visualizações totais</div>
+          <div class="stat-value" id="st-views">—</div>
+          <div class="stat-change">Acumulado</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Upvotes recebidos</div>
+          <div class="stat-value" id="st-upvotes">—</div>
+          <div class="stat-change">Da comunidade</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avaliação média</div>
+          <div class="stat-value" id="st-rating">—</div>
+          <div class="stat-change">De 5.0 estrelas</div>
         </div>
       </div>
+
+      <div class="section-hdr">
+        <div class="section-title">Seus produtos</div>
+        <span class="section-count" id="prod-count">0</span>
+        <button class="section-action" onclick="showTab('new')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Publicar novo
+        </button>
+      </div>
+      <div id="products-list-overview">
+        <div style="height:80px;border-radius:var(--r);border:1px solid var(--border);background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
+        <div style="height:80px;border-radius:var(--r);border:1px solid var(--border);background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;margin-top:.5rem"></div>
+      </div>
     </div>
-  </div>
+
+    <!-- TAB PRODUCTS -->
+    <div id="tab-products" style="display:none">
+      <div class="page-title">Meus produtos</div>
+      <div class="page-sub">Gerencie todos os seus SaaS publicados</div>
+      <div class="section-hdr">
+        <div class="section-title">Lista completa</div>
+        <button class="section-action" onclick="showTab('new')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo produto
+        </button>
+      </div>
+      <div id="products-list-full"></div>
+    </div>
+
+    <!-- TAB NEW PRODUCT -->
+    <div id="tab-new" style="display:none">
+      <div class="page-title">Publicar SaaS</div>
+      <div class="page-sub">Apresente sua ferramenta para milhares de desenvolvedores</div>
+      <div class="form-card">
+        <div class="form-title">Informações do produto</div>
+        <div class="form-sub">Os campos marcados com * são obrigatórios</div>
+        <div class="form-alert err" id="f-err"></div>
+        <div class="form-alert ok" id="f-ok"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Nome do SaaS *</label>
+            <input class="form-input" id="f-name" type="text" placeholder="Ex: FlowAI"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tagline *</label>
+            <input class="form-input" id="f-tagline" type="text" placeholder="Frase curta do produto"/>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Descrição completa *</label>
+            <textarea class="form-input form-textarea" id="f-desc" placeholder="Descreva o que seu SaaS faz, para quem é e quais problemas resolve..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Categoria *</label>
+            <select class="form-input form-select" id="f-cat">
+              <option value="">Selecione a categoria...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo de preço</label>
+            <select class="form-input form-select" id="f-pricing">
+              <option value="free">Grátis</option>
+              <option value="freemium">Freemium</option>
+              <option value="paid">Pago</option>
+              <option value="subscription">Assinatura</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preço (ex: 29.90)</label>
+            <input class="form-input" id="f-price" type="number" step="0.01" min="0" placeholder="Opcional"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Label do preço</label>
+            <input class="form-input" id="f-price-label" type="text" placeholder="Ex: /mês, único"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">URL do produto *</label>
+            <input class="form-input" id="f-url" type="url" placeholder="https://seusite.com"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">URL do logo</label>
+            <input class="form-input" id="f-logo" type="url" placeholder="https://site.com/logo.png"/>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">URL do vídeo (YouTube/Vimeo)</label>
+            <input class="form-input" id="f-video" type="url" placeholder="Opcional"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+          <button class="btn-submit" onclick="submitSaas()">
+            Enviar para aprovação →
+          </button>
+          <button class="btn-cancel" onclick="showTab('overview')">Cancelar</button>
+        </div>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem">Seu produto será revisado pela equipe antes de ser publicado.</p>
+      </div>
+    </div>
+
+  </main>
 </div>
 
+<style>
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+
 <script>
-  // const API = window.API || 'http://localhost:3000/api';
+const SB='https://jkgrmlfqgprcwfooovkx.supabase.co';
+const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA';
 
-  function getToken() { return localStorage.getItem('ls_token'); }
-  function getUser()  { return JSON.parse(localStorage.getItem('ls_user') || 'null'); }
-
-  function logout() {
-    localStorage.clear();
-    location.href = '/';
-  }
-
-  function showTab(name) {
-    ['overview','products','new-product'].forEach(t => {
-      document.getElementById(`tab-${t}`).classList.add('hidden');
-      document.querySelectorAll('.tab')[['overview','products','new-product'].indexOf(t)].classList.remove('active');
+async function q(path,opts={}){
+  const c=new AbortController(),t=setTimeout(()=>c.abort(),10000);
+  try{
+    const r=await fetch(SB+'/rest/v1/'+path,{
+      headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json',...(opts.headers||{})},
+      signal:c.signal,...opts
     });
-    document.getElementById(`tab-${name}`).classList.remove('hidden');
-    document.querySelectorAll('.tab')[['overview','products','new-product'].indexOf(name)].classList.add('active');
-  }
+    clearTimeout(t);
+    if(!r.ok){const tx=await r.text();throw new Error('SB '+r.status+': '+tx)}
+    const tx=await r.text();return tx?JSON.parse(tx):[];
+  }catch(e){clearTimeout(t);throw e}
+}
 
-  function statusBadge(s) {
-    const map = { pending:'⏳ Pendente', approved:'✅ Aprovado', rejected:'❌ Rejeitado', featured:'⭐ Destaque' };
-    return `<span class="text-xs px-2 py-0.5 rounded-full status-${s}">${map[s] || s}</span>`;
-  }
+const getU=()=>{try{return JSON.parse(localStorage.getItem('ls_user')||'null')}catch{return null}};
 
-  async function loadDashboard() {
-    const token = getToken();
-    if (!token) { location.href = '/'; return; }
-    const user = getUser();
-    if (user) document.getElementById('user-name-nav').textContent = user.name.split(' ')[0];
-    try {
-      const products = await DB.getCreatorSaas(user.id);
-      const totals = products.reduce(function(a,p){ return { views: a.views+(p.views||0), clicks: a.clicks+(p.clicks||0), upvotes: a.upvotes+(p.upvotes||0) }; }, {views:0,clicks:0,upvotes:0});
-      document.getElementById('stat-products').textContent = products.length;
-      document.getElementById('stat-views').textContent    = totals.views.toLocaleString();
-      document.getElementById('stat-clicks').textContent   = totals.clicks.toLocaleString();
-      document.getElementById('stat-upvotes').textContent  = totals.upvotes.toLocaleString();
-      const list = document.getElementById('dashboard-products-list');
-      if (!products.length) {
-        list.innerHTML = '<div class="p-6 text-center text-gray-600 text-sm">Você ainda não publicou nenhum SaaS. <button onclick="showTab('new-product')" class="text-brand-400 ml-1">Publicar agora →</button></div>';
-        return;
-      }
-      const statusMap = { pending:'⏳ Pendente', approved:'✅ Aprovado', rejected:'❌ Rejeitado', featured:'⭐ Destaque' };
-      list.innerHTML = products.map(function(p){ return '<div class="p-5 flex items-center justify-between gap-4"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="font-600 text-white text-sm">'+p.name+'</span><span class="text-xs px-2 py-0.5 rounded-full status-'+(p.status||'pending')+'">'+(statusMap[p.status]||p.status)+'</span></div><div class="flex items-center gap-4 text-xs text-gray-600"><span>👁 '+(p.views||0)+'</span><span>▲ '+(p.upvotes||0)+'</span><span>⭐ '+Number(p.avg_rating||0).toFixed(1)+' ('+(p.review_count||0)+')</span></div></div><a href="produto.html?slug='+p.slug+'" class="text-xs text-gray-500 hover:text-white">Ver →</a></div>'; }).join('');
-    } catch(e) {
-      document.getElementById('dashboard-products-list').innerHTML = '<div class="p-5 text-sm text-red-400">Erro: ' + e.message + '</div>';
-    }
+function doLogout(){
+  localStorage.removeItem('ls_user');localStorage.removeItem('ls_token');
+  location.href='/';
+}
+
+function toast(msg,type='info'){
+  const icons={success:'✓',error:'✗',info:'ℹ'};
+  const c={success:'#4ade80',error:'#f87171',info:'#60a5fa'};
+  const el=document.createElement('div');
+  el.className='toast';
+  el.innerHTML=`<span style="color:${c[type]};font-weight:700">${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('tc').appendChild(el);
+  setTimeout(()=>el.remove(),4000);
+}
+
+function showAlert(id,msg,type){
+  const el=document.getElementById(id);
+  el.textContent=msg;el.className=`form-alert ${type} show`;
+}
+function hideAlerts(){
+  ['f-err','f-ok'].forEach(id=>{const e=document.getElementById(id);if(e)e.className='form-alert'+(e.className.includes('err')?' err':' ok')});
+}
+
+function showTab(name){
+  ['overview','products','new'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===name?'block':'none';
+    const sb=document.getElementById('sb-'+t);
+    if(sb)sb.className='sidebar-item'+(t===name?' active':'');
+  });
+  if(name==='products')renderProductsFull();
+}
+
+function statusBadge(s){
+  const m={pending:'s-pending',approved:'s-approved',featured:'s-featured',rejected:'s-rejected'};
+  const l={pending:'Pendente',approved:'Aprovado',featured:'Destaque',rejected:'Rejeitado'};
+  return`<span class="status-badge ${m[s]||'s-pending'}">${l[s]||s}</span>`;
+}
+
+function logoHtml(s,sz=36){
+  if(s.logo_url)return`<img src="${s.logo_url}" alt="${s.name}" style="width:${sz}px;height:${sz}px;border-radius:7px;object-fit:cover"/>`;
+  const clrs=['#3b82f6','#8b5cf6','#22c55e','#f59e0b','#ef4444','#06b6d4'];
+  const c=clrs[s.name.charCodeAt(0)%clrs.length];
+  return`<div style="width:${sz}px;height:${sz}px;border-radius:7px;background:${c}18;border:1px solid ${c}28;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;color:${c};flex-shrink:0">${s.name.charAt(0)}</div>`;
+}
+
+let myProducts=[];
+
+function renderProductsOverview(products){
+  const el=document.getElementById('products-list-overview');
+  if(!products.length){
+    el.innerHTML=`<div class="empty">
+      <div class="empty-icon">📦</div>
+      <div class="empty-title">Nenhum produto ainda</div>
+      <div class="empty-text">Publique seu primeiro SaaS e apareça para milhares de devs.</div>
+      <button onclick="showTab('new')" style="padding:.6rem 1.4rem;border-radius:9px;background:var(--accent);color:#fff;font-size:.83rem;font-weight:600;border:none;cursor:pointer;font-family:var(--sans)">Publicar agora →</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML=products.slice(0,5).map(p=>`
+    <div class="product-row">
+      <div class="prod-logo">${logoHtml(p,36)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-tagline">${p.tagline||''}</div>
+      </div>
+      ${statusBadge(p.status)}
+      <div class="prod-stats">
+        <div class="prod-stat">
+          <div class="prod-stat-num">👁 ${(p.views||0).toLocaleString('pt-BR')}</div>
+          <div class="prod-stat-lbl">views</div>
+        </div>
+        <div class="prod-stat">
+          <div class="prod-stat-num">▲ ${p.upvotes||0}</div>
+          <div class="prod-stat-lbl">upvotes</div>
+        </div>
+        <div class="prod-stat">
+          <div class="prod-stat-num">⭐ ${Number(p.avg_rating||0).toFixed(1)}</div>
+          <div class="prod-stat-lbl">rating</div>
+        </div>
+      </div>
+      <div class="prod-actions">
+        <a href="/produto.html?slug=${p.slug}" class="action-btn" target="_blank">Ver</a>
+        <button class="action-btn del" onclick="deleteProduct('${p.id}','${p.name}')">Excluir</button>
+      </div>
+    </div>`).join('');
+  
+  document.getElementById('prod-count').textContent=products.length;
+}
+
+function renderProductsFull(){
+  const el=document.getElementById('products-list-full');
+  if(!myProducts.length){
+    el.innerHTML=`<div class="empty">
+      <div class="empty-icon">📦</div>
+      <div class="empty-title">Nenhum produto ainda</div>
+      <div class="empty-text">Publique seu primeiro SaaS agora.</div>
+      <button onclick="showTab('new')" style="padding:.6rem 1.4rem;border-radius:9px;background:var(--accent);color:#fff;font-size:.83rem;font-weight:600;border:none;cursor:pointer;font-family:var(--sans)">Publicar →</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML=myProducts.map(p=>`
+    <div class="product-row">
+      <div class="prod-logo">${logoHtml(p,36)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-tagline">${p.tagline||''}</div>
+      </div>
+      ${statusBadge(p.status)}
+      <div class="prod-stats">
+        <div class="prod-stat">
+          <div class="prod-stat-num">👁 ${(p.views||0).toLocaleString('pt-BR')}</div>
+          <div class="prod-stat-lbl">views</div>
+        </div>
+        <div class="prod-stat">
+          <div class="prod-stat-num">▲ ${p.upvotes||0}</div>
+          <div class="prod-stat-lbl">upvotes</div>
+        </div>
+        <div class="prod-stat">
+          <div class="prod-stat-num">⭐ ${Number(p.avg_rating||0).toFixed(1)}</div>
+          <div class="prod-stat-lbl">rating</div>
+        </div>
+      </div>
+      <div class="prod-actions">
+        <a href="/produto.html?slug=${p.slug}" class="action-btn" target="_blank">Ver →</a>
+        <button class="action-btn del" onclick="deleteProduct('${p.id}','${p.name}')">Excluir</button>
+      </div>
+    </div>`).join('');
+}
+
+async function deleteProduct(id,name){
+  if(!confirm(`Excluir "${name}"? Esta ação não pode ser desfeita.`))return;
+  try{
+    await fetch(SB+'/rest/v1/ls_saas?id=eq.'+id,{method:'DELETE',headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
+    toast(`"${name}" excluído com sucesso`,'success');
+    await loadDashboard();
+  }catch(e){toast('Erro ao excluir: '+e.message,'error')}
+}
+
+async function loadCategories(){
+  try{
+    const cats=await q('ls_categories?select=id,name,icon&order=sort_order.asc');
+    const sel=document.getElementById('f-cat');
+    cats.forEach(c=>{
+      const opt=document.createElement('option');
+      opt.value=c.id;
+      opt.textContent=(c.icon||'')+' '+c.name;
+      sel.appendChild(opt);
+    });
+  }catch(e){toast('Erro ao carregar categorias','error')}
+}
+
+async function submitSaas(){
+  hideAlerts();
+  const user=getU();
+  if(!user){showAlert('f-err','Faça login primeiro','err');return}
+  
+  const name=document.getElementById('f-name').value.trim();
+  const tagline=document.getElementById('f-tagline').value.trim();
+  const desc=document.getElementById('f-desc').value.trim();
+  const cat=document.getElementById('f-cat').value;
+  const pricing=document.getElementById('f-pricing').value;
+  const price=document.getElementById('f-price').value||null;
+  const priceLabel=document.getElementById('f-price-label').value.trim();
+  const url=document.getElementById('f-url').value.trim();
+  const logo=document.getElementById('f-logo').value.trim()||null;
+  const video=document.getElementById('f-video').value.trim()||null;
+  
+  if(!name||!tagline||!desc||!url||!cat){
+    showAlert('f-err','Preencha todos os campos obrigatórios (*)','err');return;
+  }
+  if(url&&!/^https?:\/\//.test(url)){
+    showAlert('f-err','URL do produto deve começar com https://','err');return;
   }
   
-  async function loadCategories() {
-    try {
-      const cats = await DB.getCategories();
-      const sel = document.getElementById('f-category');
-      sel.innerHTML = '<option value="">Selecione a categoria...</option>';
-      cats.forEach(function(c) {
-        const opt = document.createElement('option');
-        opt.value = c.id;
-        opt.textContent = (c.icon || '') + ' ' + c.name;
-        sel.appendChild(opt);
-      });
-    } catch(e) {
-      console.error('Erro ao carregar categorias:', e.message);
-    }
-  }
+  try{
+    const slug=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+Date.now();
+    await q('ls_saas',{
+      method:'POST',
+      headers:{'Prefer':'return=minimal'},
+      body:JSON.stringify({
+        name,tagline,description:desc,category_id:cat,creator_id:user.id,
+        pricing_type:pricing,price:price?parseFloat(price):null,
+        price_label:priceLabel||null,website_url:url,
+        logo_url:logo,video_url:video,
+        slug,status:'pending',tags:[],screenshots:[],
+        upvotes:0,views:0,clicks:0,avg_rating:0,review_count:0
+      })
+    });
+    showAlert('f-ok','✓ Produto enviado para aprovação! Em breve estará no marketplace.','ok');
+    // Limpar form
+    ['f-name','f-tagline','f-desc','f-price','f-price-label','f-url','f-logo','f-video'].forEach(id=>{
+      const el=document.getElementById(id);if(el)el.value='';
+    });
+    document.getElementById('f-cat').value='';
+    setTimeout(()=>{showTab('overview');loadDashboard()},2500);
+  }catch(e){showAlert('f-err','Erro ao enviar: '+e.message,'err')}
+}
 
-  async function submitSaas() {
-    const errEl = document.getElementById('form-error');
-    const sucEl = document.getElementById('form-success');
-    errEl.classList.add('hidden'); sucEl.classList.add('hidden');
-    const user = getUser();
-    if (!user) { errEl.textContent = 'Faça login primeiro'; errEl.classList.remove('hidden'); return; }
-    const body = {
-      name:         document.getElementById('f-name').value.trim(),
-      tagline:      document.getElementById('f-tagline').value.trim(),
-      description:  document.getElementById('f-description').value.trim(),
-      category_id:  document.getElementById('f-category').value,
-      pricing_type: document.getElementById('f-pricing').value,
-      price:        document.getElementById('f-price').value || null,
-      price_label:  document.getElementById('f-price-label').value.trim(),
-      website_url:  document.getElementById('f-url').value.trim(),
-      logo_url:     document.getElementById('f-logo').value.trim() || null,
-      video_url:    document.getElementById('f-video').value.trim() || null,
-      creator_id:   user.id,
-    };
-    if (!body.name || !body.description || !body.website_url || !body.category_id) {
-      errEl.textContent = 'Preencha os campos obrigatórios (*)'; errEl.classList.remove('hidden'); return;
-    }
-    try {
-      await DB.submitSaas(body);
-      sucEl.textContent = 'SaaS enviado para aprovação!';
-      sucEl.classList.remove('hidden');
-      setTimeout(function(){ showTab('overview'); loadDashboard(); }, 2000);
-    } catch(e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
-  }
+async function loadDashboard(){
+  const user=getU();
+  if(!user){location.href='/';return}
   
-  // Init
+  const hour=new Date().getHours();
+  const greet=hour<12?'Bom dia':(hour<18?'Boa tarde':'Boa noite');
+  document.getElementById('pg-title').textContent=greet+', '+user.name.split(' ')[0]+' 👋';
+  document.getElementById('nav-uname').textContent=user.name.split(' ')[0];
+  
+  try{
+    const products=await q('ls_saas?select=id,name,slug,tagline,logo_url,status,views,clicks,upvotes,avg_rating,review_count,created_at&creator_id=eq.'+user.id+'&order=created_at.desc');
+    myProducts=products;
+    
+    const total=products.length;
+    const totalViews=products.reduce((a,p)=>a+(p.views||0),0);
+    const totalUp=products.reduce((a,p)=>a+(p.upvotes||0),0);
+    const ratings=products.filter(p=>p.avg_rating>0);
+    const avgRating=ratings.length?ratings.reduce((a,p)=>a+parseFloat(p.avg_rating||0),0)/ratings.length:0;
+    
+    document.getElementById('st-products').textContent=total;
+    document.getElementById('st-views').textContent=totalViews.toLocaleString('pt-BR');
+    document.getElementById('st-upvotes').textContent=totalUp.toLocaleString('pt-BR');
+    document.getElementById('st-rating').textContent=avgRating>0?avgRating.toFixed(1)+'★':'—';
+    
+    const pending=products.filter(p=>p.status==='pending').length;
+    const approved=products.filter(p=>p.status==='approved'||p.status==='featured').length;
+    document.getElementById('st-products-sub').textContent=
+      approved+' aprovado'+(approved!==1?'s':'')+(pending?' · '+pending+' pendente'+(pending!==1?'s':''):'');
+    document.getElementById('st-products-sub').style.color=pending?'#fbbf24':'var(--green)';
+    
+    renderProductsOverview(products);
+    
+    // Mostrar banner se não tem plano pago
+    if(user.role==='creator'&&total<5){
+      document.getElementById('plan-banner').style.display='flex';
+    }
+    
+  }catch(e){
+    document.getElementById('products-list-overview').innerHTML=
+      '<div class="empty"><div class="empty-icon">⚡</div><div class="empty-title">Erro ao carregar</div><div class="empty-text">'+e.message+'</div></div>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const u=getU();
+  if(!u){
+    sessionStorage.setItem('openModal','m-login');
+    location.href='/';
+    return;
+  }
   loadDashboard();
   loadCategories();
+});
 </script>
 </body>
 </html>
