@@ -47,12 +47,18 @@ const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 
 // ── REST helper ──────────────────────────────────────────
 async function _sb(path, opts) {
-  const res = await fetch(_SB_URL + '/rest/v1/' + path, Object.assign({
-    headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json' }
-  }, opts || {}));
-  if (!res.ok) { const t = await res.text(); throw new Error('SB ' + res.status + ': ' + t); }
-  const txt = await res.text();
-  return txt ? JSON.parse(txt) : [];
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const res = await fetch(_SB_URL + '/rest/v1/' + path, Object.assign({
+      headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json' },
+      signal: ctrl.signal
+    }, opts || {}));
+    clearTimeout(t);
+    if (!res.ok) { const txt = await res.text(); throw new Error('SB ' + res.status + ': ' + txt); }
+    const txt = await res.text();
+    return txt ? JSON.parse(txt) : [];
+  } catch(e) { clearTimeout(t); throw e; }
 }
 
 // ── Auth helpers ─────────────────────────────────────────

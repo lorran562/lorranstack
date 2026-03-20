@@ -213,7 +213,7 @@ window.DB = {
     return _sb('ls_saas', {
       method: 'POST',
       headers: {'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-      body: JSON.stringify(Object.assign({}, data, { slug: slug, status: 'pending' }))
+      body: JSON.stringify(Object.assign({}, data, { slug: slug, status: 'pending', tags: data.tags || [], screenshots: data.screenshots || [] }))
     });
   },
   async _joinMeta(rows) {

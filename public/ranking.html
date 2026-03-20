@@ -37,12 +37,19 @@
 const _SB_URL = 'https://jkgrmlfqgprcwfooovkx.supabase.co';
 const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA';
 
-async function _sb(path) {
-  const res = await fetch(_SB_URL + '/rest/v1/' + path, {
-    headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY }
-  });
-  if (!res.ok) throw new Error('SB ' + res.status);
-  return res.json();
+async function _sb(path, opts) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const res = await fetch(_SB_URL + '/rest/v1/' + path, Object.assign({
+      headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json' },
+      signal: ctrl.signal
+    }, opts || {}));
+    clearTimeout(t);
+    if (!res.ok) { const txt = await res.text(); throw new Error('SB ' + res.status + ': ' + txt); }
+    const txt = await res.text();
+    return txt ? JSON.parse(txt) : [];
+  } catch(e) { clearTimeout(t); throw e; }
 }
 
 window.DB = {
