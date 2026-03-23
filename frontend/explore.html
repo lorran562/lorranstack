@@ -39,91 +39,133 @@
     .sidebar-section { margin-bottom:24px; }
     .sidebar-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:#6b7280; margin-bottom:10px; }
   </style>
-<script>
-// LorranStack v2.1 — Cliente Supabase direto no frontend
-const _SB_URL = 'https://jkgrmlfqgprcwfooovkx.supabase.co';
-const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA';
 
-async function _sb(path) {
-  const res = await fetch(_SB_URL + '/rest/v1/' + path, {
-    headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY }
-  });
-  if (!res.ok) throw new Error('SB ' + res.status);
-  return res.json();
+
+<script>
+// LorranStack v3.1 — Supabase REST (CORS OK) + Auth SHA-256
+const _SB  = 'https://jkgrmlfqgprcwfooovkx.supabase.co/rest/v1';
+const _KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA';
+const _H    = {'apikey':_KEY,'Authorization':'Bearer '+_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+
+async function _q(path,opts){
+  const r=await fetch(_SB+'/'+path,Object.assign({headers:_H},opts||{}));
+  if(!r.ok){const t=await r.text();throw new Error('DB '+r.status+': '+t.slice(0,100));}
+  const t=await r.text(); return t?JSON.parse(t):[];
 }
 
-window.DB = {
-  async getCategories() {
-    return _sb('ls_categories?select=id,name,slug,icon&order=sort_order.asc');
+async function _hashPwd(p){
+  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p+'_lorranstack_salt'));
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+window.AUTH={
+  async register(name,email,password,role){
+    const ex=await _q('ls_users?select=id&email=eq.'+encodeURIComponent(email));
+    if(ex.length) throw new Error('Email já cadastrado');
+    const hash=await _hashPwd(password);
+    const rows=await _q('ls_users',{method:'POST',body:JSON.stringify({name,email,password:hash,role:role||'user'})});
+    const u=Array.isArray(rows)?rows[0]:rows;
+    const token=btoa(JSON.stringify({id:u.id,email:u.email,role:u.role,exp:Date.now()+604800000}));
+    return {token,user:{id:u.id,name:u.name||name,email:u.email,role:u.role}};
   },
-  async getFeatured() {
-    const rows = await _sb('ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,avg_rating,review_count,is_featured,category_id,creator_id&is_featured=eq.true&status=in.(approved,featured)&order=upvotes.desc&limit=6');
-    return window.DB._joinMeta(rows);
+  async login(email,password){
+    const rows=await _q('ls_users?select=id,name,email,role,password&email=eq.'+encodeURIComponent(email));
+    if(!rows.length) throw new Error('Email ou senha incorretos');
+    const u=rows[0];
+    const hash=await _hashPwd(password);
+    if(u.password!==hash) throw new Error('Email ou senha incorretos');
+    const token=btoa(JSON.stringify({id:u.id,email:u.email,role:u.role,exp:Date.now()+604800000}));
+    return {token,user:{id:u.id,name:u.name,email:u.email,role:u.role}};
   },
-  async getSaas({ sort='upvotes', order='desc', page=1, limit=12, category, search } = {}) {
-    let q = 'ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,views,avg_rating,review_count,is_featured,category_id,creator_id&status=in.(approved,featured)';
-    if (search) q += '&or=(name.ilike.*' + encodeURIComponent(search) + '*,tagline.ilike.*' + encodeURIComponent(search) + '*)';
-    q += '&order=' + sort + '.' + order + '&limit=' + limit + '&offset=' + ((page-1)*limit);
-    const rows = await _sb(q);
-    const joined = await window.DB._joinMeta(rows);
-    if (category) {
-      const cats = await window.DB.getCategories();
-      const cat = cats.find(function(c){ return c.slug === category; });
-      if (cat) return joined.filter(function(r){ return r.category_id === cat.id; });
+  getUser(){try{return JSON.parse(localStorage.getItem('ls_user')||'null');}catch{return null;}},
+  getToken(){return localStorage.getItem('ls_token');},
+  isLoggedIn(){return !!this.getUser();},
+  logout(){localStorage.removeItem('ls_token');localStorage.removeItem('ls_user');}
+};
+
+window.DB={
+  async getCategories(){
+    return _q('ls_categories?select=id,name,slug,icon&order=sort_order.asc');
+  },
+  async getFeatured(){
+    const rows=await _q('ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,avg_rating,review_count,is_featured,category_id,creator_id&is_featured=eq.true&status=in.(approved,featured)&order=upvotes.desc&limit=6');
+    return this._join(rows);
+  },
+  async getSaas({sort='upvotes',order='desc',page=1,limit=12,category,search}={}){
+    let q='ls_saas?select=id,name,slug,tagline,logo_url,pricing_type,price_label,upvotes,views,avg_rating,review_count,is_featured,category_id,creator_id&status=in.(approved,featured)';
+    if(search) q+='&or=(name.ilike.*'+encodeURIComponent(search)+'*,tagline.ilike.*'+encodeURIComponent(search)+'*)';
+    const col=['upvotes','views','avg_rating','created_at'].includes(sort)?sort:'upvotes';
+    q+='&order='+col+'.'+(order==='asc'?'asc':'desc')+'&limit='+limit+'&offset='+((page-1)*limit);
+    const rows=await _q(q);
+    const joined=await this._join(rows);
+    if(category){
+      const cats=await this.getCategories();
+      const cat=cats.find(c=>c.slug===category);
+      if(cat) return joined.filter(r=>r.category_id===cat.id);
     }
     return joined;
   },
-  async getSaasBySlug(slug) {
-    const rows = await _sb('ls_saas?select=*&slug=eq.' + slug + '&status=in.(approved,featured)&limit=1');
-    if (!rows.length) return null;
-    const s = rows[0];
-    const cats  = await _sb('ls_categories?select=name,slug,icon&id=eq.' + s.category_id);
-    const users = await _sb('ls_users?select=name,bio,website&id=eq.' + s.creator_id);
-    const revs  = await _sb('ls_reviews?select=id,rating,comment,created_at,user_id&saas_id=eq.' + s.id + '&order=created_at.desc&limit=20');
-    s.category_name = cats[0] ? cats[0].name : '';
-    s.category_icon = cats[0] ? cats[0].icon : '';
-    s.creator_name  = users[0] ? users[0].name : 'Anônimo';
-    s.creator_bio   = users[0] ? users[0].bio  : '';
-    s.creator_website = users[0] ? users[0].website : '';
-    if (revs.length) {
-      const uids = revs.map(function(r){ return r.user_id; }).filter(Boolean);
-      const ulist = uids.length ? await _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : [];
-      const umap = {};
-      ulist.forEach(function(u){ umap[u.id] = u.name; });
-      revs.forEach(function(r){ r.user_name = umap[r.user_id] || 'Usuário'; });
-    }
-    s.reviews = revs;
-    return s;
-  },
-  async getStats() {
-    const [r1,r2] = await Promise.all([
-      fetch(_SB_URL+'/rest/v1/ls_saas?select=id&status=in.(approved,featured)',{headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'}}),
-      fetch(_SB_URL+'/rest/v1/ls_users?select=id',{headers:{'apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY,'Prefer':'count=exact','Range':'0-0'}})
+  async getSaasBySlug(slug){
+    const rows=await _q('ls_saas?select=*&slug=eq.'+slug+'&status=in.(approved,featured)&limit=1');
+    if(!rows.length) return null;
+    const s=rows[0];
+    const [cats,users,revs]=await Promise.all([
+      _q('ls_categories?select=name,slug,icon&id=eq.'+s.category_id),
+      _q('ls_users?select=name,bio,website&id=eq.'+s.creator_id),
+      _q('ls_reviews?select=id,rating,comment,created_at,user_id&saas_id=eq.'+s.id+'&order=created_at.desc&limit=20')
     ]);
-    return {
-      saas:  parseInt((r1.headers.get('content-range')||'0/15').split('/')[1]),
-      users: parseInt((r2.headers.get('content-range')||'0/8').split('/')[1])
+    s.category_name=cats[0]?.name||'';s.category_icon=cats[0]?.icon||'';
+    s.creator_name=users[0]?.name||'Anônimo';s.creator_bio=users[0]?.bio||'';s.creator_website=users[0]?.website||'';
+    if(revs.length){
+      const uids=[...new Set(revs.map(r=>r.user_id).filter(Boolean))];
+      const ul=uids.length?await _q('ls_users?select=id,name&id=in.('+uids.join(',')+')'):[]; 
+      const um={};ul.forEach(u=>{um[u.id]=u.name;});
+      revs.forEach(r=>{r.user_name=um[r.user_id]||'Usuário';});
+    }
+    s.reviews=revs; return s;
+  },
+  async getStats(){
+    const [r1,r2]=await Promise.all([
+      fetch(_SB+'/ls_saas?select=id&status=in.(approved,featured)',{headers:{..._H,'Prefer':'count=exact','Range':'0-0'}}),
+      fetch(_SB+'/ls_users?select=id',{headers:{..._H,'Prefer':'count=exact','Range':'0-0'}})
+    ]);
+    return{
+      saas:parseInt((r1.headers.get('content-range')||'0/15').split('/')[1]),
+      users:parseInt((r2.headers.get('content-range')||'0/9').split('/')[1])
     };
   },
-  async _joinMeta(rows) {
-    if (!rows.length) return rows;
-    const cids = [...new Set(rows.map(function(r){return r.category_id;}).filter(Boolean))];
-    const uids = [...new Set(rows.map(function(r){return r.creator_id;}).filter(Boolean))];
-    const cats  = cids.length ? await _sb('ls_categories?select=id,name,slug,icon&id=in.(' + cids.join(',') + ')') : [];
-    const users = uids.length ? await _sb('ls_users?select=id,name&id=in.(' + uids.join(',') + ')') : [];
-    const cmap={}, umap={};
-    cats.forEach(function(c){cmap[c.id]=c;}); users.forEach(function(u){umap[u.id]=u;});
-    return rows.map(function(r){
-      return Object.assign({},r,{
-        category_name: cmap[r.category_id] ? cmap[r.category_id].name : '',
-        category_icon: cmap[r.category_id] ? cmap[r.category_id].icon : '',
-        category_slug: cmap[r.category_id] ? cmap[r.category_id].slug : '',
-        creator_name:  umap[r.creator_id]  ? umap[r.creator_id].name  : 'Anônimo',
-      });
-    });
+  async addReview(saasId,rating,comment,userId){
+    return _q('ls_reviews',{method:'POST',body:JSON.stringify({saas_id:saasId,rating,comment,user_id:userId})});
+  },
+  async getCollections(){
+    return _q('ls_collections?select=id,title,slug,description,cover_emoji,saas_ids,is_official&is_official=eq.true&order=view_count.desc');
+  },
+  async getCreatorSaas(userId){
+    const rows=await _q('ls_saas?select=id,name,slug,status,views,clicks,upvotes,avg_rating,review_count,created_at,category_id&creator_id=eq.'+userId+'&order=created_at.desc');
+    return this._join(rows);
+  },
+  async submitSaas(data){
+    const slug=data.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+Date.now();
+    return _q('ls_saas',{method:'POST',body:JSON.stringify({...data,slug,status:'pending'})});
+  },
+  async _join(rows){
+    if(!rows.length) return rows;
+    const cids=[...new Set(rows.map(r=>r.category_id).filter(Boolean))];
+    const uids=[...new Set(rows.map(r=>r.creator_id).filter(Boolean))];
+    const [cats,users]=await Promise.all([
+      cids.length?_q('ls_categories?select=id,name,slug,icon&id=in.('+cids.join(',')+')'):Promise.resolve([]),
+      uids.length?_q('ls_users?select=id,name&id=in.('+uids.join(',')+')'):Promise.resolve([])
+    ]);
+    const cm={},um={};cats.forEach(c=>{cm[c.id]=c;});users.forEach(u=>{um[u.id]=u;});
+    return rows.map(r=>({...r,
+      category_name:cm[r.category_id]?.name||'',
+      category_icon:cm[r.category_id]?.icon||'',
+      category_slug:cm[r.category_id]?.slug||'',
+      creator_name:um[r.creator_id]?.name||'Anônimo'
+    }));
   }
 };
-window.API = null;
+window.API=null;
 
 </script>
 </head>
@@ -132,7 +174,7 @@ window.API = null;
 <!-- Navbar -->
 <nav style="background:rgba(10,10,15,.9);border-bottom:1px solid rgba(255,255,255,.05);" class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
-    <a href="/" class="flex items-center gap-2 flex-shrink-0">
+    <a href="index.html" class="flex items-center gap-2 flex-shrink-0">
       <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#4ade80,#22c55e);">
         <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 9L7.5 4.5L9 6L6 9L9 12L7.5 13.5L3 9Z" fill="white"/><path d="M15 9L10.5 4.5L9 6L12 9L9 12L10.5 13.5L15 9Z" fill="white" opacity=".6"/></svg>
       </div>
@@ -146,8 +188,7 @@ window.API = null;
         class="input-search" oninput="onSearchInput(this.value)"/>
     </div>
     <div id="nav-auth" class="flex items-center gap-2 flex-shrink-0">
-      <a href="pricing.html" class="text-sm font-semibold text-green-400 hover:text-green-300 transition-colors border border-green-400/30 px-3 py-1 rounded-full mr-1">💎 Planos</a>
-      <a href="/" onclick="sessionStorage.setItem('openModal','login-modal')" class="text-sm px-3 py-1.5 rounded-lg border border-white/10 text-gray-300 hover:border-white/20 transition-colors">Entrar</a>
+      <a href="index.html" class="text-sm px-3 py-1.5 rounded-lg border border-white/10 text-gray-300 hover:border-white/20 transition-colors">Entrar</a>
     </div>
   </div>
 </nav>
@@ -372,7 +413,7 @@ function renderCard(s) {
   ).join('');
 
   return `
-    <a href="produto.html?slug=${s.slug}" class="saas-card p-5">
+    <a href="saas.html?slug=${s.slug}" class="saas-card p-5">
       <div class="flex items-start gap-3 mb-3">
         <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-lg font-800 border border-white/8"
              style="background:rgba(255,255,255,.05);font-family:Syne,sans-serif;">
