@@ -196,6 +196,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Conta</div>
+      <button class="sidebar-item" id="sb-payments" onclick="showTab('payments')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Pagamentos
+      </button>
       <a href="/pricing.html" class="sidebar-item">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Planos
@@ -340,7 +344,38 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
       </div>
     </div>
 
-  </main>
+  <!-- TAB PAGAMENTOS -->
+      <div id="tab-payments" style="display:none">
+        <div class="page-title">Pagamentos</div>
+        <div class="page-sub">Configure como os usuários vão te pagar pelos seus SaaS</div>
+
+        <div class="form-card" style="margin-bottom:1.5rem">
+          <div class="form-title">💳 Minha chave PIX</div>
+          <div class="form-sub">Informe sua chave PIX principal. Ela aparecerá nos seus produtos pagos para os usuários te pagarem diretamente.</div>
+          <div class="form-alert err" id="pix-err"></div>
+          <div class="form-alert ok" id="pix-ok"></div>
+          <div style="display:flex;gap:.75rem;align-items:flex-end">
+            <div class="form-group" style="flex:1">
+              <label class="form-label">Chave PIX *</label>
+              <input class="form-input" id="pix-key-input" type="text" placeholder="CPF, email, telefone ou chave aleatória"/>
+            </div>
+            <button class="btn-submit" onclick="savePix()" style="flex-shrink:0;height:42px;padding:.6rem 1.2rem">
+              Salvar PIX
+            </button>
+          </div>
+          <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem">⚠️ Você recebe os pagamentos diretamente. O LorranStack não cobra comissão.</p>
+        </div>
+
+        <div class="form-card">
+          <div class="form-title">📊 Produtos com pagamento configurado</div>
+          <div class="form-sub">Seus produtos que têm chave PIX ou link de pagamento cadastrado.</div>
+          <div id="payment-products-list">
+            <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">Carregando...</div>
+          </div>
+        </div>
+      </div>
+
+    </main>
 </div>
 
 <style>
@@ -608,7 +643,77 @@ async function loadDashboard(){
   }
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
+// ── SALVAR PIX DO CREATOR ───────────────────────────────────────
+  async function savePix(){
+    const user=getU(); if(!user)return;
+    const key=document.getElementById('pix-key-input').value.trim();
+    if(!key){ document.getElementById('pix-err').textContent='Informe sua chave PIX'; document.getElementById('pix-err').className='form-alert err show'; return; }
+    try{
+      await fetch(SB+'/rest/v1/ls_users?id=eq.'+user.id,{
+        method:'PATCH',
+        headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({pix_key:key})
+      });
+      // Atualizar no localStorage
+      const u=getU(); u.pix_key=key; localStorage.setItem('ls_user',JSON.stringify(u));
+      document.getElementById('pix-ok').textContent='✓ Chave PIX salva com sucesso!';
+      document.getElementById('pix-ok').className='form-alert ok show';
+      document.getElementById('pix-err').className='form-alert err';
+      setTimeout(()=>{document.getElementById('pix-ok').className='form-alert ok'},3000);
+    }catch(e){
+      document.getElementById('pix-err').textContent='Erro: '+e.message;
+      document.getElementById('pix-err').className='form-alert err show';
+    }
+  }
+
+  // ── CARREGAR ABA PAGAMENTOS ──────────────────────────────────────
+  async function loadPaymentTab(){
+    const user=getU(); if(!user)return;
+    // Preencher PIX atual
+    try{
+      const rows=await q('ls_users?select=pix_key&id=eq.'+user.id);
+      if(rows[0]?.pix_key) document.getElementById('pix-key-input').value=rows[0].pix_key;
+    }catch(e){}
+    // Carregar produtos com pagamento configurado
+    const el=document.getElementById('payment-products-list');
+    try{
+      const prods=await q('ls_saas?select=id,name,slug,pricing_type,price,pix_key,payment_url,status&creator_id=eq.'+user.id+'&order=created_at.desc');
+      if(!prods.length){ el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">Nenhum produto publicado ainda.</div>'; return; }
+      el.innerHTML=prods.map(p=>`
+        <div style="display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1">
+            <div style="font-size:.88rem;font-weight:600;color:#fff">${p.name}</div>
+            <div style="font-size:.76rem;color:var(--muted2);margin-top:.1rem">
+              ${p.pricing_type==='free'?'Grátis':p.pricing_type==='paid'?'Pago R
+  const u=getU();
+  if(!u){
+    sessionStorage.setItem('openModal','m-login');
+    location.href='/';
+    return;
+  }
+  loadDashboard();
+  loadCategories();
+});
+</script>
+</body>
+</html>+(p.price||'?'):p.pricing_type}
+            </div>
+          </div>
+          <div style="font-size:.78rem;text-align:right">
+            ${p.pix_key?
+              '<span style="background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2);padding:2px 8px;border-radius:6px;font-size:.72rem">✓ PIX: '+p.pix_key+'</span>':
+              '<span style="color:var(--muted);font-size:.76rem">Sem PIX</span>'
+            }
+          </div>
+          ${p.payment_url?
+            '<a href="'+p.payment_url+'" target="_blank" style="font-size:.76rem;color:var(--accent);white-space:nowrap">Ver link →</a>':''
+          }
+        </div>
+      `).join('');
+    }catch(e){ el.innerHTML='<div style="padding:1rem;color:#f87171;font-size:.83rem">Erro: '+e.message+'</div>'; }
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>{
   const u=getU();
   if(!u){
     sessionStorage.setItem('openModal','m-login');
