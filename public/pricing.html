@@ -686,141 +686,146 @@ footer {
 </footer>
 
 <script>
-// ── BILLING TOGGLE ──────────────────────────────────────────
-let billing = 'monthly';
+// ── BILLING TOGGLE ─────────────────────────────────────────
+var billing = "monthly";
 function setBilling(type, el) {
   billing = type;
-  document.querySelectorAll('.toggle-opt').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('[data-monthly]').forEach(el => {
-    el.textContent = billing === 'monthly' ? el.dataset.monthly : el.dataset.yearly;
+  document.querySelectorAll(".toggle-opt").forEach(function(b){b.classList.remove("active");});
+  el.classList.add("active");
+  document.querySelectorAll("[data-monthly]").forEach(function(el){
+    el.textContent = billing === "monthly" ? el.dataset.monthly : el.dataset.yearly;
   });
 }
 
-// ── FAQ TOGGLE ──────────────────────────────────────────────
+// ── FAQ ────────────────────────────────────────────────────
 function toggleFaq(btn) {
-  const item = btn.closest('.faq-item');
-  const isOpen = item.classList.contains('open');
-  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-  if (!isOpen) item.classList.add('open');
+  var item = btn.closest(".faq-item");
+  var isOpen = item.classList.contains("open");
+  document.querySelectorAll(".faq-item.open").forEach(function(i){i.classList.remove("open");});
+  if (!isOpen) item.classList.add("open");
 }
 
-// ── PLANOS ──────────────────────────────────────────────────
-const PLANS = {
-  'creator':       { name: 'Plano Creator — LorranStack',     amount: 29.00 },
-  'creator-pro':   { name: 'Plano Creator Pro — LorranStack', amount: 79.00 },
-  'featured-slot': { name: 'Featured Slot — LorranStack',     amount: 99.00 },
+// ── DADOS DOS PLANOS ────────────────────────────────────────
+var PLANS = {
+  "creator":       { name: "Plano Creator — LorranStack",     amount: 29.00 },
+  "creator-pro":   { name: "Plano Creator Pro — LorranStack", amount: 79.00 },
+  "featured-slot": { name: "Featured Slot — LorranStack",     amount: 99.00 }
 };
 
 function getUser() {
-  try { return JSON.parse(localStorage.getItem('ls_user') || 'null'); } catch { return null; }
+  try { return JSON.parse(localStorage.getItem("ls_user") || "null"); } catch(e) { return null; }
 }
 
+// ── CHECKOUT PRINCIPAL ──────────────────────────────────────
 function startCheckout(plan) {
-  const details = PLANS[plan];
+  var details = PLANS[plan];
   if (!details) return;
-  const user = getUser();
+  var user = getUser();
   if (!user) {
-    sessionStorage.setItem('pendingPlan', plan);
-    sessionStorage.setItem('openModal', 'm-login');
-    window.location.href = '/';
+    sessionStorage.setItem("pendingPlan", plan);
+    sessionStorage.setItem("openModal", "m-login");
+    window.location.href = "/";
     return;
   }
   openPayModal(plan, details, user);
 }
 
-// ── MODAL DE PAGAMENTO ──────────────────────────────────────
+// ── MODAL DE PAGAMENTO ───────────────────────────────────────
 function openPayModal(plan, details, user) {
-  document.getElementById('pay-modal')?.remove();
-  const modal = document.createElement('div');
-  modal.id = 'pay-modal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:1rem';
-  modal.innerHTML = `
-    <div style="background:#0f1218;border:1px solid rgba(79,142,255,.3);border-radius:20px;padding:2.2rem;max-width:420px;width:100%;position:relative;animation:fadeUp .3s ease">
-      <button onclick="document.getElementById('pay-modal').remove()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#6b7a8d;font-size:1.4rem;cursor:pointer;line-height:1">×</button>
-      <div style="font-size:1.8rem;margin-bottom:.6rem">💳</div>
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:#fff;margin-bottom:.35rem">${details.name}</h3>
-      <p style="font-size:.84rem;color:#6b7a8d;margin-bottom:1.4rem">R$ ${details.amount.toFixed(2).replace('.',',')} • Mercado Pago</p>
-      <div style="display:flex;gap:.6rem;margin-bottom:1.2rem">
-        <button id="btn-pix" onclick="selectMethod('pix')" style="flex:1;padding:.6rem;border-radius:9px;border:2px solid rgba(79,142,255,.5);background:rgba(79,142,255,.1);color:#4f8eff;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s">📱 PIX</button>
-        <button id="btn-card" onclick="selectMethod('card')" style="flex:1;padding:.6rem;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#6b7a8d;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s">💳 Cartão</button>
-      </div>
-      <div id="method-info" style="background:rgba(79,142,255,.06);border:1px solid rgba(79,142,255,.15);border-radius:9px;padding:.85rem;margin-bottom:1.2rem;font-size:.82rem;color:#a0aec0;line-height:1.5">
-        <strong style="color:#4f8eff">PIX instantâneo:</strong> QR Code na hora. Aprovação em segundos. 24h disponível.
-      </div>
-      <button id="btn-pagar" onclick="processPayment('${plan}',${details.amount})" style="width:100%;padding:.78rem;border-radius:10px;background:linear-gradient(90deg,#4f8eff,#7c3aed);color:#fff;font-size:.93rem;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Pagar agora →</button>
-      <p style="text-align:center;font-size:.73rem;color:#6b7a8d;margin-top:.7rem">🔒 100% seguro via Mercado Pago</p>
-    </div>`;
+  var old = document.getElementById("pay-modal");
+  if (old) old.remove();
+  var modal = document.createElement("div");
+  modal.id = "pay-modal";
+  modal.style.cssText = "position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:1rem";
+  var amtFmt = details.amount.toFixed(2).replace(".", ",");
+  modal.innerHTML = '<div style="background:#0f1218;border:1px solid rgba(79,142,255,.3);border-radius:20px;padding:2.2rem;max-width:420px;width:100%;position:relative">'
+    + '<button onclick="document.getElementById(\'pay-modal\').remove()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#6b7a8d;font-size:1.4rem;cursor:pointer">×</button>'
+    + '<div style="font-size:1.8rem;margin-bottom:.6rem">💳</div>'
+    + '<h3 style="font-family:var(--serif);font-size:1.3rem;color:#fff;margin-bottom:.35rem">' + details.name + '</h3>'
+    + '<p style="font-size:.84rem;color:#6b7a8d;margin-bottom:1.4rem">R$ ' + amtFmt + ' &bull; Mercado Pago</p>'
+    + '<div style="display:flex;gap:.6rem;margin-bottom:1.2rem">'
+      + '<button id="btn-pix" onclick="selectMethod(\'pix\')" style="flex:1;padding:.6rem;border-radius:9px;border:2px solid rgba(79,142,255,.5);background:rgba(79,142,255,.1);color:#4f8eff;font-weight:700;cursor:pointer;font-family:var(--sans)">📱 PIX</button>'
+      + '<button id="btn-card" onclick="selectMethod(\'card\')" style="flex:1;padding:.6rem;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#6b7a8d;font-weight:600;cursor:pointer;font-family:var(--sans)">💳 Cartão</button>'
+    + '</div>'
+    + '<div id="method-info" style="background:rgba(79,142,255,.06);border:1px solid rgba(79,142,255,.15);border-radius:9px;padding:.85rem;margin-bottom:1.2rem;font-size:.82rem;color:#a0aec0;line-height:1.5">'
+      + '<strong style="color:#4f8eff">PIX instantâneo:</strong> QR Code na hora. Aprovado em segundos.'
+    + '</div>'
+    + '<button id="btn-pagar" onclick="processPayment(\''+ plan +'\','+ details.amount +')" style="width:100%;padding:.78rem;border-radius:10px;background:linear-gradient(90deg,#4f8eff,#7c3aed);color:#fff;font-size:.93rem;font-weight:700;border:none;cursor:pointer;font-family:var(--sans)">Pagar agora →</button>'
+    + '<p style="text-align:center;font-size:.73rem;color:#6b7a8d;margin-top:.7rem">🔒 100% seguro via Mercado Pago</p>'
+  + '</div>';
   document.body.appendChild(modal);
-  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  modal.addEventListener("click", function(e){if(e.target===modal)modal.remove();});
 }
 
-let selectedMethod = 'pix';
+var selectedMethod = "pix";
 function selectMethod(method) {
   selectedMethod = method;
-  const isPix = method === 'pix';
-  const pixBtn = document.getElementById('btn-pix');
-  const cardBtn = document.getElementById('btn-card');
-  const info = document.getElementById('method-info');
-  pixBtn.style.cssText = isPix
-    ? 'flex:1;padding:.6rem;border-radius:9px;border:2px solid rgba(79,142,255,.5);background:rgba(79,142,255,.1);color:#4f8eff;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif'
-    : 'flex:1;padding:.6rem;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#6b7a8d;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif';
-  cardBtn.style.cssText = !isPix
-    ? 'flex:1;padding:.6rem;border-radius:9px;border:2px solid rgba(79,142,255,.5);background:rgba(79,142,255,.1);color:#4f8eff;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif'
-    : 'flex:1;padding:.6rem;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#6b7a8d;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif';
-  info.innerHTML = isPix
-    ? '<strong style="color:#4f8eff">PIX instantâneo:</strong> QR Code na hora. Aprovação em segundos. 24h disponível.'
-    : '<strong style="color:#4f8eff">Cartão de crédito:</strong> Parcelamento em até 12x. Você será redirecionado ao checkout seguro do Mercado Pago.';
+  var isPix = (method === "pix");
+  var pb = document.getElementById("btn-pix");
+  var cb = document.getElementById("btn-card");
+  var info = document.getElementById("method-info");
+  if (isPix) {
+    pb.style.border = "2px solid rgba(79,142,255,.5)"; pb.style.background = "rgba(79,142,255,.1)"; pb.style.color = "#4f8eff";
+    cb.style.border = "1px solid rgba(255,255,255,.1)"; cb.style.background = "transparent"; cb.style.color = "#6b7a8d";
+    info.innerHTML = "<strong style=\"color:#4f8eff\">PIX instantâneo:</strong> QR Code na hora. Aprovado em segundos.";
+  } else {
+    cb.style.border = "2px solid rgba(79,142,255,.5)"; cb.style.background = "rgba(79,142,255,.1)"; cb.style.color = "#4f8eff";
+    pb.style.border = "1px solid rgba(255,255,255,.1)"; pb.style.background = "transparent"; pb.style.color = "#6b7a8d";
+    info.innerHTML = "<strong style=\"color:#4f8eff\">Cartão de crédito:</strong> Parcele em até 12x. Será redirecionado ao Mercado Pago.";
+  }
 }
 
 async function processPayment(plan, amount) {
-  const user = getUser();
-  if (!user) return;
-  const btn = document.getElementById('btn-pagar');
-  btn.disabled = true;
-  btn.textContent = 'Processando...';
+  var user = getUser(); if (!user) return;
+  var btn = document.getElementById("btn-pagar");
+  btn.disabled = true; btn.textContent = "Processando...";
   try {
-    const res = await fetch('/api/create-payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    var res = await fetch("/api/create-payment", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        method: selectedMethod, amount,
+        method: selectedMethod, amount: amount,
         product_name: PLANS[plan].name, plan_slug: plan,
-        user_id: user.id, user_email: user.email, user_name: user.name,
+        user_id: user.id, user_email: user.email, user_name: user.name
       })
     });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || 'Erro ao processar');
-    document.getElementById('pay-modal').remove();
-    if (selectedMethod === 'pix') showPixModal(data);
+    var data = await res.json();
+    if (!data.ok) throw new Error(data.error || "Erro ao processar");
+    document.getElementById("pay-modal").remove();
+    if (selectedMethod === "pix") showPixModal(data);
     else window.location.href = data.checkout_url;
-  } catch (err) {
-    btn.disabled = false;
-    btn.textContent = 'Pagar agora →';
-    alert('Erro: ' + err.message);
+  } catch(e) {
+    btn.disabled = false; btn.textContent = "Pagar agora →";
+    alert("Erro: " + e.message);
   }
 }
 
 function showPixModal(data) {
-  document.getElementById('pix-modal')?.remove();
-  const modal = document.createElement('div');
-  modal.id = 'pix-modal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:1rem';
-  const exp = new Date(data.expires_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  modal.innerHTML = `
-    <div style="background:#0f1218;border:1px solid rgba(16,185,129,.3);border-radius:20px;padding:2.2rem;max-width:400px;width:100%;text-align:center;position:relative;animation:fadeUp .3s ease">
-      <button onclick="document.getElementById('pix-modal').remove()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#6b7a8d;font-size:1.4rem;cursor:pointer;line-height:1">×</button>
-      <div style="font-size:2rem;margin-bottom:.5rem">📱</div>
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.25rem;color:#fff;margin-bottom:.35rem">Pague via PIX</h3>
-      <p style="font-size:.81rem;color:#6b7a8d;margin-bottom:1.1rem">Expira às ${exp}. Após o pagamento seu plano é ativado automaticamente.</p>
-      ${data.qr_base64 ? '<img src="data:image/png;base64,'+data.qr_base64+'" style="width:175px;height:175px;border-radius:12px;background:#fff;padding:8px;margin:0 auto .8rem;display:block" alt="QR PIX">' : ''}
-      <p style="font-size:.74rem;color:#6b7a8d;margin-bottom:.4rem">Ou copie o código PIX:</p>
-      <div style="background:#161b24;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.6rem;margin-bottom:.75rem;font-size:.71rem;color:#a0aec0;word-break:break-all;text-align:left;max-height:68px;overflow:hidden">${data.qr_code||'Código indisponível'}</div>
-      <button onclick="navigator.clipboard.writeText('${(data.qr_code||'').replace(/'/g,'\\'')}').then(()=>this.textContent='✓ Copiado!')" style="width:100%;padding:.68rem;border-radius:10px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:.5rem">Copiar código PIX</button>
-      <p style="font-size:.73rem;color:#6b7a8d">Abra seu banco → PIX → Pagar → Cole o código ou escaneie o QR</p>
-    </div>`;
+  var old = document.getElementById("pix-modal"); if(old) old.remove();
+  var modal = document.createElement("div");
+  modal.id = "pix-modal";
+  modal.style.cssText = "position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:1rem";
+  var exp = new Date(data.expires_at || Date.now() + 1800000).toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit"});
+  var qrImg = data.qr_base64 ? '<img src="data:image/png;base64,' + data.qr_base64 + '" style="width:175px;height:175px;border-radius:12px;background:#fff;padding:8px;margin:0 auto .8rem;display:block" alt="QR PIX">' : "";
+  var qrCode = data.qr_code || "";
+  modal.innerHTML = '<div style="background:#0f1218;border:1px solid rgba(16,185,129,.3);border-radius:20px;padding:2.2rem;max-width:400px;width:100%;text-align:center;position:relative">'
+    + '<button onclick="document.getElementById(\'pix-modal\').remove()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#6b7a8d;font-size:1.4rem;cursor:pointer">×</button>'
+    + '<div style="font-size:2rem;margin-bottom:.5rem">📱</div>'
+    + '<h3 style="font-family:var(--serif);font-size:1.25rem;color:#fff;margin-bottom:.35rem">Pague via PIX</h3>'
+    + '<p style="font-size:.81rem;color:#6b7a8d;margin-bottom:1.1rem">Expira às ' + exp + '. Após o pagamento o plano é ativado automaticamente.</p>'
+    + qrImg
+    + '<p style="font-size:.74rem;color:#6b7a8d;margin-bottom:.4rem">Ou copie o código PIX:</p>'
+    + '<div style="background:#161b24;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.6rem;margin-bottom:.75rem;font-size:.71rem;color:#a0aec0;word-break:break-all;text-align:left;max-height:68px;overflow:hidden">' + (qrCode || "Código indisponível") + '</div>'
+    + '<button id="copy-pix-btn" style="width:100%;padding:.68rem;border-radius:10px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-weight:700;border:none;cursor:pointer;font-family:var(--sans);margin-bottom:.5rem">Copiar código PIX</button>'
+    + '<p style="font-size:.73rem;color:#6b7a8d">Abra seu banco → PIX → Pagar → Cole o código</p>'
+  + '</div>';
   document.body.appendChild(modal);
-  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  modal.addEventListener("click", function(e){if(e.target===modal)modal.remove();});
+  document.getElementById("copy-pix-btn").addEventListener("click", function(){
+    navigator.clipboard.writeText(qrCode).then(function(){
+      document.getElementById("copy-pix-btn").textContent = "✓ Copiado!";
+    });
+  });
 }
 </script>
 
