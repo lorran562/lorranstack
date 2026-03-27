@@ -686,20 +686,18 @@ footer {
 </footer>
 
 <script>
-// ── BILLING TOGGLE ────────────────────────────────────────
+// ── BILLING TOGGLE ──────────────────────────────────────────
 let billing = 'monthly';
-
 function setBilling(type, el) {
   billing = type;
   document.querySelectorAll('.toggle-opt').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('[data-monthly]').forEach(el => {
-    const val = billing === 'monthly' ? el.dataset.monthly : el.dataset.yearly;
-    el.textContent = val;
+    el.textContent = billing === 'monthly' ? el.dataset.monthly : el.dataset.yearly;
   });
 }
 
-// ── FAQ TOGGLE ────────────────────────────────────────────
+// ── FAQ TOGGLE ──────────────────────────────────────────────
 function toggleFaq(btn) {
   const item = btn.closest('.faq-item');
   const isOpen = item.classList.contains('open');
@@ -707,76 +705,125 @@ function toggleFaq(btn) {
   if (!isOpen) item.classList.add('open');
 }
 
-// ── CHECKOUT ──────────────────────────────────────────────
-// Quando Stripe estiver integrado, substituir por chamada real
-const STRIPE_LINKS = {
-  'creator':       null, // colar link do Stripe aqui
-  'creator-pro':   null,
-  'featured-slot': null,
+// ── PLANOS ──────────────────────────────────────────────────
+const PLANS = {
+  'creator':       { name: 'Plano Creator — LorranStack',     amount: 29.00 },
+  'creator-pro':   { name: 'Plano Creator Pro — LorranStack', amount: 79.00 },
+  'featured-slot': { name: 'Featured Slot — LorranStack',     amount: 99.00 },
 };
 
-// Mapa de planos para o sistema Mercado Pago
-const PLAN_DETAILS = {
-  'creator':       { name: 'Creator — LorranStack', amount: 29.00 },
-  'creator-pro':   { name: 'Creator Pro — LorranStack', amount: 79.00 },
-  'featured-slot': { name: 'Featured Slot — LorranStack', amount: 99.00 },
-};
-
-function checkout(plan) {
-  const details = PLAN_DETAILS[plan];
-  if (!details) { console.warn('Plano desconhecido:', plan); return; }
-  lsCheckout({
-    productName: details.name,
-    amount:      details.amount,
-    planSlug:    plan,
-    onSuccess: () => {
-      window.location.href = '/?checkout=success&plan=' + plan;
-    }
-  });
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('ls_user') || 'null'); } catch { return null; }
 }
 
-function showComingSoon(plan) {
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `
-    position:fixed;inset:0;z-index:1000;
-    background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
-    display:flex;align-items:center;justify-content:center;
-  `;
-  const labels = {
-    'creator': 'Creator — R$29/mês',
-    'creator-pro': 'Creator Pro — R$79/mês',
-    'featured-slot': 'Destaque por 30 dias — R$99',
-  };
-  overlay.innerHTML = `
-    <div style="background:#0f1218;border:1px solid rgba(79,142,255,.3);border-radius:20px;
-      padding:2.5rem;max-width:400px;width:90%;text-align:center;animation:fadeUp .3s ease">
-      <div style="font-size:2.5rem;margin-bottom:1rem">🚀</div>
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:#fff;margin-bottom:.7rem">
-        Pagamento em breve!
-      </h3>
-      <p style="font-size:.88rem;color:#6b7a8d;line-height:1.6;margin-bottom:.5rem">
-        Você selecionou: <strong style="color:#4f8eff">${labels[plan]}</strong>
-      </p>
-      <p style="font-size:.85rem;color:#6b7a8d;line-height:1.6;margin-bottom:1.8rem">
-        O Stripe está sendo configurado. Envie um email para confirmar seu interesse e garantir desconto de lançamento!
-      </p>
-      <a href="mailto:josefernandes6340@gmail.com?subject=Quero o plano ${labels[plan]}&body=Olá, quero assinar o plano ${labels[plan]} do LorranStack!"
-        style="display:block;padding:.75rem;border-radius:10px;background:linear-gradient(90deg,#4f8eff,#7c3aed);
-          color:#fff;font-weight:700;text-decoration:none;font-size:.9rem;margin-bottom:.8rem">
-        Confirmar interesse por email →
-      </a>
-      <button onclick="this.closest('div[style]').parentElement.remove()"
-        style="background:none;border:none;color:#6b7a8d;font-size:.83rem;cursor:pointer;
-          font-family:'DM Sans',sans-serif">
-        Fechar
-      </button>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+function startCheckout(plan) {
+  const details = PLANS[plan];
+  if (!details) return;
+  const user = getUser();
+  if (!user) {
+    sessionStorage.setItem('pendingPlan', plan);
+    sessionStorage.setItem('openModal', 'm-login');
+    window.location.href = '/';
+    return;
+  }
+  openPayModal(plan, details, user);
+}
+
+// ── MODAL DE PAGAMENTO ──────────────────────────────────────
+function openPayModal(plan, details, user) {
+  document.getElementById('pay-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'pay-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:1rem';
+  modal.innerHTML = `
+    <div style="background:#0f1218;border:1px solid rgba(79,142,255,.3);border-radius:20px;padding:2.2rem;max-width:420px;width:100%;position:relative;animation:fadeUp .3s ease">
+      <button onclick="document.getElementById('pay-modal').remove()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#6b7a8d;font-size:1.4rem;cursor:pointer;line-height:1">×</button>
+      <div style="font-size:1.8rem;margin-bottom:.6rem">💳</div>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:#fff;margin-bottom:.35rem">${details.name}</h3>
+      <p style="font-size:.84rem;color:#6b7a8d;margin-bottom:1.4rem">R$ ${details.amount.toFixed(2).replace('.',',')} • Mercado Pago</p>
+      <div style="display:flex;gap:.6rem;margin-bottom:1.2rem">
+        <button id="btn-pix" onclick="selectMethod('pix')" style="flex:1;padding:.6rem;border-radius:9px;border:2px solid rgba(79,142,255,.5);background:rgba(79,142,255,.1);color:#4f8eff;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s">📱 PIX</button>
+        <button id="btn-card" onclick="selectMethod('card')" style="flex:1;padding:.6rem;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#6b7a8d;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s">💳 Cartão</button>
+      </div>
+      <div id="method-info" style="background:rgba(79,142,255,.06);border:1px solid rgba(79,142,255,.15);border-radius:9px;padding:.85rem;margin-bottom:1.2rem;font-size:.82rem;color:#a0aec0;line-height:1.5">
+        <strong style="color:#4f8eff">PIX instantâneo:</strong> QR Code na hora. Aprovação em segundos. 24h disponível.
+      </div>
+      <button id="btn-pagar" onclick="processPayment('${plan}',${details.amount})" style="width:100%;padding:.78rem;border-radius:10px;background:linear-gradient(90deg,#4f8eff,#7c3aed);color:#fff;font-size:.93rem;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Pagar agora →</button>
+      <p style="text-align:center;font-size:.73rem;color:#6b7a8d;margin-top:.7rem">🔒 100% seguro via Mercado Pago</p>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+let selectedMethod = 'pix';
+function selectMethod(method) {
+  selectedMethod = method;
+  const isPix = method === 'pix';
+  const pixBtn = document.getElementById('btn-pix');
+  const cardBtn = document.getElementById('btn-card');
+  const info = document.getElementById('method-info');
+  pixBtn.style.cssText = isPix
+    ? 'flex:1;padding:.6rem;border-radius:9px;border:2px solid rgba(79,142,255,.5);background:rgba(79,142,255,.1);color:#4f8eff;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif'
+    : 'flex:1;padding:.6rem;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#6b7a8d;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif';
+  cardBtn.style.cssText = !isPix
+    ? 'flex:1;padding:.6rem;border-radius:9px;border:2px solid rgba(79,142,255,.5);background:rgba(79,142,255,.1);color:#4f8eff;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif'
+    : 'flex:1;padding:.6rem;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#6b7a8d;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif';
+  info.innerHTML = isPix
+    ? '<strong style="color:#4f8eff">PIX instantâneo:</strong> QR Code na hora. Aprovação em segundos. 24h disponível.'
+    : '<strong style="color:#4f8eff">Cartão de crédito:</strong> Parcelamento em até 12x. Você será redirecionado ao checkout seguro do Mercado Pago.';
+}
+
+async function processPayment(plan, amount) {
+  const user = getUser();
+  if (!user) return;
+  const btn = document.getElementById('btn-pagar');
+  btn.disabled = true;
+  btn.textContent = 'Processando...';
+  try {
+    const res = await fetch('/api/create-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: selectedMethod, amount,
+        product_name: PLANS[plan].name, plan_slug: plan,
+        user_id: user.id, user_email: user.email, user_name: user.name,
+      })
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Erro ao processar');
+    document.getElementById('pay-modal').remove();
+    if (selectedMethod === 'pix') showPixModal(data);
+    else window.location.href = data.checkout_url;
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Pagar agora →';
+    alert('Erro: ' + err.message);
+  }
+}
+
+function showPixModal(data) {
+  document.getElementById('pix-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'pix-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:1rem';
+  const exp = new Date(data.expires_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  modal.innerHTML = `
+    <div style="background:#0f1218;border:1px solid rgba(16,185,129,.3);border-radius:20px;padding:2.2rem;max-width:400px;width:100%;text-align:center;position:relative;animation:fadeUp .3s ease">
+      <button onclick="document.getElementById('pix-modal').remove()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#6b7a8d;font-size:1.4rem;cursor:pointer;line-height:1">×</button>
+      <div style="font-size:2rem;margin-bottom:.5rem">📱</div>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.25rem;color:#fff;margin-bottom:.35rem">Pague via PIX</h3>
+      <p style="font-size:.81rem;color:#6b7a8d;margin-bottom:1.1rem">Expira às ${exp}. Após o pagamento seu plano é ativado automaticamente.</p>
+      ${data.qr_base64 ? '<img src="data:image/png;base64,'+data.qr_base64+'" style="width:175px;height:175px;border-radius:12px;background:#fff;padding:8px;margin:0 auto .8rem;display:block" alt="QR PIX">' : ''}
+      <p style="font-size:.74rem;color:#6b7a8d;margin-bottom:.4rem">Ou copie o código PIX:</p>
+      <div style="background:#161b24;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.6rem;margin-bottom:.75rem;font-size:.71rem;color:#a0aec0;word-break:break-all;text-align:left;max-height:68px;overflow:hidden">${data.qr_code||'Código indisponível'}</div>
+      <button onclick="navigator.clipboard.writeText('${(data.qr_code||'').replace(/'/g,'\\'')}').then(()=>this.textContent='✓ Copiado!')" style="width:100%;padding:.68rem;border-radius:10px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:.5rem">Copiar código PIX</button>
+      <p style="font-size:.73rem;color:#6b7a8d">Abra seu banco → PIX → Pagar → Cole o código ou escaneie o QR</p>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 </script>
 
-<script src="stripe-checkout.js"></script>
+
 </body>
 </html>
