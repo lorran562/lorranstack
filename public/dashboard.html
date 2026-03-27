@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Dashboard — LorranStack</title>
-<meta name="description" content="Gerencie seus produtos SaaS no LorranStack. Publique, edite e acompanhe analytics."/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -14,7 +13,8 @@
   --border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.14);
   --text:#e2e8f4;--muted:#5a6a82;--muted2:#8899b0;
   --accent:#3b82f6;--green:#22c55e;
-  --serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;
+  --serif:"Instrument Serif",Georgia,serif;
+  --sans:"DM Sans",system-ui,sans-serif;
   --r:12px;
 }
 html{scroll-behavior:smooth}
@@ -22,26 +22,22 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 a{text-decoration:none;color:inherit}
 button{font-family:var(--sans);cursor:pointer;border:none;background:none}
 nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;align-items:center;
-  padding:0 2rem;gap:1rem;background:rgba(6,8,16,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+  padding:0 2rem;gap:1rem;background:rgba(6,8,16,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
 .logo{display:flex;align-items:center;gap:.5rem;font-family:var(--serif);font-size:1.2rem;color:#fff}
 .logo-dot{width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6)}
 .nav-r{margin-left:auto;display:flex;align-items:center;gap:.75rem}
 .nav-link{font-size:.82rem;color:var(--muted2);transition:color .15s;padding:.3rem .6rem;border-radius:7px}
 .nav-link:hover{color:var(--text);background:rgba(255,255,255,.05)}
 .nav-user{font-size:.82rem;color:var(--muted2)}
-.nav-logout{font-size:.82rem;color:var(--muted);padding:.35rem .75rem;border-radius:7px;
-  border:1px solid var(--border);transition:all .15s;cursor:pointer}
+.nav-logout{font-size:.82rem;color:var(--muted);padding:.35rem .75rem;border-radius:7px;border:1px solid var(--border);transition:all .15s;cursor:pointer}
 .nav-logout:hover{color:var(--text);border-color:var(--border-h)}
 .layout{display:flex;min-height:100vh;padding-top:58px}
-.sidebar{width:220px;flex-shrink:0;border-right:1px solid var(--border);
-  padding:1.5rem 1rem;position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto}
+.sidebar{width:220px;flex-shrink:0;border-right:1px solid var(--border);padding:1.5rem 1rem;position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto}
 .sidebar-section{margin-bottom:1.5rem}
-.sidebar-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;
-  letter-spacing:.1em;padding:.3rem .6rem;margin-bottom:.3rem}
-.sidebar-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem;border-radius:9px;
-  font-size:.83rem;color:var(--muted2);transition:all .15s;cursor:pointer;width:100%;text-align:left}
+.sidebar-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding:.3rem .6rem;margin-bottom:.3rem}
+.sidebar-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem;border-radius:9px;font-size:.83rem;color:var(--muted2);transition:all .15s;cursor:pointer;width:100%;text-align:left;border:1px solid transparent}
 .sidebar-item:hover{background:var(--bg3);color:var(--text)}
-.sidebar-item.active{background:rgba(59,130,246,.1);color:#93bbfb;border:1px solid rgba(59,130,246,.15)}
+.sidebar-item.active{background:rgba(59,130,246,.1);color:#93bbfb;border-color:rgba(59,130,246,.15)}
 .sidebar-item svg{flex-shrink:0;opacity:.7}
 .sidebar-item.active svg{opacity:1}
 .main{flex:1;padding:2rem;max-width:1000px}
@@ -52,11 +48,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
 .stat-label{font-size:.75rem;color:var(--muted);margin-bottom:.5rem;letter-spacing:.03em}
 .stat-value{font-family:var(--serif);font-size:2rem;color:#fff;line-height:1;font-weight:400}
 .stat-change{font-size:.73rem;color:var(--green);margin-top:.35rem}
-.product-row{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
-  padding:1rem 1.2rem;display:flex;align-items:center;gap:1rem;transition:border-color .15s;margin-bottom:.5rem}
+.product-row{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;display:flex;align-items:center;gap:1rem;transition:border-color .15s;margin-bottom:.5rem}
 .product-row:hover{border-color:var(--border-h)}
-.prod-logo{width:36px;height:36px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:.95rem;flex-shrink:0;overflow:hidden}
+.prod-logo{width:36px;height:36px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:.95rem;flex-shrink:0;overflow:hidden}
 .prod-logo img{width:100%;height:100%;object-fit:cover;border-radius:7px}
 .prod-name{font-size:.88rem;font-weight:600;color:#fff;margin-bottom:.1rem}
 .prod-tagline{font-size:.76rem;color:var(--muted2)}
@@ -70,8 +64,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
 .s-featured{background:rgba(139,92,246,.12);color:#a78bfa;border:1px solid rgba(139,92,246,.2)}
 .s-rejected{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2)}
 .prod-actions{display:flex;gap:.4rem;flex-shrink:0}
-.action-btn{padding:.3rem .65rem;border-radius:7px;font-size:.76rem;border:1px solid var(--border);
-  color:var(--muted2);transition:all .15s;cursor:pointer;font-family:var(--sans)}
+.action-btn{padding:.3rem .65rem;border-radius:7px;font-size:.76rem;border:1px solid var(--border);color:var(--muted2);transition:all .15s;cursor:pointer;font-family:var(--sans)}
 .action-btn:hover{border-color:var(--border-h);color:var(--text)}
 .action-btn.del:hover{border-color:rgba(239,68,68,.4);color:#f87171;background:rgba(239,68,68,.06)}
 .form-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.8rem;max-width:700px}
@@ -81,8 +74,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
 .form-group{display:flex;flex-direction:column;gap:.45rem}
 .form-group.full{grid-column:1/-1}
 .form-label{font-size:.79rem;font-weight:600;color:var(--muted2);letter-spacing:.02em}
-.form-input{padding:.7rem .9rem;border-radius:9px;background:var(--bg3);border:1px solid var(--border);
-  color:var(--text);font-size:.86rem;outline:none;transition:border-color .15s;font-family:var(--sans);width:100%}
+.form-input{padding:.7rem .9rem;border-radius:9px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:.86rem;outline:none;transition:border-color .15s;font-family:var(--sans);width:100%}
 .form-input:focus{border-color:rgba(59,130,246,.5);box-shadow:0 0 0 3px rgba(59,130,246,.08)}
 .form-input::placeholder{color:var(--muted)}
 .form-textarea{resize:vertical;min-height:90px}
@@ -91,41 +83,31 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
 .form-alert.err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#fca5a5}
 .form-alert.ok{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);color:#86efac}
 .form-alert.show{display:block}
-.btn-submit{padding:.75rem 1.4rem;border-radius:9px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);
-  color:#fff;font-size:.86rem;font-weight:600;border:none;cursor:pointer;font-family:var(--sans);
-  transition:all .2s;box-shadow:0 4px 16px rgba(59,130,246,.25)}
+.btn-submit{padding:.75rem 1.4rem;border-radius:9px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:.86rem;font-weight:600;border:none;cursor:pointer;font-family:var(--sans);transition:all .2s;box-shadow:0 4px 16px rgba(59,130,246,.25)}
 .btn-submit:hover{opacity:.9;transform:translateY(-1px)}
-.btn-cancel{padding:.75rem 1.2rem;border-radius:9px;background:var(--bg3);border:1px solid var(--border);
-  color:var(--muted2);font-size:.86rem;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-cancel{padding:.75rem 1.2rem;border-radius:9px;background:var(--bg3);border:1px solid var(--border);color:var(--muted2);font-size:.86rem;cursor:pointer;font-family:var(--sans);transition:all .15s}
 .btn-cancel:hover{color:var(--text);border-color:var(--border-h)}
 .empty{text-align:center;padding:3.5rem 2rem;border:1px dashed var(--border);border-radius:var(--r)}
 .empty-icon{font-size:2rem;margin-bottom:.75rem}
 .empty-title{font-family:var(--serif);font-size:1.2rem;color:#fff;margin-bottom:.4rem}
 .empty-text{font-size:.82rem;color:var(--muted);margin-bottom:1.2rem}
+.empty-btn{padding:.6rem 1.4rem;border-radius:9px;background:var(--accent);color:#fff;font-size:.83rem;font-weight:600;border:none;cursor:pointer;font-family:var(--sans)}
 .tc{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem}
-.toast{display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;
-  background:var(--bg3);border:1px solid var(--border-h);color:var(--text);font-size:.82rem;
-  box-shadow:0 8px 28px rgba(0,0,0,.5);animation:slideIn .3s ease;max-width:300px;font-family:var(--sans)}
+.toast{display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;background:var(--bg3);border:1px solid var(--border-h);color:var(--text);font-size:.82rem;box-shadow:0 8px 28px rgba(0,0,0,.5);animation:slideIn .3s ease;max-width:300px}
 @keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel{height:80px;border-radius:var(--r);border:1px solid var(--border);background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;margin-bottom:.5rem}
 .section-hdr{display:flex;align-items:center;gap:1rem;margin-bottom:1.2rem}
 .section-title{font-family:var(--serif);font-size:1.3rem;color:#fff;font-weight:400}
 .section-count{font-size:.75rem;color:var(--muted);background:var(--bg3);border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px}
-.section-action{margin-left:auto;display:flex;align-items:center;gap:.4rem;padding:.38rem .85rem;
-  border-radius:8px;background:var(--accent);color:#fff;font-size:.8rem;font-weight:600;cursor:pointer;
-  transition:all .15s;border:none;font-family:var(--sans)}
+.section-action{margin-left:auto;display:flex;align-items:center;gap:.4rem;padding:.38rem .85rem;border-radius:8px;background:var(--accent);color:#fff;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;border:none;font-family:var(--sans)}
 .section-action:hover{background:#2563eb}
-.plan-banner{background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(139,92,246,.08));
-  border:1px solid rgba(59,130,246,.2);border-radius:var(--r);padding:1.2rem 1.5rem;
-  display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem}
+.plan-banner{background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(139,92,246,.08));border:1px solid rgba(59,130,246,.2);border-radius:var(--r);padding:1.2rem 1.5rem;display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem}
 .plan-banner-icon{font-size:1.8rem;flex-shrink:0}
 .plan-banner-title{font-size:.9rem;font-weight:600;color:#fff;margin-bottom:.2rem}
 .plan-banner-text{font-size:.8rem;color:var(--muted2)}
-.plan-banner-btn{margin-left:auto;flex-shrink:0;padding:.45rem 1rem;border-radius:8px;
-  background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:.8rem;font-weight:600;
-  border:none;cursor:pointer;font-family:var(--sans);white-space:nowrap}
-.pix-badge{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2);
-  padding:2px 8px;border-radius:6px;font-size:.72rem}
+.plan-banner-btn{margin-left:auto;flex-shrink:0;padding:.45rem 1rem;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:.8rem;font-weight:600;border:none;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+.pix-badge{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2);padding:2px 8px;border-radius:6px;font-size:.72rem}
 @media(max-width:768px){
   .sidebar{display:none}
   .stats-grid{grid-template-columns:1fr 1fr}
@@ -152,7 +134,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
       <div class="sidebar-label">Menu</div>
       <button class="sidebar-item active" id="sb-overview" onclick="showTab('overview')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Visao geral
+        Visão geral
       </button>
       <button class="sidebar-item" id="sb-products" onclick="showTab('products')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
@@ -176,459 +158,346 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
     </div>
   </aside>
   <main class="main">
-    <!-- TAB OVERVIEW -->
     <div id="tab-overview">
-      <div class="page-title" id="pg-title">Bom dia</div>
-      <div class="page-sub">Aqui esta um resumo dos seus produtos</div>
+      <div class="page-title" id="pg-title">Bom dia 👋</div>
+      <div class="page-sub">Aqui está um resumo dos seus produtos</div>
       <div class="plan-banner" id="plan-banner" style="display:none">
         <div class="plan-banner-icon">💎</div>
         <div>
           <div class="plan-banner-title">Upgrade para Creator Pro</div>
-          <div class="plan-banner-text">Publique produtos ilimitados, destaque na home e analytics avancado.</div>
+          <div class="plan-banner-text">Publique ilimitados, destaque na home e analytics avançado.</div>
         </div>
-        <button class="plan-banner-btn" onclick="location.href='/pricing.html'">Ver planos</button>
+        <button class="plan-banner-btn" onclick="location.href='/pricing.html'">Ver planos →</button>
       </div>
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Produtos publicados</div>
-          <div class="stat-value" id="st-products">—</div>
-          <div class="stat-change" id="st-products-sub" style="color:var(--muted2)">Carregando...</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Visualizacoes totais</div>
-          <div class="stat-value" id="st-views">—</div>
-          <div class="stat-change">Acumulado</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Upvotes recebidos</div>
-          <div class="stat-value" id="st-upvotes">—</div>
-          <div class="stat-change">Da comunidade</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Avaliacao media</div>
-          <div class="stat-value" id="st-rating">—</div>
-          <div class="stat-change">De 5.0 estrelas</div>
-        </div>
+        <div class="stat-card"><div class="stat-label">Produtos publicados</div><div class="stat-value" id="st-products">—</div><div class="stat-change" id="st-sub" style="color:var(--muted2)">Carregando...</div></div>
+        <div class="stat-card"><div class="stat-label">Visualizações totais</div><div class="stat-value" id="st-views">—</div><div class="stat-change">Acumulado</div></div>
+        <div class="stat-card"><div class="stat-label">Upvotes recebidos</div><div class="stat-value" id="st-upvotes">—</div><div class="stat-change">Da comunidade</div></div>
+        <div class="stat-card"><div class="stat-label">Avaliação média</div><div class="stat-value" id="st-rating">—</div><div class="stat-change">De 5.0 estrelas</div></div>
       </div>
       <div class="section-hdr">
         <div class="section-title">Seus produtos</div>
         <span class="section-count" id="prod-count">0</span>
-        <button class="section-action" onclick="showTab('new')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Publicar novo
-        </button>
+        <button class="section-action" onclick="showTab('new')">+ Publicar novo</button>
       </div>
-      <div id="products-list-overview">
-        <div style="height:80px;border-radius:var(--r);border:1px solid var(--border);background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
-        <div style="height:80px;border-radius:var(--r);border:1px solid var(--border);background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;margin-top:.5rem"></div>
-      </div>
+      <div id="overview-list"><div class="skel"></div><div class="skel"></div></div>
     </div>
-    <!-- TAB PRODUCTS -->
     <div id="tab-products" style="display:none">
       <div class="page-title">Meus produtos</div>
       <div class="page-sub">Gerencie todos os seus SaaS publicados</div>
       <div class="section-hdr">
         <div class="section-title">Lista completa</div>
-        <button class="section-action" onclick="showTab('new')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Novo produto
-        </button>
+        <button class="section-action" onclick="showTab('new')">+ Novo produto</button>
       </div>
-      <div id="products-list-full"></div>
+      <div id="full-list"></div>
     </div>
-    <!-- TAB NEW -->
     <div id="tab-new" style="display:none">
       <div class="page-title">Publicar SaaS</div>
       <div class="page-sub">Apresente sua ferramenta para milhares de desenvolvedores</div>
       <div class="form-card">
-        <div class="form-title">Informacoes do produto</div>
-        <div class="form-sub">Os campos com * sao obrigatorios</div>
+        <div class="form-title">Informações do produto</div>
+        <div class="form-sub">Campos com * são obrigatórios</div>
         <div class="form-alert err" id="f-err"></div>
         <div class="form-alert ok" id="f-ok"></div>
         <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">Nome do SaaS *</label>
-            <input class="form-input" id="f-name" type="text" placeholder="Ex: FlowAI"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Tagline *</label>
-            <input class="form-input" id="f-tagline" type="text" placeholder="Frase curta do produto"/>
-          </div>
-          <div class="form-group full">
-            <label class="form-label">Descricao completa *</label>
-            <textarea class="form-input form-textarea" id="f-desc" placeholder="Descreva o que seu SaaS faz..."></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Categoria *</label>
-            <select class="form-input form-select" id="f-cat">
-              <option value="">Selecione...</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Tipo de preco</label>
-            <select class="form-input form-select" id="f-pricing">
-              <option value="free">Gratis</option>
-              <option value="freemium">Freemium</option>
-              <option value="paid">Pago</option>
-              <option value="subscription">Assinatura</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Preco (ex: 29.90)</label>
-            <input class="form-input" id="f-price" type="number" step="0.01" min="0" placeholder="Opcional"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Label do preco</label>
-            <input class="form-input" id="f-price-label" type="text" placeholder="Ex: /mes, unico"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label">URL do produto *</label>
-            <input class="form-input" id="f-url" type="url" placeholder="https://seusite.com"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label">URL do logo</label>
-            <input class="form-input" id="f-logo" type="url" placeholder="https://site.com/logo.png"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Chave PIX (para receber pagamentos)</label>
-            <input class="form-input" id="f-pix" type="text" placeholder="CPF, email, telefone ou chave aleatoria"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Link de pagamento (opcional)</label>
-            <input class="form-input" id="f-payment-url" type="url" placeholder="https://mpago.la/seu-link"/>
-          </div>
-          <div class="form-group full">
-            <label class="form-label">URL do video (YouTube/Vimeo)</label>
-            <input class="form-input" id="f-video" type="url" placeholder="Opcional"/>
-          </div>
+          <div class="form-group"><label class="form-label">Nome do SaaS *</label><input class="form-input" id="f-name" type="text" placeholder="Ex: FlowAI"></div>
+          <div class="form-group"><label class="form-label">Tagline *</label><input class="form-input" id="f-tagline" type="text" placeholder="Frase curta e impactante"></div>
+          <div class="form-group full"><label class="form-label">Descrição completa *</label><textarea class="form-input form-textarea" id="f-desc" placeholder="Descreva o que seu SaaS faz, para quem é e quais problemas resolve..."></textarea></div>
+          <div class="form-group"><label class="form-label">Categoria *</label><select class="form-input form-select" id="f-cat"><option value="">Selecione...</option></select></div>
+          <div class="form-group"><label class="form-label">Tipo de preço</label><select class="form-input form-select" id="f-pricing"><option value="free">Grátis</option><option value="freemium">Freemium</option><option value="paid">Pago</option><option value="subscription">Assinatura</option></select></div>
+          <div class="form-group"><label class="form-label">Preço (ex: 29.90)</label><input class="form-input" id="f-price" type="number" step="0.01" min="0" placeholder="Opcional"></div>
+          <div class="form-group"><label class="form-label">Label do preço</label><input class="form-input" id="f-price-label" type="text" placeholder="Ex: /mês, único"></div>
+          <div class="form-group"><label class="form-label">URL do produto *</label><input class="form-input" id="f-url" type="url" placeholder="https://seusite.com"></div>
+          <div class="form-group"><label class="form-label">URL do logo</label><input class="form-input" id="f-logo" type="url" placeholder="https://site.com/logo.png"></div>
+          <div class="form-group"><label class="form-label">Chave PIX (para receber pagamentos)</label><input class="form-input" id="f-pix" type="text" placeholder="CPF, email, telefone ou chave aleatória"></div>
+          <div class="form-group"><label class="form-label">Link de pagamento</label><input class="form-input" id="f-pay-url" type="url" placeholder="https://mpago.la/seu-link (opcional)"></div>
+          <div class="form-group full"><label class="form-label">URL do vídeo (YouTube/Vimeo)</label><input class="form-input" id="f-video" type="url" placeholder="Opcional"></div>
         </div>
         <div style="display:flex;gap:.75rem;margin-top:1.5rem">
-          <button class="btn-submit" onclick="submitSaas()">Enviar para aprovacao</button>
+          <button class="btn-submit" onclick="submitSaas()">Enviar para aprovação →</button>
           <button class="btn-cancel" onclick="showTab('overview')">Cancelar</button>
         </div>
-        <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem">Seu produto sera revisado antes de ser publicado.</p>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem">Seu produto será revisado antes de aparecer no marketplace.</p>
       </div>
     </div>
-    <!-- TAB PAGAMENTOS -->
     <div id="tab-payments" style="display:none">
       <div class="page-title">Pagamentos</div>
-      <div class="page-sub">Configure como os usuarios vao te pagar pelos seus SaaS</div>
+      <div class="page-sub">Configure como os usuários vão te pagar pelos seus SaaS</div>
       <div class="form-card" style="margin-bottom:1.5rem">
-        <div class="form-title">Minha chave PIX</div>
-        <div class="form-sub">Informe sua chave PIX principal. Ela aparecera nos seus produtos pagos para os usuarios te pagarem diretamente.</div>
+        <div class="form-title">Minha chave PIX global</div>
+        <div class="form-sub">Esta chave aparece em todos os seus produtos pagos. Você pode sobrescrever por produto no formulário de publicação.</div>
         <div class="form-alert err" id="pix-err"></div>
         <div class="form-alert ok" id="pix-ok"></div>
         <div style="display:flex;gap:.75rem;align-items:flex-end">
           <div class="form-group" style="flex:1">
             <label class="form-label">Chave PIX *</label>
-            <input class="form-input" id="pix-key-input" type="text" placeholder="CPF, email, telefone ou chave aleatoria"/>
+            <input class="form-input" id="pix-input" type="text" placeholder="CPF, email, telefone ou chave aleatória">
           </div>
-          <button class="btn-submit" onclick="savePix()" style="flex-shrink:0;height:42px;padding:.6rem 1.2rem">Salvar PIX</button>
+          <button class="btn-submit" onclick="savePix()" style="flex-shrink:0;padding:.7rem 1.2rem">Salvar</button>
         </div>
-        <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem">Voce recebe os pagamentos diretamente. O LorranStack nao cobra comissao.</p>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem">⚠️ Você recebe 100% direto. O LorranStack não cobra comissão.</p>
       </div>
       <div class="form-card">
-        <div class="form-title">Produtos com pagamento configurado</div>
-        <div class="form-sub">Seus produtos que tem chave PIX ou link de pagamento cadastrado.</div>
-        <div id="payment-products-list">
-          <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">Carregando...</div>
-        </div>
+        <div class="form-title">Produtos com pagamento</div>
+        <div class="form-sub">Seus produtos que têm PIX ou link de pagamento configurado.</div>
+        <div id="pay-list"><div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">Carregando...</div></div>
       </div>
     </div>
   </main>
 </div>
 <script>
-const SB='https://jkgrmlfqgprcwfooovkx.supabase.co';
-const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA';
+var SB="https://jkgrmlfqgprcwfooovkx.supabase.co";
+var SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ3JtbGZxZ3ByY3dmb29vdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTY4NTIsImV4cCI6MjA4ODgzMjg1Mn0.f0N9ase2ZoYKq4JL7zVT9rzrjjsslYMPLcwd-k5Z8DA";
 
-async function q(path,opts={}){
-  const c=new AbortController(),t=setTimeout(()=>c.abort(),10000);
-  try{
-    const {headers:xH,...xO}=opts;
-    const r=await fetch(SB+'/rest/v1/'+path,{
-      headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json',...(xH||{})},
-      signal:c.signal,...xO
-    });
-    clearTimeout(t);
-    if(!r.ok){const tx=await r.text();throw new Error('SB '+r.status+': '+tx)}
-    const tx=await r.text();return tx?JSON.parse(tx):[];
-  }catch(e){clearTimeout(t);throw e}
-}
+function getU(){try{return JSON.parse(localStorage.getItem("ls_user")||"null")}catch(e){return null}}
 
-const getU=()=>{try{return JSON.parse(localStorage.getItem('ls_user')||'null')}catch{return null}};
-
-function doLogout(){
-  localStorage.removeItem('ls_user');localStorage.removeItem('ls_token');
-  location.href='/';
-}
+function doLogout(){localStorage.removeItem("ls_user");localStorage.removeItem("ls_token");location.href="/"}
 
 function toast(msg,type){
-  type=type||'info';
-  const icons={success:'checkmark',error:'x',info:'i'};
-  const c={success:'#4ade80',error:'#f87171',info:'#60a5fa'};
-  const sym={success:'✓',error:'✗',info:'ℹ'};
-  const el=document.createElement('div');
-  el.className='toast';
-  el.innerHTML='<span style="color:'+c[type]+';font-weight:700">'+sym[type]+'</span><span>'+msg+'</span>';
-  document.getElementById('tc').appendChild(el);
+  var c={success:"#4ade80",error:"#f87171",info:"#60a5fa"};
+  var s={success:"✓",error:"✗",info:"ℹ"};
+  var el=document.createElement("div");
+  el.className="toast";
+  el.innerHTML="<span style=\"color:"+c[type||"info"]+";font-weight:700\">"+s[type||"info"]+"</span><span>"+msg+"</span>";
+  document.getElementById("tc").appendChild(el);
   setTimeout(function(){el.remove()},4000);
 }
 
 function showAlert(id,msg,type){
-  const el=document.getElementById(id);
+  var el=document.getElementById(id);
+  if(!el)return;
   el.textContent=msg;
-  el.className='form-alert '+type+' show';
+  el.className="form-alert "+type+" show";
 }
 
-function hideAlerts(){
-  ['f-err','f-ok'].forEach(function(id){
-    const e=document.getElementById(id);
-    if(e)e.className='form-alert'+(e.className.indexOf('err')>=0?' err':' ok');
+function hideAlerts(ids){
+  (ids||["f-err","f-ok"]).forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.className="form-alert"+(el.className.indexOf("err")>=0?" err":" ok");
   });
 }
+
+var myProducts=[];
 
 function showTab(name){
-  ['overview','products','new','payments'].forEach(function(t){
-    const tab=document.getElementById('tab-'+t);
-    if(tab)tab.style.display=(t===name)?'block':'none';
-    const sb=document.getElementById('sb-'+t);
-    if(sb)sb.className='sidebar-item'+(t===name?' active':'');
+  ["overview","products","new","payments"].forEach(function(t){
+    var tab=document.getElementById("tab-"+t);
+    if(tab)tab.style.display=(t===name)?"block":"none";
+    var sb=document.getElementById("sb-"+t);
+    if(sb)sb.className="sidebar-item"+(t===name?" active":"");
   });
-  if(name==='products')renderProductsFull();
-  if(name==='payments')loadPaymentTab();
+  if(name==="products")renderFull();
+  if(name==="payments")loadPayments();
 }
 
-function statusBadge(s){
-  const m={pending:'s-pending',approved:'s-approved',featured:'s-featured',rejected:'s-rejected'};
-  const l={pending:'Pendente',approved:'Aprovado',featured:'Destaque',rejected:'Rejeitado'};
-  return '<span class="status-badge '+(m[s]||'s-pending')+'">'+(l[s]||s)+'</span>';
+function sbadge(s){
+  var m={pending:"s-pending",approved:"s-approved",featured:"s-featured",rejected:"s-rejected"};
+  var l={pending:"Pendente",approved:"Aprovado",featured:"Destaque",rejected:"Rejeitado"};
+  return "<span class=\"status-badge "+(m[s]||"s-pending")+"\">"+(l[s]||s)+"</span>";
 }
 
-function logoHtml(s,sz){
+function logoEl(p,sz){
   sz=sz||36;
-  if(s.logo_url)return '<img src="'+s.logo_url+'" alt="'+s.name+'" style="width:'+sz+'px;height:'+sz+'px;border-radius:7px;object-fit:cover"/>';
-  const clrs=['#3b82f6','#8b5cf6','#22c55e','#f59e0b','#ef4444','#06b6d4'];
-  const c=clrs[s.name.charCodeAt(0)%clrs.length];
-  return '<div style="width:'+sz+'px;height:'+sz+'px;border-radius:7px;background:'+c+'18;border:1px solid '+c+'28;display:flex;align-items:center;justify-content:center;font-family:var(--serif);color:'+c+';flex-shrink:0">'+s.name.charAt(0)+'</div>';
+  if(p.logo_url)return "<img src=\""+p.logo_url+"\" style=\"width:"+sz+"px;height:"+sz+"px;border-radius:7px;object-fit:cover\">";
+  var cs=["#3b82f6","#8b5cf6","#22c55e","#f59e0b","#ef4444","#06b6d4"];
+  var c=cs[p.name.charCodeAt(0)%cs.length];
+  return "<div style=\"width:"+sz+"px;height:"+sz+"px;border-radius:7px;background:"+c+"18;border:1px solid "+c+"28;display:flex;align-items:center;justify-content:center;font-family:var(--serif);color:"+c+"\">"+p.name.charAt(0)+"</div>";
 }
 
-let myProducts=[];
-
-function buildProductRow(p){
-  return '<div class="product-row">'
-    +'<div class="prod-logo">'+logoHtml(p,36)+'</div>'
-    +'<div style="flex:1;min-width:0">'
-      +'<div class="prod-name">'+p.name+'</div>'
-      +'<div class="prod-tagline">'+(p.tagline||'')+'</div>'
-    +'</div>'
-    +statusBadge(p.status)
-    +'<div class="prod-stats">'
-      +'<div class="prod-stat"><div class="prod-stat-num">'+((p.views||0).toLocaleString('pt-BR'))+'</div><div class="prod-stat-lbl">views</div></div>'
-      +'<div class="prod-stat"><div class="prod-stat-num">'+  (p.upvotes||0)+'</div><div class="prod-stat-lbl">votos</div></div>'
-      +'<div class="prod-stat"><div class="prod-stat-num">'+Number(p.avg_rating||0).toFixed(1)+'</div><div class="prod-stat-lbl">nota</div></div>'
-    +'</div>'
-    +'<div class="prod-actions">'
-      +'<a href="/produto.html?slug='+p.slug+'" class="action-btn" target="_blank">Ver</a>'
-      +'<button class="action-btn del" onclick="deleteProduct(''+p.id+'',''+p.name.replace(/'/g,"\'")+'')" >Excluir</button>'
-    +'</div>'
-  +'</div>';
+function buildRow(p){
+  var safeId=p.id.replace(/"/g,"");
+  var safeName=(p.name||"").replace(/"/g,"&quot;").replace(/\\/g,"\\\\");
+  return "<div class=\"product-row\">"
+    +"<div class=\"prod-logo\">"+logoEl(p,36)+"</div>"
+    +"<div style=\"flex:1;min-width:0\"><div class=\"prod-name\">"+p.name+"</div><div class=\"prod-tagline\">"+(p.tagline||"")+"</div></div>"
+    +sbadge(p.status)
+    +"<div class=\"prod-stats\">"
+      +"<div class=\"prod-stat\"><div class=\"prod-stat-num\">"+(p.views||0).toLocaleString("pt-BR")+"</div><div class=\"prod-stat-lbl\">views</div></div>"
+      +"<div class=\"prod-stat\"><div class=\"prod-stat-num\">"+(p.upvotes||0)+"</div><div class=\"prod-stat-lbl\">votos</div></div>"
+      +"<div class=\"prod-stat\"><div class=\"prod-stat-num\">"+Number(p.avg_rating||0).toFixed(1)+"</div><div class=\"prod-stat-lbl\">nota</div></div>"
+    +"</div>"
+    +"<div class=\"prod-actions\">"
+      +"<a href=\"/produto.html?slug="+p.slug+"\" class=\"action-btn\" target=\"_blank\">Ver</a>"
+      +"<button class=\"action-btn del\" data-id=\""+safeId+"\" data-name=\""+safeName+"\" onclick=\"delProd(this)\">Excluir</button>"
+    +"</div>"
+  +"</div>";
 }
 
-function renderProductsOverview(products){
-  const el=document.getElementById('products-list-overview');
-  if(!products.length){
-    el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><div class="empty-title">Nenhum produto ainda</div><div class="empty-text">Publique seu primeiro SaaS e apareca para milhares de devs.</div><button onclick="showTab('new')" style="padding:.6rem 1.4rem;border-radius:9px;background:var(--accent);color:#fff;font-size:.83rem;font-weight:600;border:none;cursor:pointer;font-family:var(--sans)">Publicar agora</button></div>';
-    return;
-  }
-  el.innerHTML=products.slice(0,5).map(buildProductRow).join('');
-  document.getElementById('prod-count').textContent=products.length;
+function emptyHtml(msg,btn){
+  return "<div class=\"empty\"><div class=\"empty-icon\">\uD83D\uDCE6</div><div class=\"empty-title\">"+msg+"</div>"
+    +(btn?"<button class=\"empty-btn\" onclick=\"showTab('new')\">"+btn+"</button>":"")+"</div>";
 }
 
-function renderProductsFull(){
-  const el=document.getElementById('products-list-full');
-  if(!myProducts.length){
-    el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><div class="empty-title">Nenhum produto ainda</div><div class="empty-text">Publique seu primeiro SaaS agora.</div><button onclick="showTab('new')" style="padding:.6rem 1.4rem;border-radius:9px;background:var(--accent);color:#fff;font-size:.83rem;font-weight:600;border:none;cursor:pointer;font-family:var(--sans)">Publicar</button></div>';
-    return;
-  }
-  el.innerHTML=myProducts.map(buildProductRow).join('');
+function renderOverview(ps){
+  var el=document.getElementById("overview-list");
+  document.getElementById("prod-count").textContent=ps.length;
+  if(!ps.length){el.innerHTML=emptyHtml("Nenhum produto ainda","Publicar agora →");return;}
+  el.innerHTML=ps.slice(0,5).map(buildRow).join("");
 }
 
-async function deleteProduct(id,name){
-  if(!confirm('Excluir "'+name+'"? Esta acao nao pode ser desfeita.'))return;
+function renderFull(){
+  var el=document.getElementById("full-list");
+  if(!myProducts.length){el.innerHTML=emptyHtml("Nenhum produto","Publicar →");return;}
+  el.innerHTML=myProducts.map(buildRow).join("");
+}
+
+function delProd(btn){
+  var id=btn.getAttribute("data-id");
+  var name=btn.getAttribute("data-name");
+  if(!confirm("Excluir \""+name+"\"? Esta ação não pode ser desfeita."))return;
+  fetch(SB+"/rest/v1/ls_saas?id=eq."+id,{method:"DELETE",headers:{"apikey":SK,"Authorization":"Bearer "+SK}})
+    .then(function(){toast("\""+name+"\" excluído","success");loadDash();})
+    .catch(function(e){toast("Erro: "+e.message,"error");});
+}
+
+async function qry(path,opts){
+  opts=opts||{};
+  var ctrl=new AbortController();
+  var tid=setTimeout(function(){ctrl.abort()},10000);
+  var xH=opts.headers||{};
+  delete opts.headers;
   try{
-    await fetch(SB+'/rest/v1/ls_saas?id=eq.'+id,{method:'DELETE',headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
-    toast('"'+name+'" excluido com sucesso','success');
-    await loadDashboard();
-  }catch(e){toast('Erro ao excluir: '+e.message,'error')}
+    var r=await fetch(SB+"/rest/v1/"+path,Object.assign({
+      headers:Object.assign({"apikey":SK,"Authorization":"Bearer "+SK,"Content-Type":"application/json"},xH),
+      signal:ctrl.signal
+    },opts));
+    clearTimeout(tid);
+    if(!r.ok){var tx=await r.text();throw new Error("SB "+r.status+": "+tx);}
+    var tx2=await r.text();
+    return tx2?JSON.parse(tx2):[];
+  }catch(e){clearTimeout(tid);throw e;}
 }
 
-async function loadCategories(){
+async function loadCats(){
   try{
-    const cats=await q('ls_categories?select=id,name,icon&order=sort_order.asc');
-    const sel=document.getElementById('f-cat');
+    var cats=await qry("ls_categories?select=id,name,icon&order=sort_order.asc");
+    var sel=document.getElementById("f-cat");
     cats.forEach(function(c){
-      const opt=document.createElement('option');
-      opt.value=c.id;
-      opt.textContent=(c.icon||'')+' '+c.name;
-      sel.appendChild(opt);
+      var o=document.createElement("option");
+      o.value=c.id;
+      o.textContent=(c.icon||"")+" "+c.name;
+      sel.appendChild(o);
     });
-  }catch(e){toast('Erro ao carregar categorias','error')}
+  }catch(e){console.warn("cats:",e.message);}
+}
+
+async function loadDash(){
+  var user=getU();
+  if(!user){location.href="/";return;}
+  var h=new Date().getHours();
+  var g=h<12?"Bom dia":h<18?"Boa tarde":"Boa noite";
+  document.getElementById("pg-title").textContent=g+", "+user.name.split(" ")[0]+" 👋";
+  document.getElementById("nav-uname").textContent=user.name.split(" ")[0];
+  try{
+    var ps=await qry("ls_saas?select=id,name,slug,tagline,logo_url,status,views,clicks,upvotes,avg_rating,review_count&creator_id=eq."+user.id+"&order=created_at.desc");
+    myProducts=ps;
+    var tv=ps.reduce(function(a,p){return a+(p.views||0)},0);
+    var tu=ps.reduce(function(a,p){return a+(p.upvotes||0)},0);
+    var rr=ps.filter(function(p){return p.avg_rating>0});
+    var ar=rr.length?rr.reduce(function(a,p){return a+parseFloat(p.avg_rating||0)},0)/rr.length:0;
+    document.getElementById("st-products").textContent=ps.length;
+    document.getElementById("st-views").textContent=tv.toLocaleString("pt-BR");
+    document.getElementById("st-upvotes").textContent=tu.toLocaleString("pt-BR");
+    document.getElementById("st-rating").textContent=ar>0?ar.toFixed(1)+"★":"—";
+    var pend=ps.filter(function(p){return p.status==="pending"}).length;
+    var appr=ps.filter(function(p){return p.status==="approved"||p.status==="featured"}).length;
+    var sub=appr+" aprovado"+(appr!==1?"s":"")+(pend?" · "+pend+" pendente"+(pend!==1?"s":""):"");
+    document.getElementById("st-sub").textContent=sub;
+    document.getElementById("st-sub").style.color=pend?"#fbbf24":"var(--green)";
+    renderOverview(ps);
+    if(user.role==="creator"&&ps.length<5)document.getElementById("plan-banner").style.display="flex";
+  }catch(e){
+    document.getElementById("overview-list").innerHTML="<div class=\"empty\"><div class=\"empty-icon\">⚡</div><div class=\"empty-title\">Erro ao carregar</div><div class=\"empty-text\">"+e.message+"</div></div>";
+  }
 }
 
 async function submitSaas(){
-  hideAlerts();
-  const user=getU();
-  if(!user){showAlert('f-err','Faca login primeiro','err');return}
-  const name=document.getElementById('f-name').value.trim();
-  const tagline=document.getElementById('f-tagline').value.trim();
-  const desc=document.getElementById('f-desc').value.trim();
-  const cat=document.getElementById('f-cat').value;
-  const pricing=document.getElementById('f-pricing').value;
-  const price=document.getElementById('f-price').value||null;
-  const priceLabel=document.getElementById('f-price-label').value.trim();
-  const url=document.getElementById('f-url').value.trim();
-  const logo=document.getElementById('f-logo').value.trim()||null;
-  const video=document.getElementById('f-video').value.trim()||null;
-  const pixKey=document.getElementById('f-pix').value.trim()||null;
-  const paymentUrl=document.getElementById('f-payment-url').value.trim()||null;
-  if(!name||!tagline||!desc||!url||!cat){
-    showAlert('f-err','Preencha todos os campos obrigatorios (*)','err');return;
-  }
-  if(url&&!/^https?:///.test(url)){
-    showAlert('f-err','URL do produto deve comecar com https://','err');return;
-  }
+  hideAlerts(["f-err","f-ok"]);
+  var user=getU();
+  if(!user){showAlert("f-err","Faça login primeiro","err");return;}
+  var name=(document.getElementById("f-name").value||"").trim();
+  var tagline=(document.getElementById("f-tagline").value||"").trim();
+  var desc=(document.getElementById("f-desc").value||"").trim();
+  var cat=document.getElementById("f-cat").value;
+  var pricing=document.getElementById("f-pricing").value;
+  var price=document.getElementById("f-price").value||null;
+  var pl=(document.getElementById("f-price-label").value||"").trim();
+  var url=(document.getElementById("f-url").value||"").trim();
+  var logo=(document.getElementById("f-logo").value||"").trim()||null;
+  var video=(document.getElementById("f-video").value||"").trim()||null;
+  var pix=(document.getElementById("f-pix").value||"").trim()||null;
+  var payUrl=(document.getElementById("f-pay-url").value||"").trim()||null;
+  if(!name||!tagline||!desc||!url||!cat){showAlert("f-err","Preencha os campos obrigatórios (*)","err");return;}
+  if(!/^https?:\/\//.test(url)){showAlert("f-err","URL deve começar com https://","err");return;}
   try{
-    const slug=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+Date.now();
-    await q('ls_saas',{
-      method:'POST',
-      headers:{'Prefer':'return=minimal'},
+    var slug=name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+Date.now();
+    await qry("ls_saas",{
+      method:"POST",
+      headers:{"Prefer":"return=minimal"},
       body:JSON.stringify({
-        name,tagline,description:desc,category_id:cat,creator_id:user.id,
+        name:name,tagline:tagline,description:desc,category_id:cat,creator_id:user.id,
         pricing_type:pricing,price:price?parseFloat(price):null,
-        price_label:priceLabel||null,website_url:url,
-        logo_url:logo,video_url:video,
-        pix_key:pixKey,payment_url:paymentUrl,
-        slug,status:'pending',tags:[],screenshots:[],
+        price_label:pl||null,website_url:url,logo_url:logo,video_url:video,
+        pix_key:pix,payment_url:payUrl,
+        slug:slug,status:"pending",tags:[],screenshots:[],
         upvotes:0,views:0,clicks:0,avg_rating:0,review_count:0
       })
     });
-    showAlert('f-ok','Produto enviado para aprovacao! Em breve estara no marketplace.','ok');
-    ['f-name','f-tagline','f-desc','f-price','f-price-label','f-url','f-logo','f-video','f-pix','f-payment-url'].forEach(function(id){
-      const el=document.getElementById(id);if(el)el.value='';
+    showAlert("f-ok","✓ Produto enviado! Em breve estará no marketplace.","ok");
+    ["f-name","f-tagline","f-desc","f-price","f-price-label","f-url","f-logo","f-video","f-pix","f-pay-url"].forEach(function(id){
+      var el=document.getElementById(id);if(el)el.value="";
     });
-    document.getElementById('f-cat').value='';
-    setTimeout(function(){showTab('overview');loadDashboard()},2500);
-  }catch(e){showAlert('f-err','Erro ao enviar: '+e.message,'err')}
-}
-
-async function loadDashboard(){
-  const user=getU();
-  if(!user){location.href='/';return}
-  const hour=new Date().getHours();
-  const greet=hour<12?'Bom dia':(hour<18?'Boa tarde':'Boa noite');
-  document.getElementById('pg-title').textContent=greet+', '+user.name.split(' ')[0]+' 👋';
-  document.getElementById('nav-uname').textContent=user.name.split(' ')[0];
-  try{
-    const products=await q('ls_saas?select=id,name,slug,tagline,logo_url,status,views,clicks,upvotes,avg_rating,review_count,created_at&creator_id=eq.'+user.id+'&order=created_at.desc');
-    myProducts=products;
-    const total=products.length;
-    const totalViews=products.reduce(function(a,p){return a+(p.views||0)},0);
-    const totalUp=products.reduce(function(a,p){return a+(p.upvotes||0)},0);
-    const ratings=products.filter(function(p){return p.avg_rating>0});
-    const avgRating=ratings.length?ratings.reduce(function(a,p){return a+parseFloat(p.avg_rating||0)},0)/ratings.length:0;
-    document.getElementById('st-products').textContent=total;
-    document.getElementById('st-views').textContent=totalViews.toLocaleString('pt-BR');
-    document.getElementById('st-upvotes').textContent=totalUp.toLocaleString('pt-BR');
-    document.getElementById('st-rating').textContent=avgRating>0?avgRating.toFixed(1)+'★':'—';
-    const pending=products.filter(function(p){return p.status==='pending'}).length;
-    const approved=products.filter(function(p){return p.status==='approved'||p.status==='featured'}).length;
-    document.getElementById('st-products-sub').textContent=approved+' aprovado'+(approved!==1?'s':'')+(pending?' · '+pending+' pendente'+(pending!==1?'s':''):'');
-    document.getElementById('st-products-sub').style.color=pending?'#fbbf24':'var(--green)';
-    renderProductsOverview(products);
-    document.getElementById('prod-count').textContent=total;
-    if(user.role==='creator'&&total<5){
-      document.getElementById('plan-banner').style.display='flex';
-    }
-  }catch(e){
-    document.getElementById('products-list-overview').innerHTML='<div class="empty"><div class="empty-icon">⚡</div><div class="empty-title">Erro ao carregar</div><div class="empty-text">'+e.message+'</div></div>';
-  }
+    document.getElementById("f-cat").value="";
+    setTimeout(function(){showTab("overview");loadDash();},2500);
+  }catch(e){showAlert("f-err","Erro: "+e.message,"err");}
 }
 
 async function savePix(){
-  const user=getU();if(!user)return;
-  const key=document.getElementById('pix-key-input').value.trim();
-  if(!key){
-    showAlert('pix-err','Informe sua chave PIX','err');return;
-  }
+  hideAlerts(["pix-err","pix-ok"]);
+  var user=getU();if(!user)return;
+  var key=(document.getElementById("pix-input").value||"").trim();
+  if(!key){showAlert("pix-err","Informe sua chave PIX","err");return;}
   try{
-    await fetch(SB+'/rest/v1/ls_users?id=eq.'+user.id,{
-      method:'PATCH',
-      headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},
+    await fetch(SB+"/rest/v1/ls_users?id=eq."+user.id,{
+      method:"PATCH",
+      headers:{"apikey":SK,"Authorization":"Bearer "+SK,"Content-Type":"application/json","Prefer":"return=minimal"},
       body:JSON.stringify({pix_key:key})
     });
-    const u=getU();u.pix_key=key;localStorage.setItem('ls_user',JSON.stringify(u));
-    showAlert('pix-ok','Chave PIX salva com sucesso!','ok');
-    document.getElementById('pix-err').className='form-alert err';
-    setTimeout(function(){document.getElementById('pix-ok').className='form-alert ok'},3000);
-  }catch(e){
-    showAlert('pix-err','Erro: '+e.message,'err');
-  }
+    var u=getU();u.pix_key=key;localStorage.setItem("ls_user",JSON.stringify(u));
+    showAlert("pix-ok","✓ Chave PIX salva!","ok");
+    setTimeout(function(){hideAlerts(["pix-ok"]);},3000);
+  }catch(e){showAlert("pix-err","Erro: "+e.message,"err");}
 }
 
-async function loadPaymentTab(){
-  const user=getU();if(!user)return;
+async function loadPayments(){
+  var user=getU();if(!user)return;
   try{
-    const rows=await q('ls_users?select=pix_key&id=eq.'+user.id);
-    if(rows[0]&&rows[0].pix_key){
-      document.getElementById('pix-key-input').value=rows[0].pix_key;
-    }
+    var rows=await qry("ls_users?select=pix_key&id=eq."+user.id);
+    if(rows[0]&&rows[0].pix_key)document.getElementById("pix-input").value=rows[0].pix_key;
   }catch(e){}
-  const el=document.getElementById('payment-products-list');
+  var el=document.getElementById("pay-list");
   try{
-    const prods=await q('ls_saas?select=id,name,slug,pricing_type,price,pix_key,payment_url,status&creator_id=eq.'+user.id+'&order=created_at.desc');
-    if(!prods.length){
-      el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">Nenhum produto publicado ainda.</div>';
-      return;
-    }
-    var rows2='';
-    prods.forEach(function(p){
-      var pricing='';
-      if(p.pricing_type==='free')pricing='Gratis';
-      else if(p.pricing_type==='paid')pricing='Pago R$'+(p.price||'?');
-      else pricing=p.pricing_type;
-
-      var pixHtml=p.pix_key
-        ?'<span class="pix-badge">PIX: '+p.pix_key+'</span>'
-        :'<span style="color:var(--muted);font-size:.76rem">Sem PIX</span>';
-
-      var linkHtml=p.payment_url
-        ?'<a href="'+p.payment_url+'" target="_blank" style="font-size:.76rem;color:var(--accent);white-space:nowrap">Ver link</a>'
-        :'';
-
-      rows2+='<div style="display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--border)">'
-        +'<div style="flex:1">'
-          +'<div style="font-size:.88rem;font-weight:600;color:#fff">'+p.name+'</div>'
-          +'<div style="font-size:.76rem;color:var(--muted2);margin-top:.1rem">'+pricing+'</div>'
-        +'</div>'
-        +'<div style="font-size:.78rem;text-align:right">'+pixHtml+'</div>'
-        +linkHtml
-      +'</div>';
+    var ps=await qry("ls_saas?select=id,name,pricing_type,price,pix_key,payment_url&creator_id=eq."+user.id+"&order=created_at.desc");
+    if(!ps.length){el.innerHTML="<div style=\"padding:2rem;text-align:center;color:var(--muted)\">Nenhum produto publicado ainda.</div>";return;}
+    var html2="";
+    ps.forEach(function(p){
+      var pr=p.pricing_type==="free"?"Grátis":p.pricing_type==="paid"?"Pago R$"+(p.price||"?"):p.pricing_type;
+      var px=p.pix_key?"<span class=\"pix-badge\">PIX: "+p.pix_key+"</span>":"<span style=\"color:var(--muted);font-size:.75rem\">Sem PIX</span>";
+      var lk=p.payment_url?"<a href=\""+p.payment_url+"\" target=\"_blank\" style=\"font-size:.76rem;color:var(--accent)\">Link →</a>":"";
+      html2+="<div style=\"display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--border)\">"
+        +"<div style=\"flex:1\"><div style=\"font-size:.88rem;font-weight:600;color:#fff\">"+p.name+"</div><div style=\"font-size:.76rem;color:var(--muted2)\">"+pr+"</div></div>"
+        +px+lk
+      +"</div>";
     });
-    el.innerHTML=rows2;
-  }catch(e){
-    el.innerHTML='<div style="padding:1rem;color:#f87171;font-size:.83rem">Erro: '+e.message+'</div>';
-  }
+    el.innerHTML=html2;
+  }catch(e){el.innerHTML="<div style=\"padding:1rem;color:#f87171\">Erro: "+e.message+"</div>";}
 }
 
-document.addEventListener('DOMContentLoaded',function(){
-  const u=getU();
-  if(!u){
-    sessionStorage.setItem('openModal','m-login');
-    location.href='/';
-    return;
-  }
-  loadDashboard();
-  loadCategories();
+document.addEventListener("DOMContentLoaded",function(){
+  var u=getU();
+  if(!u){sessionStorage.setItem("openModal","m-login");location.href="/";return;}
+  loadDash();
+  loadCats();
 });
 </script>
 </body>
